@@ -286,3 +286,8 @@ function isLast(obs: Observation): boolean {
   const dist = (s: number) => (s - obs.button + n) % n;
   return live.every((p) => dist(p.seat) <= dist(obs.seat));
 }
+
+/** 복기/분석용: 중립 설정(적응 없음, 최대 레인지 추론)으로 상대 레인지 추정 */
+export function inferRange(obs: Observation, o: PublicPlayer): OppRange {
+  return oppRange(obs, o, { ...PROFILES.Balanced.style, adapt: 0 }, SKILLS[5], {});
+}

@@ -51,7 +51,7 @@ export function startHand(prev: GameState, rng: RNG): GameState {
 }
 
 /** 확정된 덱으로 핸드 시작 (저장 복구/리플레이/테스트용). */
-export function startHandWithDeck(prev: GameState, deck: Card[], seed: number): GameState {
+export function startHandWithDeck(prev: GameState, deck: Card[], seed: number, forceButton?: number): GameState {
   if (deck.length !== 52 || hasDuplicates(deck)) throw new Error('invalid deck');
   const s = clone(prev);
   if (s.street !== 'complete') throw new IllegalActionError('hand in progress');
@@ -61,7 +61,7 @@ export function startHandWithDeck(prev: GameState, deck: Card[], seed: number): 
 
   s.handNo += 1;
   s.seed = seed;
-  s.button = nextSeat(s, s.button, (p) => alive(p));
+  s.button = forceButton ?? nextSeat(s, s.button, (p) => alive(p));
   s.board = []; s.burned = []; s.events = []; s.actionLog = []; s.result = null;
   s.currentBet = 0; s.minRaise = s.config.bb;
   s.totalChips = s.players.reduce((t, p) => t + p.stack, 0);

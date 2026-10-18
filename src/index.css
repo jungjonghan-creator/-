@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: #05090f; color: #e6edf7; font-family: system-ui, -apple-system, 'Noto Sans KR', 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+.safe-pad { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); padding-bottom: env(safe-area-inset-bottom); padding-top: env(safe-area-inset-top); }
+.felt { background: radial-gradient(ellipse at 50% 40%, #12305a 0%, #0b1d3a 55%, #07122a 100%); box-shadow: inset 0 0 0 6px #0c1526, inset 0 0 0 10px #1e2c47, 0 10px 40px rgba(0,0,0,.6); }
+.card { background: #fafafa; color: #111; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.5); font-weight: 700; line-height: 1; }
+.card.red { color: #c81e1e; }
+.card.back { background: repeating-linear-gradient(45deg, #1d4ed8, #1d4ed8 4px, #1e3a8a 4px, #1e3a8a 8px); border: 2px solid #dbeafe; }
+@keyframes dealIn { from { transform: translateY(-14px) scale(.85); opacity: 0 } to { transform: none; opacity: 1 } }
+.deal { animation: dealIn var(--anim, 220ms) ease-out both; }
+@keyframes chipPop { from { transform: scale(.6); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+.chip-pop { animation: chipPop var(--anim, 200ms) ease-out both; }
+@keyframes pulseRing { 0%,100% { box-shadow: 0 0 0 2px #facc15 } 50% { box-shadow: 0 0 0 5px rgba(250,204,21,.35) } }
+.acting { animation: pulseRing 1.2s infinite; }
+@keyframes bigPot { 0% { transform: scale(1) } 50% { transform: scale(1.12) } 100% { transform: scale(1) } }
+.big-pot { animation: bigPot .6s ease-in-out 2; }
+button:disabled { opacity: .35; cursor: not-allowed; }
+.btn { border-radius: 10px; font-weight: 700; padding: 10px 14px; min-height: 48px; user-select: none; touch-action: manipulation; }
+input[type=range] { accent-color: #facc15; }
