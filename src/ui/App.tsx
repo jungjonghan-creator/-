@@ -7,6 +7,7 @@ import { HistoryScreen } from './HistoryScreen';
 import { TrainerScreen } from './Trainer';
 import { CoachScreen } from './CoachScreen';
 import { StoryScreen } from './StoryScreen';
+import { Lobby } from './Lobby';
 
 export function App() {
   const { init, screen, session } = useGame();
@@ -20,6 +21,7 @@ export function App() {
       {screen === 'trainer' && <TrainerScreen />}
       {screen === 'coach' && <CoachScreen />}
       {screen === 'story' && <StoryScreen />}
+      {screen === 'lobby' && <Lobby />}
     </div>
   );
 }

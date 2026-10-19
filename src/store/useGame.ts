@@ -2,23 +2,25 @@ import { create } from 'zustand';
 import { Action, AllInAction, HandRecord } from '../engine/types';
 import { randomSeed, createRng } from '../engine/rng';
 import { newMTTSession, mttReenter, MTTConfig } from '../game/mtt';
-import { mttAdvanceAsync } from '../game/workerClient';
+import { mttAdvanceAsync, mttSimToEndAsync } from '../game/workerClient';
 import { sngPayouts } from '../game/icm';
 import { Difficulty } from '../ai/profiles';
-import { aiStep, beginHand, humanAct, isAITurn, newSession, rebuy, Session, SessionConfig, sessionOver, handOver } from '../game/session';
+import { tierById } from '../game/tiers';
+import { aiStep, beginHand, defaultAIs, humanAct, isAITurn, newSession, rebuy, Session, SessionConfig, sessionOver, handOver } from '../game/session';
 import { clearSession, loadKV, loadSession, saveKV, saveSession } from '../persist/db';
 import { sfx, setMuted } from '../sound';
+import { tourneyAnnouncements, tourneyStatus } from '../game/tourney';
 import { CHAPTERS } from '../story/chapters';
 import { CHARACTERS, rivalDifficulty } from '../story/characters';
 import { directHand, sessionHighlights, StoryLine } from '../story/director';
 import { leave, needsLoan, newStory, sit, StoryState, takeLoan, topUp, chapterOf } from '../story/state';
 
 
-export type Screen = 'menu' | 'table' | 'stats' | 'history' | 'trainer' | 'coach' | 'story';
+export type Screen = 'menu' | 'table' | 'stats' | 'history' | 'trainer' | 'coach' | 'story' | 'lobby';
 export interface Settings { sound: boolean; animMs: number; revealAI: boolean; hints: boolean; autoCoach: boolean }
 const DEFAULT_SETTINGS: Settings = { sound: true, animMs: 450, revealAI: false, hints: false, autoCoach: true };
 
-export interface TourneyResult { date: number; mode: string; entrants: number; place: number; prize: number; buyIn: number; entries: number }
+export interface TourneyResult { tierId?: string; date: number; mode: string; entrants: number; place: number; prize: number; buyIn: number; entries: number }
 export type RecordGroup = 'competitive' | 'training';
 export const groupOf = (s: Session): RecordGroup => (s.config.mode === 'trainer' ? 'training' : 'competitive');
 
@@ -36,9 +38,11 @@ interface Store {
   hasSave: boolean;
   init(): Promise<void>;
   start(cfg: Omit<SessionConfig, 'seed'> & { seed?: number }): void;
+  startTier(tierId: string, humanName?: string, difficulty?: Difficulty): void;
   startMTT(cfg: { mtt: MTTConfig; startBB: number; bb: number; speed: SessionConfig['speed']; humanName: string; difficulty: Difficulty; profileId: string }): void;
   reenter(): void;
   declineReentry(): void;
+  simToEnd(): void;
   tourneys: TourneyResult[];
   finalizeTourney(): void;
   resume(): Promise<void>;
@@ -74,6 +78,15 @@ export const useGame = create<Store>((set, get) => {
   const persist = (s: Session) => { void saveSession(s).catch(() => set({ notice: '저장 실패 (저장소 접근 불가)' })); };
   const commit = (s: Session) => { set({ session: s }); persist(s); };
 
+  /** 토너먼트 상태 변화(블라인드 상승·탈락·버블·입상…)를 피드에 알림으로 추가 */
+  function announce(s: Session): Session {
+    const cur = tourneyStatus(s);
+    if (!cur) return s;
+    const msgs = tourneyAnnouncements(s.tstat ?? null, cur);
+    const lines: StoryLine[] = msgs.map((text, i) => ({ id: `t-${s.game.handNo}-${cur.level}-${cur.playersLeft}-${i}`, handNo: s.game.handNo, kind: 'system', speaker: '토너먼트', emoji: '📣', text, ts: Date.now() }));
+    return { ...s, tstat: cur, feed: lines.length ? [...(s.feed ?? []), ...lines].slice(-60) : s.feed };
+  }
+
   /** 핸드 종료 직후 해설/대사를 피드에 추가 (핸드당 1회) */
   function direct() {
     const s = get().session;
@@ -83,7 +96,7 @@ export const useGame = create<Store>((set, get) => {
     const heroSeat = rec.startStacks.find((x) => x.id === 'hero')!.seat;
     let lines: StoryLine[] = [];
     try { lines = directHand({ rec, heroSeat, history: s.records.slice(0, -1), memory: s.memory, characters: !!s.config.story }); } catch { /* 연출 실패는 게임을 막지 않는다 */ }
-    commit({ ...s, feed: [...(s.feed ?? []), ...lines].slice(-60), directedHand: rec.handNo });
+    commit(announce({ ...s, feed: [...(s.feed ?? []), ...lines].slice(-60), directedHand: rec.handNo }));
   }
 
   async function runAI(myGen: number) {
@@ -144,15 +157,27 @@ export const useGame = create<Store>((set, get) => {
       archiveOld();
       let s = newSession({ ...cfg, seed: cfg.seed ?? randomSeed() });
       s = beginHand(s);
+      s = { ...s, tstat: tourneyStatus(s) ?? undefined };
       set({ session: s, screen: 'table', notice: null });
       persist(s);
       void runAI(gen);
+    },
+    startTier(tierId, humanName = 'TETO', difficulty = 3) {
+      const tr = tierById(tierId);
+      set({ currentTier: tr.id } as any);
+      if (tr.kind === 'mtt') {
+        get().startMTT({ mtt: { entrants: tr.entrants, tableSize: tr.tableSize as 6 | 9, buyIn: tr.buyIn, reentry: !!tr.reentry, reentryUntilLevel: tr.lateRegUntilLevel ?? 4, maxReentries: 2, lateRegUntilLevel: tr.lateRegUntilLevel, lateRegPerRound: tr.lateRegPerRound, aiReentry: tr.aiReentry }, startBB: tr.startBB, bb: tr.bb, speed: tr.speed, humanName, difficulty, profileId: 'Balanced' });
+      } else {
+        get().start({ mode: tr.kind === 'hu' ? 'headsup-sng' : 'sng', seats: tr.tableSize, startBB: tr.startBB, bb: tr.bb, speed: tr.speed, humanName, ais: defaultAIs(tr.tableSize - 1, difficulty, 'Balanced') });
+      }
+      const s = get().session; if (s) { const n = { ...s, tierId: tr.id }; set({ session: n }); persist(n); }
     },
     startMTT(cfg) {
       gen++;
       archiveOld();
       let s = newMTTSession({ ...cfg, seed: randomSeed() });
       s = beginHand(s);
+      s = { ...s, tstat: tourneyStatus(s) ?? undefined };
       set({ session: s, screen: 'table', notice: null });
       persist(s);
       void runAI(gen);
@@ -160,6 +185,11 @@ export const useGame = create<Store>((set, get) => {
     reenter() {
       const s = get().session; if (!s?.mtt) return;
       try { let n = mttReenter(s); n = beginHand(n); commit(n); gen++; void runAI(gen); } catch (e) { set({ notice: (e as Error).message }); }
+    },
+    simToEnd() {
+      const s = get().session; if (!s?.mtt || s.mtt.finished) return;
+      set({ busy: true });
+      void mttSimToEndAsync(s, randomSeed()).then((n) => { commit(n); set({ busy: false }); }).catch((e) => set({ notice: (e as Error).message, busy: false }));
     },
     declineReentry() {
       const s = get().session; if (!s?.mtt) return;
@@ -171,9 +201,9 @@ export const useGame = create<Store>((set, get) => {
       if (!s || s.tourneyRecorded || !sessionOver(s)) return;
       const g = s.game;
       let place: number, entrants: number, prize: number, entries = 1, buyIn = 100;
-      if (s.mtt) { place = s.mtt.places['hero'] ?? 1; entrants = s.mtt.config.entrants; prize = s.mtt.heroPrize; entries = s.mtt.entries; buyIn = s.mtt.config.buyIn; }
+      if (s.mtt) { place = s.mtt.places['hero'] ?? 1; entrants = s.mtt.totalEntries; prize = s.mtt.heroPrize; entries = s.mtt.entries; buyIn = s.mtt.config.buyIn; }
       else { entrants = g.players.length; place = g.players.find((p) => p.isHuman)?.finishPlace ?? 1; prize = sngPayouts(entrants, buyIn)[place - 1] ?? 0; }
-      const tourneys = [...get().tourneys, { date: Date.now(), mode: s.config.mode, entrants, place, prize, buyIn, entries }];
+      const tourneys = [...get().tourneys, { tierId: s.tierId, date: Date.now(), mode: s.config.mode, entrants, place, prize, buyIn, entries }];
       const ns = { ...s, tourneyRecorded: true };
       set({ tourneys, session: ns }); void saveKV('tourneys', tourneys); persist(ns);
     },
@@ -216,6 +246,7 @@ export const useGame = create<Store>((set, get) => {
             if (sessionOver(n) || n.mtt!.heroOut) { commit(n); set({ busy: false }); get().finalizeTourney(); return; }
           }
           n = beginHand(n, createRng(seed ^ 0x5bd1e995));
+          n = announce(n);
         } catch (e) { set({ notice: (e as Error).message, busy: false }); return; }
         commit(n);
         gen++;

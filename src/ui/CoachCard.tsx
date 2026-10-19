@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { allInLuck, quickCoach, QuickCoach } from '../analysis/coach';
+import { allInLuck, quickCoach, QuickCoach, TourneyCtx } from '../analysis/coach';
 import { reviewHand } from '../analysis/review';
 import { createRng } from '../engine/rng';
 import { HandRecord } from '../engine/types';
@@ -13,7 +13,7 @@ const TONE: Record<QuickCoach['tone'], { label: string; cls: string }> = {
 };
 
 /** 핸드가 끝나면 자동으로 뜨는 짧은 피드백. 상세 복기/분석실로 이어진다. */
-export function CoachCard({ rec, onDetail, detailOpen }: { rec: HandRecord; onDetail: () => void; detailOpen: boolean }) {
+export function CoachCard({ rec, onDetail, detailOpen, tctx }: { rec: HandRecord; onDetail: () => void; detailOpen: boolean; tctx?: TourneyCtx }) {
   const { setScreen } = useGame();
   const [q, setQ] = useState<QuickCoach | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -24,7 +24,7 @@ export function CoachCard({ rec, onDetail, detailOpen }: { rec: HandRecord; onDe
       const seat = rec.startStacks.find((s) => s.id === 'hero')!.seat;
       const rv = reviewHand(rec, 'hero', 700);
       const luck = allInLuck(rec, seat, createRng(rec.seed), 1800);
-      setQ(quickCoach(rec, rv, luck));
+      setQ(quickCoach(rec, rv, luck, tctx));
     }, 30);
     return () => clearTimeout(t);
   }, [rec]);

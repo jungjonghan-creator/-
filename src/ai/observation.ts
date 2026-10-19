@@ -28,6 +28,8 @@ export interface Observation {
   /** 영웅 기준 유효 스택 (영웅 스택+베팅, 활성 상대 중 최대 스택+베팅 중 작은 값) */
   effStack: number;
   position: string;
+  /** 토너먼트 공개 정보 (남은 인원, 입상 인원, 평균 스택). 캐시게임이면 없음 */
+  tournament?: { playersLeft: number; paid: number; avgStack: number };
 }
 
 export function positionLabels(s: GameState): Record<number, string> {
@@ -53,7 +55,7 @@ export function positionLabels(s: GameState): Record<number, string> {
   return labels;
 }
 
-export function observe(s: GameState, seat: number): Observation {
+export function observe(s: GameState, seat: number, tournament?: Observation['tournament']): Observation {
   const hero = s.players[seat];
   const labels = positionLabels(s);
   const legal = (s.toAct === seat ? legalActions(s) : null) ?? {
@@ -70,5 +72,6 @@ export function observe(s: GameState, seat: number): Observation {
     currentBet: s.currentBet, minRaise: s.minRaise, bb: s.config.bb, ante: s.config.ante, button: s.button,
     players, history: s.events.map((e) => ({ ...e })), legal: { ...legal }, effStack: Math.min(hero.stack + hero.bet, maxOpp),
     position: labels[seat] ?? '',
+    ...(tournament ? { tournament } : {}),
   };
 }

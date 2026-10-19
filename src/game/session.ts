@@ -40,6 +40,9 @@ export interface Session {
   /** 해설/대사 피드 (스토리·해설) */
   feed?: import('../story/director').StoryLine[];
   directedHand?: number;
+  tierId?: string;
+  /** 직전 토너먼트 상태 스냅샷 (알림 차이 계산용) */
+  tstat?: import('./tourney').TourneyStatus;
   level: number;
   levelHand: number;        // 현재 레벨에서 치른 핸드 수
   startedAt: number;
@@ -49,8 +52,10 @@ export interface Session {
 
 export const HANDS_PER_LEVEL: Record<Speed, number> = { normal: 10, turbo: 6, hyper: 3 };
 
+export const LEVEL_COUNT = 40;
 export function blindStructure(baseBB: number): BlindLevel[] {
   const mult = [1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256];
+  while (mult.length < LEVEL_COUNT) mult.push(Math.round(mult[mult.length - 1] * 1.5));
   return mult.map((m, i) => {
     const bb = Math.round(baseBB * m);
     return { sb: Math.round(bb / 2), bb, ante: i >= 3 ? Math.max(1, Math.round(bb / 8)) : 0 };
@@ -146,11 +151,26 @@ export const isHumanTurn = (sess: Session) => sess.game.toAct !== null && sess.g
 export const handOver = (sess: Session) => sess.game.street === 'complete';
 
 /** AI 한 번 행동. RNG 는 (게임시드, 핸드, 이벤트수, 좌석)에서 유도 → 저장 복구 후에도 동일 결정 */
+/** AI 에게 전달하는 공개 토너먼트 정보 */
+export function tournamentContext(sess: Session): { playersLeft: number; paid: number; avgStack: number } | undefined {
+  const c = sess.config;
+  if (c.mode === 'mtt' && sess.mtt) {
+    const m = sess.mtt;
+    return { playersLeft: m.remaining, paid: m.payouts.length, avgStack: m.startStack * m.totalEntries / Math.max(1, m.remaining) };
+  }
+  if (c.mode === 'sng' || c.mode === 'headsup-sng') {
+    const n = sess.game.players.length;
+    const alive = sess.game.players.filter((p) => !p.busted).length;
+    return { playersLeft: alive, paid: n <= 2 ? 1 : n <= 6 ? 2 : 3, avgStack: sess.game.players.reduce((t, p) => t + p.stack + p.invested, 0) / Math.max(1, alive) };
+  }
+  return undefined;
+}
+
 export function aiStep(sess: Session, simScale = 1): { sess: Session; decision: Decision } {
   const g = sess.game;
   const seat = g.toAct as number;
   const setup = sess.aiById?.[g.players[seat].id] ?? sess.aiBySeat[seat];
-  const obs = observe(g, seat);
+  const obs = observe(g, seat, tournamentContext(sess));
   const rng = createRng((g.seed ^ Math.imul(g.handNo + 1, 2654435761) ^ Math.imul(g.events.length + 7, 40503) ^ (seat * 977)) >>> 0);
   const decision = decide(obs, setup, sess.memory, rng, sess.config.seed, simScale);
   let next: GameState;

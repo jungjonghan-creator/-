@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { CoachCard } from './CoachCard';
 import { StoryFeed } from './StoryFeed';
+import { TourneyHud } from './TourneyHud';
+import { tourneyStatus, ZONE_LABEL, STAGES } from '../game/tourney';
 import { chapterOf, netWorth } from '../story/state';
-import { currentBlinds, blindStructure, HANDS_PER_LEVEL, sessionOver, Session } from '../game/session';
+import { currentBlinds, blindStructure, HANDS_PER_LEVEL, LEVEL_COUNT, sessionOver, Session } from '../game/session';
 import { ActionBar } from './ActionBar';
 import { ReviewPanel } from './Review';
 import { TableView } from './Table';
@@ -13,7 +15,7 @@ import { createRng } from '../engine/rng';
 import { legalActions } from '../engine/game';
 
 export function GameScreen({ sess }: { sess: Session }) {
-  const { nextHand, quit, busy, settings, setSettings, notice, doRebuy, reenter, declineReentry, skipAI, story, leaveStory, loanRebuy } = useGame();
+  const { nextHand, quit, busy, settings, setSettings, notice, doRebuy, reenter, declineReentry, simToEnd, skipAI, story, leaveStory, loanRebuy } = useGame();
   const [panel, setPanel] = useState<'log' | 'hist' | null>(null);
   const [review, setReview] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
@@ -26,6 +28,14 @@ export function GameScreen({ sess }: { sess: Session }) {
     const t = setTimeout(() => setBubble(null), 5000);
     return () => clearTimeout(t);
   }, [lastTalk?.id]); // eslint-disable-line
+  const lastSys = [...feed].reverse().find((l) => l.kind === 'system');
+  const [announce, setAnnounce] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lastSys || Date.now() - lastSys.ts > 8000) return;
+    setAnnounce(lastSys.text);
+    const t = setTimeout(() => setAnnounce(null), 7000);
+    return () => clearTimeout(t);
+  }, [lastSys?.id]); // eslint-disable-line
   const storyCfg = sess.config.story;
   const chapter = storyCfg ? chapterOf(storyCfg.chapter) : null;
   const g = sess.game;
@@ -37,7 +47,7 @@ export function GameScreen({ sess }: { sess: Session }) {
   const tourney = sess.config.mode === 'sng' || sess.config.mode === 'headsup-sng' || sess.config.mode === 'mtt';
   const roundsLeft = mtt ? HANDS_PER_LEVEL[sess.config.speed] - (mtt.round % HANDS_PER_LEVEL[sess.config.speed]) : HANDS_PER_LEVEL[sess.config.speed] - sess.levelHand;
   const over = sessionOver(sess);
-  const nextBl = tourney ? blindStructure(sess.config.bb)[Math.min(sess.level + 1, 16)] : null;
+  const nextBl = tourney ? blindStructure(sess.config.bb)[Math.min(sess.level + 1, LEVEL_COUNT - 1)] : null;
   const rec = sess.records[sess.records.length - 1];
   const alive = g.players.filter((p) => !p.busted).length;
   const effBB = (() => { const live = g.players.filter((p) => p.inHand && !p.folded || (complete && p.stack > 0)); if (live.length < 2) return null; const st = live.map((p) => p.stack + p.bet).sort((a, b) => b - a); return Math.min(hero.stack + hero.bet, st[0] === hero.stack + hero.bet ? st[1] : st[0]) / g.config.bb; })();
@@ -59,9 +69,6 @@ export function GameScreen({ sess }: { sess: Session }) {
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => quit()} data-testid="btn-menu">☰ 메뉴</button>
         <div className="flex-1 truncate" data-testid="blinds">
           블라인드 {bl.sb}/{bl.bb}{bl.ante ? ` 앤티 ${bl.ante}` : ''} · 핸드 #{g.handNo}{effBB !== null ? ` · 유효 ${effBB.toFixed(1)}BB` : ''}
-          {tourney && ` · 레벨 ${sess.level + 1} (${roundsLeft}핸드 후 ${nextBl?.sb}/${nextBl?.bb})`}
-          {tourney && !mtt && ` · 생존 ${alive}/${g.players.length}`}
-          {mtt && ` · 남은 ${mtt.remaining}/${mtt.config.entrants + mtt.entries - 1}명 · 테이블 ${mtt.tables.length}개${mtt.bubble ? ' · 버블' : ''}${mtt.finalTable ? ' · 파이널 테이블' : ''}`}
           {sess.config.mode === 'trainer' && ' · 훈련 모드'}
           {chapter && ` · 챕터 ${chapter.id} · 순자산 ${netWorth(story, hero.stack + hero.bet).toLocaleString()} / ${chapter.goalNetWorth.toLocaleString()}`}
         </div>
@@ -73,6 +80,8 @@ export function GameScreen({ sess }: { sess: Session }) {
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => setPanel(panel === 'log' ? null : 'log')} data-testid="btn-log">기록</button>
       </header>
       <div className="flex-1 min-h-0 overflow-y-auto">
+        {announce && <div className="mx-2 mt-2 rounded-lg bg-amber-500 text-black font-semibold text-xs sm:text-sm px-3 py-2 shadow-lg" role="alert" data-testid="announce">📣 {announce}</div>}
+        {tourney && <TourneyHud sess={sess} />}
         <TableView sess={sess} bubble={bubble} />
         {feed.length > 0 && <StoryFeed lines={feed} />}
         {panel === 'log' && (
@@ -104,8 +113,10 @@ export function GameScreen({ sess }: { sess: Session }) {
             )}
             {mtt && over && (
               <div className="p-3 rounded-lg bg-indigo-900/60 space-y-1 text-sm" data-testid="mtt-over">
-                <div className="text-lg font-bold">{mtt.places['hero'] === 1 ? '🏆 우승!' : `최종 ${mtt.places['hero'] ?? '-'}위 / ${mtt.config.entrants + mtt.entries - 1}명`}</div>
+                <div className="text-lg font-bold">{mtt.places['hero'] === 1 ? '🏆 우승!' : `최종 ${mtt.places['hero'] ?? '-'}위 / ${mtt.totalEntries}명`}</div>
                 <div>상금 {mtt.heroPrize.toLocaleString()} · 바이인 {(mtt.config.buyIn * mtt.entries).toLocaleString()} · ROI {(((mtt.heroPrize - mtt.config.buyIn * mtt.entries) / (mtt.config.buyIn * mtt.entries)) * 100).toFixed(0)}% (가상 칩)</div>
+                {!mtt.finished && <button className="btn !min-h-[34px] !py-1 bg-slate-700 text-xs" onClick={() => simToEnd()} disabled={busy} data-testid="btn-sim-end">{busy ? '진행 중…' : '남은 대회 끝까지 진행해 우승자 보기'}</button>}
+                {mtt.finished && mtt.winner && <div className="text-sm" data-testid="mtt-winner">우승: {mtt.names[mtt.winner] ?? mtt.winner}</div>}
                 {mtt.icmLog.length > 0 && (
                   <div className="text-xs" data-testid="icm-log">
                     <div className="font-semibold mt-1">ICM 사후 분석 (파이널 테이블, 근사)</div>
@@ -121,7 +132,7 @@ export function GameScreen({ sess }: { sess: Session }) {
                 <div className="text-sm">토너먼트 순위: {g.players.slice().sort((a, b) => (a.finishPlace ?? 99) - (b.finishPlace ?? 99)).map((p) => `${p.finishPlace ?? '-'}. ${p.name}`).join(' · ')}</div>
               </div>
             )}
-            {rec && settings.autoCoach && <CoachCard rec={rec} onDetail={() => setReview(!review)} detailOpen={review} />}
+            {rec && settings.autoCoach && <CoachCard tctx={(() => { const ts = tourneyStatus(sess); return ts ? { M: ts.M, zone: ts.zone, zoneLabel: ZONE_LABEL[ts.zone], nearBubble: ts.nearBubble, bubble: ts.bubble, stageLabel: STAGES[ts.stageIndex].label, heroVsAvg: ts.heroVsAvg } : undefined; })()} rec={rec} onDetail={() => setReview(!review)} detailOpen={review} />}
             {review && rec && <ReviewPanel rec={rec} defaultLevel="detail" />}
           </div>
         )}

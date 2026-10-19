@@ -79,7 +79,21 @@ function describeMistake(d: DecisionReview, bb: number): string {
   return d.lesson;
 }
 
-export function quickCoach(rec: HandRecord, review: HandReview, luck: LuckResult | null): QuickCoach {
+export interface TourneyCtx { M: number; zoneLabel: string; zone: string; nearBubble: boolean; bubble: boolean; stageLabel: string; heroVsAvg: number }
+
+/** 토너먼트 맥락 코멘트: 스택 깊이(M)와 버블 압력에 따라 같은 플레이의 의미가 달라진다 */
+export function tournamentNotes(ctx: TourneyCtx): string[] {
+  const out: string[] = [];
+  if (ctx.zone === 'shove') out.push(`M=${ctx.M.toFixed(1)} (${ctx.zoneLabel}): 한두 바퀴면 블라인드에 잠식됩니다. 이 구간에서는 콜·체크 플레이보다 푸시/폴드가 기본입니다.`);
+  else if (ctx.zone === 'danger') out.push(`M=${ctx.M.toFixed(1)} (${ctx.zoneLabel}): 포스트플랍 회전이 어렵습니다. 레이즈하면 올인까지 갈 각오로 시작하세요.`);
+  else if (ctx.zone === 'pressure') out.push(`M=${ctx.M.toFixed(1)} (${ctx.zoneLabel}): 깊은 스택의 플레이는 끝났습니다. 3벳/리쉬브로 팟을 키우는 옵션을 보세요.`);
+  if (ctx.bubble) out.push('버블입니다. 평균 이하 스택은 무리한 콜을 피하고, 큰 스택은 중간 스택을 압박하는 구간입니다 (ICM).');
+  else if (ctx.nearBubble) out.push(`입상권이 가깝습니다(${ctx.stageLabel}). 탈락 위험이 있는 콜은 칩 가치보다 상금 가치(ICM)가 더 크게 깎입니다.`);
+  if (ctx.heroVsAvg >= 1.8) out.push(`평균의 ${ctx.heroVsAvg.toFixed(1)}배 스택입니다. 숏스택을 상대로 포지션과 압박을 무기로 쓰세요.`);
+  return out;
+}
+
+export function quickCoach(rec: HandRecord, review: HandReview, luck: LuckResult | null, tctx?: TourneyCtx): QuickCoach {
   const bb = rec.config.bb;
   const net = review.heroNet;
   const ds = review.decisions;
@@ -120,7 +134,8 @@ export function quickCoach(rec: HandRecord, review: HandReview, luck: LuckResult
   }
   if (net < 0 && tone === 'good' && !luck?.applicable) points.push('져도 판단이 합리적이었다면 장기적으로는 이득입니다. 결과와 판단을 분리해서 보세요.');
   if (net > 0 && tone === 'warn') points.push('이겼지만 위의 판단은 반복하면 손해로 이어집니다. 결과(운)에 속지 마세요.');
-  return { tone, headline, points: points.slice(0, 4), keyDecisionIndex: keyIdx, luck };
+  const tn = tctx ? tournamentNotes(tctx) : [];
+  return { tone, headline, points: [...points.slice(0, 3), ...tn.slice(0, 2)], keyDecisionIndex: keyIdx, luck };
 }
 
 // ───────────────────────── 심층 분석 리포트 ─────────────────────────

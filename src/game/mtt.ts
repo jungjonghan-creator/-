@@ -1,5 +1,5 @@
 import { AISetup, Difficulty, PROFILE_IDS } from '../ai/profiles';
-import { aiStep, beginHand, blindStructure, HANDS_PER_LEVEL, Session, SessionConfig, Speed } from './session';
+import { aiStep, beginHand, blindStructure, LEVEL_COUNT, HANDS_PER_LEVEL, Session, SessionConfig, Speed } from './session';
 import { icm, payoutStructure } from './icm';
 import { createGame, makePlayer, startHand } from '../engine/game';
 import { createRng, RNG } from '../engine/rng';
@@ -12,6 +12,12 @@ export interface MTTConfig {
   reentry: boolean;       // 사람 재진입 허용
   reentryUntilLevel: number;
   maxReentries: number;
+  /** 레이트 등록: 이 레벨(1부터)까지 라운드마다 신규 참가자 입장 (0/미지정 = 없음) */
+  lateRegUntilLevel?: number;
+  /** 라운드당 평균 신규 입장 인원 */
+  lateRegPerRound?: number;
+  /** 탈락한 AI 가 레이트 등록 시간 안에 재진입 */
+  aiReentry?: boolean;
 }
 
 export interface MTTTable { id: number; game: GameState }
@@ -27,6 +33,13 @@ export interface MTTState {
   names: Record<string, string>;
   remaining: number;
   entries: number;               // 사람의 총 엔트리 수 (재진입 포함)
+  /** 총 엔트리 수 (초기 + 레이트 등록 + 재진입). 최종 순위의 기준 */
+  totalEntries: number;
+  /** 탈락 엔트리 id (먼저 탈락 = 낮은 순위). 순위 = totalEntries − index */
+  bustSeq: string[];
+  registrationOpen: boolean;
+  lateJoined: number;
+  aiCounter: number;
   heroOut: boolean;
   heroCanReenter: boolean;
   finished: boolean;
@@ -35,6 +48,8 @@ export interface MTTState {
   bubble: boolean;
   finalTable: boolean;
   nextTableId: number;
+  /** 탈락 기록 (최신이 마지막). 실제 온라인 토너먼트의 탈락 알림용 */
+  elims: { id: string; name: string; place: number; round: number }[];
   icmLog: { round: number; players: number; heroStack: number; chipShare: number; icmShare: number | null }[];
   log: string[];
 }
@@ -69,7 +84,7 @@ export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais'
   const payouts = payoutStructure(cfg.entrants, cfg.buyIn);
   const mtt: MTTState = {
     config: cfg, tables, heroTable: heroTable.id, round: 0, startStack: stack, prizePool: cfg.buyIn * cfg.entrants, payouts, places: {}, names,
-    remaining: cfg.entrants, entries: 1, heroOut: false, heroCanReenter: false, finished: false, heroPrize: 0, bubble: false, finalTable: false, nextTableId: nTables, icmLog: [], log: [],
+    remaining: cfg.entrants, entries: 1, totalEntries: cfg.entrants, bustSeq: [], registrationOpen: (cfg.lateRegUntilLevel ?? 0) > 0, lateJoined: 0, aiCounter: cfg.entrants - 1, heroOut: false, heroCanReenter: false, finished: false, heroPrize: 0, bubble: false, finalTable: false, nextTableId: nTables, elims: [], icmLog: [], log: [],
   };
   const config: SessionConfig = { mode: 'mtt', seats: cfg.tableSize, startBB: base.startBB, bb: base.bb, speed: base.speed, humanName: base.humanName, ais: [], seed: base.seed };
   return {
@@ -80,7 +95,7 @@ export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais'
 const heroGame = (m: MTTState) => (m.heroTable === null ? null : m.tables.find((t) => t.id === m.heroTable)!.game);
 
 function setBlinds(g: GameState, bb: number, level: number, base: number) {
-  const l = blindStructure(base)[Math.min(level, 16)];
+  const l = blindStructure(base)[Math.min(level, LEVEL_COUNT - 1)];
   void bb;
   g.config = { ...g.config, sb: l.sb, bb: l.bb, ante: l.ante };
 }
@@ -138,9 +153,10 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
   for (const tb of m.tables) {
     tb.game.players.forEach((p, i) => { if (p.stack === 0 && p.id in m.names) busts.push({ id: p.id, start: tb.game.startStacks[i] ?? 0 }); });
   }
-  const before = m.remaining;
   busts.sort((a, b) => a.start - b.start); // 작은 스택 먼저 = 더 낮은 순위
-  busts.forEach((b, k) => { m.places[b.id] = before - k; });
+  busts.forEach((b) => { m.bustSeq.push(b.id); });
+  recomputePlaces(m);
+  busts.forEach((b) => { m.elims.push({ id: b.id, name: m.names[b.id] ?? b.id, place: m.places[b.id], round: m.round + 1 }); });
   m.remaining -= busts.length;
   const bustIds = new Set(busts.map((b) => b.id));
   for (const tb of m.tables) tb.game = removePlayers(tb.game, bustIds);
@@ -152,10 +168,27 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
     m.log.push(`탈락: ${place}위${m.heroPrize ? ` (상금 ${m.heroPrize.toLocaleString()})` : ''}`);
   }
   m.round++;
+  // 2.5) 레이트 등록 / AI 재진입 (종료 판정 전에 인원 반영)
+  const lvNow = level + 1;
+  const open = (m.config.lateRegUntilLevel ?? 0) >= lvNow && m.remaining > 1;
+  if (open) {
+    const per = m.config.lateRegPerRound ?? 0;
+    let add = Math.floor(per) + (rng.next() < per - Math.floor(per) ? 1 : 0);
+    if (m.config.aiReentry) for (const b of busts) if (b.id !== 'hero' && !b.id.startsWith('hero#') && rng.next() < 0.22) add++;
+    const joined = addLateEntrants(m, add, rng, sess);
+    sess = { ...sess, aiById: { ...(sess.aiById ?? {}), ...joined } };
+  } else if (m.registrationOpen) {
+    m.registrationOpen = false;
+    m.log.push(`레이트 등록 마감 — 총 ${m.totalEntries}엔트리`);
+  }
+  m.payouts = payoutStructure(m.totalEntries, m.config.buyIn);
+  m.prizePool = m.config.buyIn * m.totalEntries;
+  recomputePlaces(m);
+  if (bustIds.has('hero')) { const place = m.places['hero']; m.heroPrize = m.payouts[place - 1] ?? 0; }
   // 3) 종료 판정
   if (m.remaining <= 1) {
     const w = m.tables.flatMap((t) => t.game.players).find((p) => p.stack > 0);
-    if (w) { m.places[w.id] = 1; m.winner = w.id; if (w.id === 'hero') { m.heroPrize = m.payouts[0]; m.heroOut = false; } }
+    if (w) { m.places[w.id] = 1; m.winner = w.id; m.registrationOpen = false; if (w.id === 'hero') { m.heroPrize = m.payouts[0]; m.heroOut = false; } }
     m.finished = true; m.heroCanReenter = false;
   } else rebalance(m, sess.config.speed);
 
@@ -175,6 +208,36 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
   }
   const ng = blankHand(hg ?? sess.game);
   return { ...sess, mtt: m, game: ng, level };
+}
+
+function recomputePlaces(m: MTTState) {
+  m.bustSeq.forEach((id, i) => { m.places[id] = m.totalEntries - i; });
+}
+
+/** 신규 AI 참가자를 자리가 있는 테이블(없으면 새 테이블)에 착석 */
+function addLateEntrants(m: MTTState, n: number, rng: RNG, sess: Session): Record<string, AISetup> {
+  const out: Record<string, AISetup> = {};
+  const size = m.config.tableSize;
+  const baseDiff = (sess.aiById?.ai0?.difficulty ?? 3) as Difficulty;
+  for (let k = 0; k < n; k++) {
+    m.aiCounter++;
+    const id = `ai${m.aiCounter}`;
+    const diff = Math.max(1, Math.min(5, baseDiff + (rng.int(3) - 1))) as Difficulty;
+    const setup: AISetup = { profileId: PROFILE_IDS[rng.int(PROFILE_IDS.length)], difficulty: diff };
+    out[id] = setup;
+    m.names[id] = `Bot${String(m.aiCounter + 1).padStart(2, '0')}`;
+    const p = makePlayer(id, m.names[id], m.startStack, false, setup.profileId);
+    const open = m.tables.filter((t) => t.game.players.length < size);
+    if (open.length) { const t = open.reduce((a, b) => (b.game.players.length < a.game.players.length ? b : a)); t.game = addPlayer(t.game, p); }
+    else {
+      const lv = blindStructure(sess.config.bb)[Math.min(sess.level, LEVEL_COUNT - 1)];
+      const dummy = `__tmp${id}`;
+      const g0 = createGame({ sb: lv.sb, bb: lv.bb, ante: lv.ante, maxSeats: size }, [p, makePlayer(dummy, 'tmp', 1, false)], m.aiCounter);
+      m.tables.push({ id: m.nextTableId++, game: removePlayers(g0, new Set([dummy])) });
+    }
+    m.totalEntries++; m.remaining++; m.lateJoined++;
+  }
+  return out;
 }
 
 /** 핸드 사이에 플레이어 구성이 바뀔 수 있으므로 직전 핸드의 카드/좌석 종속 정보를 비운다 */
@@ -233,10 +296,15 @@ export function mttReenter(sess: Session): Session {
   if (!m.heroCanReenter) throw new Error('재진입 불가');
   const t = m.tables.reduce((a, b) => (b.game.players.length < a.game.players.length ? b : a));
   if (t.game.players.length >= m.config.tableSize) throw new Error('빈 좌석 없음');
+  // 이전 엔트리의 탈락 기록은 hero#n 으로 보존 (새 엔트리가 'hero' 를 이어받음)
+  const old = `hero#${m.entries}`;
+  m.bustSeq = m.bustSeq.map((x) => (x === 'hero' ? old : x));
+  m.names[old] = m.names['hero']; delete m.places['hero'];
   t.game = addPlayer(t.game, makePlayer('hero', m.names['hero'], m.startStack, true));
   m.heroTable = t.id; m.heroOut = false; m.heroCanReenter = false; m.entries++;
-  m.remaining++; m.prizePool += m.config.buyIn; delete m.places['hero']; m.heroPrize = 0;
-  m.payouts = payoutStructure(m.config.entrants + (m.entries - 1), m.config.buyIn);
+  m.remaining++; m.totalEntries++; m.heroPrize = 0;
+  m.payouts = payoutStructure(m.totalEntries, m.config.buyIn); m.prizePool = m.config.buyIn * m.totalEntries;
+  recomputePlaces(m);
   return { ...sess, mtt: m, game: blankHand(t.game) };
 }
 

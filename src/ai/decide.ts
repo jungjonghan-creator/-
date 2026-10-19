@@ -55,6 +55,13 @@ export function sanitize(a: Action | AllInAction, obs: Observation): Action | Al
   return a;
 }
 
+/** 버블 압력 0~1 (남은 인원 − 입상 인원: 1→1.0, 2→0.6, 3→0.3) */
+export function bubbleFactor(obs: Observation): number {
+  if (!obs.tournament) return 0;
+  const d = obs.tournament.playersLeft - obs.tournament.paid;
+  return d === 1 ? 1 : d === 2 ? 0.6 : d === 3 ? 0.3 : 0;
+}
+
 function raiseTo(obs: Observation, to: number): Action | AllInAction {
   const l = obs.legal;
   if (!l.canRaise) return l.canCall ? { type: 'call' } : { type: 'check' };
@@ -103,11 +110,16 @@ function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng
 
   const nHands = opp.length + 1;
   const tableScale = nHands >= 8 ? 0.85 : 1;
+  // 토너먼트 압력: 버블 근처에서는 중간 스택이 타이트해지고, 큰 스택은 압박을 건다
+  const bf = bubbleFactor(obs);
+  const ratio = obs.tournament ? hero.stack / Math.max(1, obs.tournament.avgStack) : 1;
+  const icmTight = bf > 0 && ratio >= 0.5 && ratio <= 1.8 && bbs > 12 ? 1 - 0.3 * bf : 1;
+  const bigPress = bf > 0 && ratio > 1.8 ? 1 + 0.25 * bf : 1;
 
   if (raises === 0) {
     // 오픈 (BB 는 체크 옵션)
     const base = OPEN_BASE[pos] ?? 0.2;
-    let openPct = clamp(base * st.vpipMul * tableScale * (limpers > 0 ? 0.8 : 1), 0, 0.95);
+    let openPct = clamp(base * st.vpipMul * tableScale * (limpers > 0 ? 0.8 : 1) * (icmTight < 1 ? 0.88 : 1) * bigPress, 0, 0.95);
     if (pos === 'BB') {
       // 림퍼 고립 레이즈
       if (limpers > 0 && pct <= 0.12 * st.threeBet * st.vpipMul) return { action: raiseTo(obs, (st.openSize + limpers) * bb + bb), info: info('림퍼 고립') };
@@ -140,8 +152,8 @@ function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng
   const posBonus = ['BTN', 'BTN/SB', 'CO'].includes(pos) ? 1.3 : pos === 'BB' ? 1.25 : 1;
   const posPenalty = ['UTG', 'UTG+1'].includes(pos) ? 0.8 : 1;
   if (raises === 1) {
-    const tb = clamp(0.045 * st.threeBet * (lateOpener ? 1.6 : 1) * widen * posPenalty, 0.01, 0.4);
-    const callPct = clamp(0.11 * st.vpipMul * posBonus * sizePenalty * foldAdj * widen, 0.01, 0.8);
+    const tb = clamp(0.045 * st.threeBet * (lateOpener ? 1.6 : 1) * widen * posPenalty * bigPress, 0.01, 0.4);
+    const callPct = clamp(0.11 * st.vpipMul * posBonus * sizePenalty * foldAdj * widen * icmTight, 0.01, 0.8);
     const toCall = l.callAmount;
     const potOddsNeed = toCall / (obs.pot + toCall);
     if (pct <= tb) {
@@ -157,7 +169,7 @@ function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng
     return { action: { type: 'fold' }, info: info('폴드', potOddsNeed) };
   }
   // 4벳 이상
-  const cont = clamp((raises === 2 ? 0.03 : 0.015) * foldAdj * st.threeBet * widen, 0.005, 0.2);
+  const cont = clamp((raises === 2 ? 0.03 : 0.015) * foldAdj * st.threeBet * widen * icmTight, 0.005, 0.2);
   if (pct <= cont) return { action: pct < 0.012 ? { type: 'allin' } : l.canRaise ? raiseTo(obs, lastRaiseTo * 2.3) : { type: 'call' }, info: info('4벳+') };
   const toCall = l.callAmount;
   if (pct <= cont * 1.8 && toCall / (obs.pot + toCall) < 0.4) return { action: { type: 'call' }, info: info('콜 (4벳+)') };
@@ -233,7 +245,8 @@ function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rn
   if (l.canCall) {
     // 베팅에 직면
     const odds = toCall / (pot + toCall);
-    const need = clamp(odds * skill.potOddsAware + 0.38 * (1 - skill.potOddsAware) - (st.bluffCatch - 0.5) * 0.12 - callAdj + (nOpp > 1 ? 0.02 : 0), 0.05, 0.97);
+    const icmPrem = obs.tournament ? bubbleFactor(obs) * 0.05 * (obs.tournament && hero.stack / Math.max(1, obs.tournament.avgStack) <= 1.8 ? 1 : 0) : 0;
+    const need = clamp(odds * skill.potOddsAware + 0.38 * (1 - skill.potOddsAware) - (st.bluffCatch - 0.5) * 0.12 - callAdj + (nOpp > 1 ? 0.02 : 0) + icmPrem, 0.05, 0.97);
     const valueRaise = st.valueThresh + 0.17;
     if (l.canRaise && eq >= valueRaise && rng.next() < 0.45 + st.checkRaise * 2 + (inPosition ? 0.1 : 0)) {
       return { action: raiseTo(obs, obs.currentBet * (2.6 + st.betSize * 0.6) + 0), info: info('밸류 레이즈', need) };

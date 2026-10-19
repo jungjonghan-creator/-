@@ -1,5 +1,5 @@
 import { createRng } from '../engine/rng';
-import { mttAdvance } from './mtt';
+import { mttAdvance, mttSimToEnd } from './mtt';
 import type { Session } from './session';
 
 let worker: Worker | null = null;
@@ -30,5 +30,16 @@ export function mttAdvanceAsync(sess: Session, seed: number): Promise<Session> {
     const id = ++seq;
     pending.set(id, { resolve, reject });
     w.postMessage({ id, sess, seed });
+  });
+}
+
+/** 사람이 탈락한 뒤 남은 대회를 끝까지 시뮬레이션해 최종 순위를 확정한다 */
+export function mttSimToEndAsync(sess: Session, seed: number): Promise<Session> {
+  const w = getWorker();
+  if (!w) return Promise.resolve(mttSimToEnd(sess, createRng(seed)));
+  return new Promise((resolve, reject) => {
+    const id = ++seq;
+    pending.set(id, { resolve, reject });
+    w.postMessage({ id, sess, seed, kind: 'toEnd' });
   });
 }
