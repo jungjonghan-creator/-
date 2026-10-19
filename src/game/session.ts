@@ -21,6 +21,9 @@ export interface SessionConfig {
   humanName: string;
   ais: AISetup[];           // seats-1 개
   seed: number;
+  /** 스토리 모드: AI 표시 이름과 챕터 정보 */
+  aiNames?: string[];
+  story?: { chapter: number; buyIn: number };
 }
 
 export interface Session {
@@ -34,6 +37,9 @@ export interface Session {
   aiById?: Record<string, AISetup>;
   mtt?: import('./mtt').MTTState;
   tourneyRecorded?: boolean;
+  /** 해설/대사 피드 (스토리·해설) */
+  feed?: import('../story/director').StoryLine[];
+  directedHand?: number;
   level: number;
   levelHand: number;        // 현재 레벨에서 치른 핸드 수
   startedAt: number;
@@ -65,7 +71,7 @@ export function newSession(config: SessionConfig): Session {
   const aiById: Record<string, AISetup> = {};
   const names = ['NOVA', 'ORION', 'LYRA', 'VEGA', 'ATLAS', 'IRIS', 'RIGEL', 'SIRIUS'];
   config.ais.forEach((ai, i) => {
-    players.push(makePlayer(`ai${i}`, names[i % names.length], stack, false, ai.profileId));
+    players.push(makePlayer(`ai${i}`, config.aiNames?.[i] ?? names[i % names.length], stack, false, ai.profileId));
     aiBySeat[i + 1] = ai;
     aiById[`ai${i}`] = ai;
   });

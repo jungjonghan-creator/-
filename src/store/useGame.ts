@@ -8,10 +8,15 @@ import { Difficulty } from '../ai/profiles';
 import { aiStep, beginHand, humanAct, isAITurn, newSession, rebuy, Session, SessionConfig, sessionOver, handOver } from '../game/session';
 import { clearSession, loadKV, loadSession, saveKV, saveSession } from '../persist/db';
 import { sfx, setMuted } from '../sound';
+import { CHAPTERS } from '../story/chapters';
+import { CHARACTERS, rivalDifficulty } from '../story/characters';
+import { directHand, sessionHighlights, StoryLine } from '../story/director';
+import { leave, needsLoan, newStory, sit, StoryState, takeLoan, topUp, chapterOf } from '../story/state';
 
-export type Screen = 'menu' | 'table' | 'stats' | 'history' | 'trainer';
-export interface Settings { sound: boolean; animMs: number; revealAI: boolean; hints: boolean }
-const DEFAULT_SETTINGS: Settings = { sound: true, animMs: 450, revealAI: false, hints: false };
+
+export type Screen = 'menu' | 'table' | 'stats' | 'history' | 'trainer' | 'coach' | 'story';
+export interface Settings { sound: boolean; animMs: number; revealAI: boolean; hints: boolean; autoCoach: boolean }
+const DEFAULT_SETTINGS: Settings = { sound: true, animMs: 450, revealAI: false, hints: false, autoCoach: true };
 
 export interface TourneyResult { date: number; mode: string; entrants: number; place: number; prize: number; buyIn: number; entries: number }
 export type RecordGroup = 'competitive' | 'training';
@@ -40,6 +45,12 @@ interface Store {
   act(a: Action | AllInAction, token: string): void;
   nextHand(): void;
   doRebuy(amount: number): void;
+  story: StoryState;
+  startStory(chapterId: number, buyInBBs: number): void;
+  leaveStory(): void;
+  takeStoryLoan(): void;
+  loanRebuy(): void;
+  dismissChapterClear(): void;
   setScreen(s: Screen): void;
   setSettings(p: Partial<Settings>): void;
   quit(): Promise<void>;
@@ -63,12 +74,27 @@ export const useGame = create<Store>((set, get) => {
   const persist = (s: Session) => { void saveSession(s).catch(() => set({ notice: '저장 실패 (저장소 접근 불가)' })); };
   const commit = (s: Session) => { set({ session: s }); persist(s); };
 
+  /** 핸드 종료 직후 해설/대사를 피드에 추가 (핸드당 1회) */
+  function direct() {
+    const s = get().session;
+    if (!s || !s.records.length) return;
+    const rec = s.records[s.records.length - 1];
+    if ((s.directedHand ?? 0) >= rec.handNo) return;
+    const heroSeat = rec.startStacks.find((x) => x.id === 'hero')!.seat;
+    let lines: StoryLine[] = [];
+    try { lines = directHand({ rec, heroSeat, history: s.records.slice(0, -1), memory: s.memory, characters: !!s.config.story }); } catch { /* 연출 실패는 게임을 막지 않는다 */ }
+    commit({ ...s, feed: [...(s.feed ?? []), ...lines].slice(-60), directedHand: rec.handNo });
+  }
+
   async function runAI(myGen: number) {
     set({ busy: true });
     while (gen === myGen) {
       const s = get().session;
       if (!s || !isAITurn(s)) break;
-      const ms = get().skip ? 0 : get().settings.animMs;
+      const seatNow = s.game.toAct as number;
+      const prof = s.aiById?.[s.game.players[seatNow].id]?.profileId ?? s.aiBySeat[seatNow]?.profileId;
+      const think = ({ Maniac: 0.6, CallingStation: 0.9, Nit: 1.5, TAG: 1.1, AdaptivePro: 1.3 } as Record<string, number>)[prof ?? ''] ?? 1;
+      const ms = get().skip ? 0 : Math.round(get().settings.animMs * think * (0.7 + ((s.game.events.length * 37 + seatNow * 11) % 7) / 10));
       if (ms > 0) await delay(ms);
       if (gen !== myGen) return;
       const cur = get().session!;
@@ -83,6 +109,7 @@ export const useGame = create<Store>((set, get) => {
     if (gen === myGen) {
       set({ busy: false, skip: false });
       const s = get().session;
+      if (s && handOver(s)) direct();
       if (s && handOver(s) && sessionOver(s)) get().finalizeTourney();
       if (s && handOver(s) && get().settings.sound) {
         const hero = s.game.players.findIndex((p) => p.isHuman);
@@ -95,12 +122,15 @@ export const useGame = create<Store>((set, get) => {
     tourneys: [],
     archive: { competitive: [], training: [] },
     recordsFor(g) { const s = get().session; return [...get().archive[g], ...(s && groupOf(s) === g ? s.records : [])]; },
+    story: newStory(),
     skip: false,
     skipAI() { set({ skip: true }); },
     session: null, screen: 'menu', busy: false, settings: DEFAULT_SETTINGS, notice: null, corrupt: null, hasSave: false,
     async init() {
       const st = await loadKV<Settings>('settings');
       if (st) { set({ settings: { ...DEFAULT_SETTINGS, ...st } }); setMuted(!st.sound); }
+      const sty = await loadKV<StoryState>('story');
+      if (sty && sty.version === 1) set({ story: sty });
       const tr = await loadKV<TourneyResult[]>('tourneys');
       if (tr) set({ tourneys: tr });
       const ar = await loadKV<Record<RecordGroup, HandRecord[]>>('archive');
@@ -195,8 +225,58 @@ export const useGame = create<Store>((set, get) => {
     },
     doRebuy(amount) {
       const s = get().session; if (!s) return;
-      try { commit(rebuy(s, s.game.players.findIndex((p) => p.isHuman), amount)); } catch (e) { set({ notice: (e as Error).message }); }
+      try {
+        if (s.config.story) {
+          const st = topUp(get().story, amount);
+          set({ story: st }); void saveKV('story', st);
+        }
+        commit(rebuy(s, s.game.players.findIndex((p) => p.isHuman), amount));
+      } catch (e) { set({ notice: (e as Error).message }); }
     },
+    startStory(chapterId, bbs) {
+      const ch = chapterOf(chapterId);
+      gen++;
+      try {
+        const st = sit(get().story, ch, bbs);
+        archiveOld();
+        const rivals = ch.rivals.map((r) => ({ c: CHARACTERS[r.id], d: rivalDifficulty(r.id, r.difficulty) }));
+        let s = newSession({
+          mode: 'cash', seats: ch.seats, startBB: bbs, bb: ch.bb, speed: 'normal', humanName: 'TETO', seed: randomSeed(),
+          ais: rivals.map((r) => ({ profileId: r.c.profileId, difficulty: r.d })), aiNames: rivals.map((r) => r.c.name),
+          story: { chapter: ch.id, buyIn: bbs * ch.bb },
+        });
+        const intro: StoryLine = { id: 'intro', handNo: 0, kind: 'narr', speaker: '해설', emoji: '🎙️', text: ch.intro[0], ts: Date.now() };
+        s = { ...s, feed: [intro] };
+        s = beginHand(s);
+        set({ story: st, session: s, screen: 'table', notice: null }); void saveKV('story', st); persist(s);
+        void runAI(gen);
+      } catch (e) { set({ notice: (e as Error).message }); }
+    },
+    leaveStory() {
+      const s = get().session; if (!s?.config.story) return;
+      gen++;
+      const hero = s.game.players.find((p) => p.isHuman)!;
+      // 진행 중인 핸드의 내 투입분은 포기한 것으로 처리 (핸드 종료 시에만 버튼 노출)
+      const hl = sessionHighlights(s.records);
+      const st = leave(get().story, hero.stack, s.records.length, hl.headline, hl.best, hl.worst);
+      archiveOld();
+      set({ story: st, session: null, screen: 'story', busy: false, hasSave: false });
+      void saveKV('story', st); void clearSession();
+    },
+    takeStoryLoan() {
+      const st = takeLoan(get().story, chapterOf(get().story.chapter));
+      set({ story: st }); void saveKV('story', st);
+    },
+    loanRebuy() {
+      const s = get().session; if (!s?.config.story) return;
+      const ch = chapterOf(s.config.story.chapter);
+      let st = takeLoan(get().story, ch);
+      const amount = s.config.startBB * s.config.bb;
+      try { st = topUp(st, amount); } catch (e) { set({ notice: (e as Error).message }); return; }
+      set({ story: st }); void saveKV('story', st);
+      commit(rebuy(s, s.game.players.findIndex((p) => p.isHuman), amount));
+    },
+    dismissChapterClear() { const st = { ...get().story, chapterJustCleared: null }; set({ story: st }); void saveKV('story', st); },
     setScreen(screen) { set({ screen }); },
     setSettings(p) {
       const settings = { ...get().settings, ...p };

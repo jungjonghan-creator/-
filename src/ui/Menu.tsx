@@ -38,6 +38,10 @@ export function Menu() {
           <button className="btn !min-h-[34px] bg-rose-700 text-xs" onClick={() => dismissCorrupt()}>손상된 저장 삭제</button>
         </div>
       )}
+      <button className="w-full text-left rounded-xl p-3 bg-gradient-to-r from-indigo-900 to-slate-900 border border-indigo-500/60" onClick={() => setScreen('story')} data-testid="nav-story">
+        <div className="font-bold">스토리 모드 — 더 서킷</div>
+        <div className="text-xs text-slate-300">3,000칩으로 시작해 지하 클럽에서 정상까지. 자본·라이벌·챕터가 이어집니다.</div>
+      </button>
       {hasSave && <button className="btn w-full bg-emerald-600" onClick={() => resume()} data-testid="btn-resume">▶ 이어하기</button>}
       <section className="space-y-2">
         <h2 className="font-bold">게임 모드</h2>
@@ -87,7 +91,8 @@ export function Menu() {
       </section>
       <input className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} aria-label="이름" />
       <button className="btn w-full bg-gradient-to-r from-sky-600 to-indigo-600 text-lg" onClick={go} data-testid="btn-start">게임 시작</button>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button className="btn bg-indigo-800 text-sm" onClick={() => setScreen('coach')} data-testid="nav-coach">분석실</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('stats')} data-testid="nav-stats">통계</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('history')} data-testid="nav-history">핸드 기록</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('trainer')} data-testid="nav-trainer">푸시/폴드·스팟 훈련</button>

@@ -13,7 +13,7 @@ export function seatXY(rel: number, n: number) {
   return { x: 50 + 40 * Math.cos(ang), y: 50 + 37 * Math.sin(ang), ix: 50 + 23 * Math.cos(ang), iy: 50 + 21 * Math.sin(ang) };
 }
 
-export function TableView({ sess, revealAll = false }: { sess: Session; revealAll?: boolean }) {
+export function TableView({ sess, revealAll = false, bubble = null }: { sess: Session; revealAll?: boolean; bubble?: { name: string; text: string } | null }) {
   const g = sess.game;
   const { settings } = useGame();
   const heroSeat = g.players.findIndex((p) => p.isHuman);
@@ -53,6 +53,12 @@ export function TableView({ sess, revealAll = false }: { sess: Session; revealAl
           const inactive = p.busted || !p.inHand;
           return (
             <div key={p.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%` }} data-testid={`seat-${i}`}>
+              {bubble && bubble.name === p.name && (
+                <div className="absolute z-20 left-1/2 -translate-x-1/2 bottom-[calc(100%-6px)] w-[8.5rem] sm:w-48 rounded-xl bg-white text-slate-900 text-[10px] sm:text-xs px-2 py-1 shadow-lg chip-pop leading-snug" data-testid="bubble" role="status">
+                  {bubble.text}
+                  <span className="absolute left-1/2 -bottom-1 w-2 h-2 bg-white rotate-45 -translate-x-1/2" aria-hidden />
+                </div>
+              )}
               <div className={`flex flex-col items-center ${p.folded || inactive ? 'opacity-50' : ''}`}>
                 <div className="flex -mb-2 z-10">
                   {p.inHand && !p.folded && p.hole.map((c, k) => (

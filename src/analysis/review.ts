@@ -1,4 +1,4 @@
-import { inferRange } from '../ai/decide';
+import { inferRange, OPEN_BASE } from '../ai/decide';
 import { estimateEquity, holePct } from '../ai/equity';
 import { observe } from '../ai/observation';
 import { handKey } from '../ai/handKey';
@@ -29,6 +29,18 @@ export interface DecisionReview {
   alternatives: string[];
   lesson: string;
   borderline: boolean;
+  // ── 집계용 필드 ──
+  position: string;
+  actionType: 'fold' | 'check' | 'call' | 'bet' | 'raise';
+  handKey: string;
+  opponents: number;
+  /** 추정 EV 손실 (BB 단위, 신뢰구간 밖의 콜/폴드 실수만 집계. 그 외 0) */
+  evLossBB: number;
+  facingBet: boolean;
+  betFracOfPot: number | null;   // 내가 벳/레이즈했다면 팟 대비 크기
+  facedFracOfPot: number | null; // 내가 직면한 벳의 팟 대비 크기
+  stackBB: number;
+  preflopRaisesFaced: number;
 }
 
 export interface HandReview {
@@ -77,6 +89,7 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
     let borderline = false;
     const label = type === 'fold' ? '폴드' : type === 'check' ? '체크' : type === 'call' ? `콜 ${ev.paid.toLocaleString()}` : `${type === 'bet' ? '베팅' : '레이즈'} → ${ev.toTotal.toLocaleString()}`;
     const key = handKey(obs.hole[0], obs.hole[1]);
+    const raisesFaced = obs.history.filter((e) => e.street === 'preflop' && (e.type === 'raise' || e.type === 'bet')).length;
     notes.push(`핸드 ${obs.hole.map(cardToString).join(' ')} (${key}, 프리플랍 상위 ${(holePct(obs.hole[0], obs.hole[1]) * 100).toFixed(0)}%) · 포지션 ${obs.position}`);
     if (obs.board.length >= 3) notes.push(`보드 ${obs.board.map(cardToString).join(' ')} · 현재 메이드핸드: ${describe(evaluate([...obs.hole, ...obs.board]))}`);
     if (obs.street === 'preflop') notes.push('프리플랍 가정: 아직 행동하지 않은 플레이어는 폴드(이미 콜/레이즈한 상대와의 에퀴티)');
@@ -84,7 +97,26 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
     notes.push(`추정 승률 ${(equity * 100).toFixed(1)}% (±${(se * 200).toFixed(1)}%p 표본오차, 레인지 가정 불확실성 ±${(unc * 100).toFixed(0)}%p) vs ${opp.length}명`);
     if (need !== null) notes.push(`정확한 팟오즈: 콜 ${toCall.toLocaleString()} / 팟 ${(pot + toCall).toLocaleString()} → 필요 승률 ${(need * 100).toFixed(1)}%`);
 
-    if (need !== null && (type === 'fold' || type === 'call')) {
+    const handPct = holePct(obs.hole[0], obs.hole[1]);
+    const unopened = obs.street === 'preflop' && raisesFaced === 0 && obs.position !== 'BB';
+    if (unopened) {
+      // 앞에 레이즈가 없는 프리플랍: 팟오즈가 아니라 포지션별 오픈 범위로 평가 (근사 기준: AI 와 동일한 범위표)
+      const thr = Math.min(0.95, (OPEN_BASE[obs.position] ?? 0.2) * (obs.players.filter((p) => p.inHand).length >= 8 ? 0.85 : 1));
+      const hu = obs.position === 'BTN/SB';
+      notes.push(`포지션 ${obs.position}의 기준 오픈 범위는 상위 약 ${(thr * 100).toFixed(0)}% (근사 기준, 솔버 아님) — 내 핸드는 상위 ${(handPct * 100).toFixed(0)}%`);
+      if (type === 'raise') {
+        if (handPct <= thr * 1.25) { score = 92; lesson = '범위 안의 적절한 오픈입니다.'; }
+        else if (handPct <= thr * 1.7) { score = 74; lesson = '범위보다 약간 넓은 오픈입니다. 포지션이 좋거나 상대가 약하면 허용됩니다.'; }
+        else { score = 45; mistake = '범위 밖 오픈(추정)'; lesson = `상위 ${(handPct * 100).toFixed(0)}% 핸드는 이 포지션의 기준(${(thr * 100).toFixed(0)}%)보다 훨씬 약합니다. 뒤에 남은 플레이어에게 3벳이나 어려운 포스트플랍 팟을 허용하게 됩니다.`; alternatives.push('폴드'); }
+      } else if (type === 'call') {
+        if (hu) { score = 78; lesson = '헤즈업에서 SB 림프는 가능한 선택이지만 레이즈가 보통 더 높은 빈도로 쓰입니다.'; }
+        else { score = handPct <= thr ? 62 : 40; mistake = '림프(추정)'; lesson = '림프는 주도권을 포기하고 뒤 플레이어에게 싼 가격을 줍니다. 참여할 핸드라면 레이즈, 아니면 폴드가 기본입니다.'; alternatives.push(handPct <= thr ? '레이즈' : '폴드'); }
+      } else if (type === 'fold') {
+        const late = ['BTN', 'CO', 'SB', 'BTN/SB'].includes(obs.position);
+        if (late && handPct <= thr * 0.6) { score = 55; mistake = '너무 타이트한 폴드(추정)'; lesson = '이 포지션에서는 이 정도 핸드로 오픈해 블라인드를 노리는 것이 보통입니다.'; alternatives.push('레이즈(스틸)'); }
+        else { score = 92; lesson = '범위 밖 핸드를 접은 올바른 폴드입니다.'; }
+      }
+    } else if (need !== null && (type === 'fold' || type === 'call')) {
       const evFold = 0;
       const chosen = type === 'call' ? evCall! : evFold;
       const best = Math.max(evCall!, evFold);
@@ -109,7 +141,13 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
       alternatives.push('체크 또는 더 작은 사이즈');
     }
     if (type === 'raise' && equity < 0.5 && toCall > 0 && !mistake) alternatives.push(`콜 (모델 EV ≈ ${evCall!.toFixed(0)} 칩)`);
+    const evLossBB = need !== null && (type === 'fold' || type === 'call') && !borderline && mistake
+      ? Math.max(0, (Math.max(evCall!, 0) - (type === 'call' ? evCall! : 0))) / rec.config.bb : 0;
     decisions.push({
+      position: obs.position, actionType: type as DecisionReview['actionType'], handKey: key, opponents: opp.length, evLossBB,
+      facingBet: toCall > 0, betFracOfPot: type === 'bet' || type === 'raise' ? ev.paid / Math.max(1, pot) : null,
+      facedFracOfPot: toCall > 0 ? toCall / Math.max(1, pot - toCall) : null, stackBB: (before.players[heroSeat].stack + before.players[heroSeat].bet) / rec.config.bb,
+      preflopRaisesFaced: raisesFaced,
       actionIndex: idx, street: obs.street, actionLabel: label, pot, toCall, equity, equitySE: se, rangeUncertainty: unc,
       potOddsNeed: need, evCall, score, grade: score === null ? null : gradeOf(score), mistake, notes, alternatives,
       lesson: lesson || '평가 정보가 부족합니다.', borderline,

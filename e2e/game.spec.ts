@@ -205,3 +205,68 @@ test('핸드 기록: 즐겨찾기와 검색', async ({ page }) => {
   await page.getByTestId('history-search').fill('zzzz');
   await expect(page.getByTestId('history-item')).toHaveCount(0);
 });
+
+async function nextHandOrRebuy(page: import('@playwright/test').Page) {
+  if (await page.getByTestId('btn-rebuy').count()) await page.getByTestId('btn-rebuy').click();
+  await page.getByTestId('btn-next').click({ timeout: 5000 });
+}
+
+test('핸드가 끝나면 코치 카드가 자동으로 뜬다', async ({ page }) => {
+  await startGame(page, { seats: 2, stack: 50 });
+  await playPassively(page);
+  await expect(page.getByTestId('coach-card')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId('coach-headline')).not.toBeEmpty();
+  // 끄면 나타나지 않는다
+  await page.getByTestId('btn-coach-toggle').click();
+  await expect(page.getByTestId('coach-card')).toBeHidden();
+  await page.getByTestId('btn-coach-toggle').click();
+  await page.getByTestId('coach-detail').click();
+  await expect(page.getByTestId('review')).toBeVisible();
+});
+
+test('스토리 모드: 앉기 → 해설 피드 → 코치 → 일어나기 → 정산·저널', async ({ page }) => {
+  test.setTimeout(90000);
+  await page.goto('/');
+  await page.evaluate(async () => { const r = indexedDB.deleteDatabase('poker-arena'); await new Promise((res) => { r.onsuccess = r.onerror = r.onblocked = () => res(null); }); });
+  await page.reload();
+  await page.getByTestId('nav-story').click();
+  await expect(page.getByTestId('bankroll')).toHaveText('3,000');
+  await expect(page.getByTestId('chapter-card')).toContainText('지하 클럽');
+  await expect(page.getByTestId('rival-kang')).toBeVisible();
+  await page.getByTestId('sit-50').click();
+  await expect(page.getByTestId('table')).toBeVisible();
+  await page.getByTestId('speed').selectOption('0');
+  await expect(page.getByTestId('story-feed')).toBeVisible();
+  await expect(page.getByTestId('blinds')).toContainText('챕터 1');
+  // 라이벌 이름이 캐릭터 이름으로 표시된다 (NOVA 포함)
+  await expect(page.locator('[data-testid^=name-]', { hasText: '강 사장' })).toHaveCount(1);
+  await playPassively(page);
+  await expect(page.getByTestId('coach-card')).toBeVisible({ timeout: 15000 });
+  await page.getByTestId('btn-leave').click();
+  await expect(page.getByTestId('story')).toBeVisible();
+  await expect(page.getByTestId('story-summary')).toBeVisible();
+  const bank = Number((await page.getByTestId('bankroll').innerText()).replace(/,/g, ''));
+  expect(bank).toBeGreaterThan(1000); // 정산 후 자본 = 3000 - 1000 + 현재 스택
+  expect(bank).toBeLessThan(5000);
+  await expect(page.getByTestId('journal')).toBeVisible();
+  // 다시 앉아 이어서 하기 → 새로고침 후에도 이어하기 가능
+  await page.getByTestId('sit-50').click();
+  await expect(page.getByTestId('table')).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.reload();
+  await page.getByTestId('nav-story').click();
+  await expect(page.getByTestId('story-resume')).toBeVisible();
+});
+
+test('분석실: 여러 핸드 후 심층 리포트(누수·계획·상대 분석)', async ({ page }) => {
+  test.setTimeout(150000);
+  await startGame(page, { seats: 2, stack: 50 });
+  for (let h = 0; h < 9; h++) { await playPassively(page); await nextHandOrRebuy(page); }
+  await page.getByTestId('btn-menu').click();
+  await page.getByTestId('nav-coach').click();
+  await expect(page.getByTestId('coach-summary')).toBeVisible({ timeout: 90000 });
+  await expect(page.getByTestId('coach-plan')).toBeVisible();
+  await expect(page.getByTestId('coach-preflop')).toBeVisible();
+  await expect(page.getByTestId('coach-opponents')).toBeVisible();
+  await expect(page.getByTestId('coach-tilt')).toBeVisible();
+});

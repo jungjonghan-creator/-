@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CoachCard } from './CoachCard';
+import { StoryFeed } from './StoryFeed';
+import { chapterOf, netWorth } from '../story/state';
 import { currentBlinds, blindStructure, HANDS_PER_LEVEL, sessionOver, Session } from '../game/session';
 import { ActionBar } from './ActionBar';
 import { ReviewPanel } from './Review';
@@ -10,10 +13,21 @@ import { createRng } from '../engine/rng';
 import { legalActions } from '../engine/game';
 
 export function GameScreen({ sess }: { sess: Session }) {
-  const { nextHand, quit, busy, settings, setSettings, notice, doRebuy, reenter, declineReentry, skipAI } = useGame();
+  const { nextHand, quit, busy, settings, setSettings, notice, doRebuy, reenter, declineReentry, skipAI, story, leaveStory, loanRebuy } = useGame();
   const [panel, setPanel] = useState<'log' | 'hist' | null>(null);
   const [review, setReview] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
+  const [bubble, setBubble] = useState<{ name: string; text: string } | null>(null);
+  const feed = sess.feed ?? [];
+  const lastTalk = [...feed].reverse().find((l) => l.kind === 'talk');
+  useEffect(() => {
+    if (!lastTalk || Date.now() - lastTalk.ts > 8000) return;
+    setBubble({ name: lastTalk.speaker, text: lastTalk.text });
+    const t = setTimeout(() => setBubble(null), 5000);
+    return () => clearTimeout(t);
+  }, [lastTalk?.id]); // eslint-disable-line
+  const storyCfg = sess.config.story;
+  const chapter = storyCfg ? chapterOf(storyCfg.chapter) : null;
   const g = sess.game;
   const complete = g.street === 'complete';
   const heroSeat = g.players.findIndex((p) => p.isHuman);
@@ -49,15 +63,18 @@ export function GameScreen({ sess }: { sess: Session }) {
           {tourney && !mtt && ` · 생존 ${alive}/${g.players.length}`}
           {mtt && ` · 남은 ${mtt.remaining}/${mtt.config.entrants + mtt.entries - 1}명 · 테이블 ${mtt.tables.length}개${mtt.bubble ? ' · 버블' : ''}${mtt.finalTable ? ' · 파이널 테이블' : ''}`}
           {sess.config.mode === 'trainer' && ' · 훈련 모드'}
+          {chapter && ` · 챕터 ${chapter.id} · 순자산 ${netWorth(story, hero.stack + hero.bet).toLocaleString()} / ${chapter.goalNetWorth.toLocaleString()}`}
         </div>
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => setSettings({ sound: !settings.sound })} aria-label="소리" data-testid="btn-sound">{settings.sound ? '🔊' : '🔇'}</button>
         <select className="bg-slate-800 rounded px-1 py-1" value={settings.animMs} onChange={(e) => setSettings({ animMs: Number(e.target.value) })} aria-label="속도" data-testid="speed">
           <option value={0}>즉시</option><option value={200}>빠름</option><option value={450}>보통</option><option value={900}>느림</option>
         </select>
+        <button className={`btn !min-h-[34px] !py-1 ${settings.autoCoach ? 'bg-emerald-800' : 'bg-slate-700'}`} onClick={() => setSettings({ autoCoach: !settings.autoCoach })} title="핸드 종료 후 자동 코치" data-testid="btn-coach-toggle">코치 {settings.autoCoach ? 'ON' : 'OFF'}</button>
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => setPanel(panel === 'log' ? null : 'log')} data-testid="btn-log">기록</button>
       </header>
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <TableView sess={sess} />
+        <TableView sess={sess} bubble={bubble} />
+        {feed.length > 0 && <StoryFeed lines={feed} />}
         {panel === 'log' && (
           <div className="mx-2 mb-2 p-2 rounded-lg bg-slate-900/90 border border-slate-700 text-xs max-h-40 overflow-y-auto" data-testid="log-panel">
             {g.events.filter((e) => e.type !== 'ante').map((e) => (
@@ -104,7 +121,8 @@ export function GameScreen({ sess }: { sess: Session }) {
                 <div className="text-sm">토너먼트 순위: {g.players.slice().sort((a, b) => (a.finishPlace ?? 99) - (b.finishPlace ?? 99)).map((p) => `${p.finishPlace ?? '-'}. ${p.name}`).join(' · ')}</div>
               </div>
             )}
-            {review && rec && <ReviewPanel rec={rec} />}
+            {rec && settings.autoCoach && <CoachCard rec={rec} onDetail={() => setReview(!review)} detailOpen={review} />}
+            {review && rec && <ReviewPanel rec={rec} defaultLevel="detail" />}
           </div>
         )}
       </div>
@@ -115,11 +133,13 @@ export function GameScreen({ sess }: { sess: Session }) {
           ) : mtt?.heroOut && mtt.heroCanReenter ? (
             <div className="text-sm text-amber-200">재진입 여부를 선택하세요.</div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-2 [&>button]:whitespace-nowrap [&>button]:px-3">
               {sess.config.mode === 'cash' && heroBusted
                 ? <button className="btn flex-1 bg-amber-600 text-black" onClick={() => doRebuy(sess.config.startBB * sess.config.bb)} data-testid="btn-rebuy">리바이 {(sess.config.startBB * sess.config.bb).toLocaleString()}</button>
                 : null}
               {sess.config.mode === 'cash' && !heroBusted && <button className="btn bg-slate-700" onClick={() => doRebuy(sess.config.startBB * sess.config.bb - hero.stack > 0 ? sess.config.startBB * sess.config.bb - hero.stack : 1)} disabled={hero.stack >= sess.config.startBB * sess.config.bb} data-testid="btn-topup">탑업</button>}
+              {storyCfg && chapter && sess.config.mode === 'cash' && heroBusted && story.bankroll < sess.config.startBB * sess.config.bb && <button className="btn bg-rose-700 text-sm" onClick={() => loanRebuy()} data-testid="btn-loan">스폰서 빚으로 재도전</button>}
+              {storyCfg && <button className="btn bg-slate-700 text-xs sm:text-sm" onClick={() => leaveStory()} data-testid="btn-leave">일어나기</button>}
               <button className="btn flex-1 bg-emerald-600" onClick={() => { setReview(false); setHint(null); nextHand(); }} disabled={busy || (heroBusted && sess.config.mode === 'cash') || !!(mtt?.heroOut && mtt.heroCanReenter)} data-testid="btn-next">{mtt && heroBusted ? '결과 확인' : '다음 핸드'}</button>
               <button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button>
             </div>

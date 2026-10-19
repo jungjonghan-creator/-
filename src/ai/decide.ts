@@ -16,7 +16,7 @@ export interface Decision {
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
 function gauss(rng: RNG) { return Math.sqrt(-2 * Math.log(1 - rng.next())) * Math.cos(2 * Math.PI * rng.next()); }
 
-const OPEN_BASE: Record<string, number> = {
+export const OPEN_BASE: Record<string, number> = {
   UTG: 0.14, 'UTG+1': 0.16, MP: 0.18, 'MP+1': 0.2, HJ: 0.22, CO: 0.28, BTN: 0.45, SB: 0.38, 'BTN/SB': 0.75, BB: 0.0,
 };
 
