@@ -1,12 +1,13 @@
 import { Page, expect } from '@playwright/test';
 
-export async function startGame(page: Page, opts: { seats?: number; stack?: number; mode?: string } = {}) {
+export async function startGame(page: Page, opts: { seats?: number; stack?: number; mode?: string; speed?: string } = {}) {
   await page.goto('/');
   await page.evaluate(async () => { const r = indexedDB.deleteDatabase('poker-arena'); await new Promise((res) => { r.onsuccess = r.onerror = r.onblocked = () => res(null); }); });
   await page.reload();
   await page.getByTestId(opts.mode ?? 'mode-cash').click();
   if (opts.seats) await page.getByTestId(`seats-${opts.seats}`).click();
   if (opts.stack) await page.getByTestId(`stack-${opts.stack}`).click();
+  if (opts.speed) await page.getByTestId(`speed-${opts.speed}`).click();
   await page.getByTestId('btn-start').click();
   await expect(page.getByTestId('table')).toBeVisible();
   await page.getByTestId('speed').selectOption('0');

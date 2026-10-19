@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { Action, AllInAction, HandRecord } from '../engine/types';
 import { randomSeed, createRng } from '../engine/rng';
+import { newMTTSession, mttReenter, MTTConfig } from '../game/mtt';
+import { mttAdvanceAsync } from '../game/workerClient';
+import { sngPayouts } from '../game/icm';
+import { Difficulty } from '../ai/profiles';
 import { aiStep, beginHand, humanAct, isAITurn, newSession, rebuy, Session, SessionConfig, sessionOver, handOver } from '../game/session';
 import { clearSession, loadKV, loadSession, saveKV, saveSession } from '../persist/db';
 import { sfx, setMuted } from '../sound';
@@ -9,6 +13,7 @@ export type Screen = 'menu' | 'table' | 'stats' | 'history' | 'trainer';
 export interface Settings { sound: boolean; animMs: number; revealAI: boolean; hints: boolean }
 const DEFAULT_SETTINGS: Settings = { sound: true, animMs: 450, revealAI: false, hints: false };
 
+export interface TourneyResult { date: number; mode: string; entrants: number; place: number; prize: number; buyIn: number; entries: number }
 export type RecordGroup = 'competitive' | 'training';
 export const groupOf = (s: Session): RecordGroup => (s.config.mode === 'trainer' ? 'training' : 'competitive');
 
@@ -18,12 +23,19 @@ interface Store {
   session: Session | null;
   screen: Screen;
   busy: boolean;
+  skip: boolean;
+  skipAI(): void;
   settings: Settings;
   notice: string | null;
   corrupt: { errors: string[] } | null;
   hasSave: boolean;
   init(): Promise<void>;
   start(cfg: Omit<SessionConfig, 'seed'> & { seed?: number }): void;
+  startMTT(cfg: { mtt: MTTConfig; startBB: number; bb: number; speed: SessionConfig['speed']; humanName: string; difficulty: Difficulty; profileId: string }): void;
+  reenter(): void;
+  declineReentry(): void;
+  tourneys: TourneyResult[];
+  finalizeTourney(): void;
   resume(): Promise<void>;
   act(a: Action | AllInAction, token: string): void;
   nextHand(): void;
@@ -40,6 +52,14 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const decisionToken = (s: Session) => `${s.game.handNo}:${s.game.events.length}`;
 
 export const useGame = create<Store>((set, get) => {
+  const archiveOld = () => {
+    const old = get().session;
+    if (old && old.records.length) {
+      const grp = groupOf(old);
+      const archive = { ...get().archive, [grp]: [...get().archive[grp], ...old.records] };
+      set({ archive }); void saveKV('archive', archive);
+    }
+  };
   const persist = (s: Session) => { void saveSession(s).catch(() => set({ notice: '저장 실패 (저장소 접근 불가)' })); };
   const commit = (s: Session) => { set({ session: s }); persist(s); };
 
@@ -48,7 +68,7 @@ export const useGame = create<Store>((set, get) => {
     while (gen === myGen) {
       const s = get().session;
       if (!s || !isAITurn(s)) break;
-      const ms = get().settings.animMs;
+      const ms = get().skip ? 0 : get().settings.animMs;
       if (ms > 0) await delay(ms);
       if (gen !== myGen) return;
       const cur = get().session!;
@@ -61,8 +81,9 @@ export const useGame = create<Store>((set, get) => {
       commit(sess);
     }
     if (gen === myGen) {
-      set({ busy: false });
+      set({ busy: false, skip: false });
       const s = get().session;
+      if (s && handOver(s) && sessionOver(s)) get().finalizeTourney();
       if (s && handOver(s) && get().settings.sound) {
         const hero = s.game.players.findIndex((p) => p.isHuman);
         (s.game.result?.net[hero] ?? 0) > 0 ? sfx.win() : sfx.lose();
@@ -71,12 +92,17 @@ export const useGame = create<Store>((set, get) => {
   }
 
   return {
+    tourneys: [],
     archive: { competitive: [], training: [] },
     recordsFor(g) { const s = get().session; return [...get().archive[g], ...(s && groupOf(s) === g ? s.records : [])]; },
+    skip: false,
+    skipAI() { set({ skip: true }); },
     session: null, screen: 'menu', busy: false, settings: DEFAULT_SETTINGS, notice: null, corrupt: null, hasSave: false,
     async init() {
       const st = await loadKV<Settings>('settings');
       if (st) { set({ settings: { ...DEFAULT_SETTINGS, ...st } }); setMuted(!st.sound); }
+      const tr = await loadKV<TourneyResult[]>('tourneys');
+      if (tr) set({ tourneys: tr });
       const ar = await loadKV<Record<RecordGroup, HandRecord[]>>('archive');
       if (ar) set({ archive: { competitive: ar.competitive ?? [], training: ar.training ?? [] } });
       const r = await loadSession();
@@ -85,17 +111,41 @@ export const useGame = create<Store>((set, get) => {
     },
     start(cfg) {
       gen++;
-      const old = get().session;
-      if (old && old.records.length) {
-        const grp = groupOf(old);
-        const archive = { ...get().archive, [grp]: [...get().archive[grp], ...old.records] };
-        set({ archive }); void saveKV('archive', archive);
-      }
+      archiveOld();
       let s = newSession({ ...cfg, seed: cfg.seed ?? randomSeed() });
       s = beginHand(s);
       set({ session: s, screen: 'table', notice: null });
       persist(s);
       void runAI(gen);
+    },
+    startMTT(cfg) {
+      gen++;
+      archiveOld();
+      let s = newMTTSession({ ...cfg, seed: randomSeed() });
+      s = beginHand(s);
+      set({ session: s, screen: 'table', notice: null });
+      persist(s);
+      void runAI(gen);
+    },
+    reenter() {
+      const s = get().session; if (!s?.mtt) return;
+      try { let n = mttReenter(s); n = beginHand(n); commit(n); gen++; void runAI(gen); } catch (e) { set({ notice: (e as Error).message }); }
+    },
+    declineReentry() {
+      const s = get().session; if (!s?.mtt) return;
+      const ns = { ...s, mtt: { ...s.mtt, heroCanReenter: false } };
+      commit(ns); get().finalizeTourney();
+    },
+    finalizeTourney() {
+      const s = get().session;
+      if (!s || s.tourneyRecorded || !sessionOver(s)) return;
+      const g = s.game;
+      let place: number, entrants: number, prize: number, entries = 1, buyIn = 100;
+      if (s.mtt) { place = s.mtt.places['hero'] ?? 1; entrants = s.mtt.config.entrants; prize = s.mtt.heroPrize; entries = s.mtt.entries; buyIn = s.mtt.config.buyIn; }
+      else { entrants = g.players.length; place = g.players.find((p) => p.isHuman)?.finishPlace ?? 1; prize = sngPayouts(entrants, buyIn)[place - 1] ?? 0; }
+      const tourneys = [...get().tourneys, { date: Date.now(), mode: s.config.mode, entrants, place, prize, buyIn, entries }];
+      const ns = { ...s, tourneyRecorded: true };
+      set({ tourneys, session: ns }); void saveKV('tourneys', tourneys); persist(ns);
     },
     async resume() {
       const r = await loadSession();
@@ -122,12 +172,26 @@ export const useGame = create<Store>((set, get) => {
       const s = get().session;
       if (!s || !handOver(s) || get().busy) return;
       if (sessionOver(s)) return;
-      let n = s;
-      try { n = beginHand(s, createRng(randomSeed())); } catch (e) { set({ notice: (e as Error).message }); return; }
-      commit(n);
-      gen++;
-      if (get().settings.sound) sfx.card();
-      void runAI(gen);
+      const myGen = ++gen;
+      set({ busy: true });
+      // MTT 는 다른 테이블 시뮬레이션이 무거우므로 렌더 후 실행
+      void (async () => {
+        if (gen !== myGen) return;
+        let n = s;
+        try {
+          const seed = randomSeed();
+          if (s.mtt) {
+            n = await mttAdvanceAsync(s, seed);
+            if (gen !== myGen) return;
+            if (sessionOver(n) || n.mtt!.heroOut) { commit(n); set({ busy: false }); get().finalizeTourney(); return; }
+          }
+          n = beginHand(n, createRng(seed ^ 0x5bd1e995));
+        } catch (e) { set({ notice: (e as Error).message, busy: false }); return; }
+        commit(n);
+        gen++;
+        if (get().settings.sound) sfx.card();
+        void runAI(gen);
+      })();
     },
     doRebuy(amount) {
       const s = get().session; if (!s) return;

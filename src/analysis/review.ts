@@ -80,6 +80,7 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
     notes.push(`핸드 ${obs.hole.map(cardToString).join(' ')} (${key}, 프리플랍 상위 ${(holePct(obs.hole[0], obs.hole[1]) * 100).toFixed(0)}%) · 포지션 ${obs.position}`);
     if (obs.board.length >= 3) notes.push(`보드 ${obs.board.map(cardToString).join(' ')} · 현재 메이드핸드: ${describe(evaluate([...obs.hole, ...obs.board]))}`);
     if (obs.street === 'preflop') notes.push('프리플랍 가정: 아직 행동하지 않은 플레이어는 폴드(이미 콜/레이즈한 상대와의 에퀴티)');
+    ranges.forEach((r, i) => notes.push(`상대 추정 레인지(${opp[i].name}): 프리플랍 상위 ${(r.pct * 100).toFixed(0)}%${r.boardTop < 1 ? ` · 현재 보드 강도 상위 ${(r.boardTop * 100).toFixed(0)}%` : ''} (휴리스틱 추론)`));
     notes.push(`추정 승률 ${(equity * 100).toFixed(1)}% (±${(se * 200).toFixed(1)}%p 표본오차, 레인지 가정 불확실성 ±${(unc * 100).toFixed(0)}%p) vs ${opp.length}명`);
     if (need !== null) notes.push(`정확한 팟오즈: 콜 ${toCall.toLocaleString()} / 팟 ${(pot + toCall).toLocaleString()} → 필요 승률 ${(need * 100).toFixed(1)}%`);
 

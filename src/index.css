@@ -21,3 +21,11 @@ body { margin: 0; background: #05090f; color: #e6edf7; font-family: system-ui, -
 button:disabled { opacity: .35; cursor: not-allowed; }
 .btn { border-radius: 10px; font-weight: 700; padding: 10px 14px; min-height: 48px; user-select: none; touch-action: manipulation; }
 input[type=range] { accent-color: #facc15; }
+
+/* 가로 모드 소형 화면(낮은 높이): 버튼/카드 압축으로 테이블 영역 확보 */
+@media (max-height: 520px) and (orientation: landscape) {
+  .btn { min-height: 38px !important; padding: 4px 10px; font-size: 14px; }
+  .card.w-11 { width: 2rem; height: 2.9rem; font-size: 14px; }
+  .card.w-8 { width: 1.5rem; height: 2.2rem; font-size: 11px; }
+  header { padding-top: 2px !important; padding-bottom: 2px !important; }
+}

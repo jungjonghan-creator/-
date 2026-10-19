@@ -10,7 +10,7 @@ export interface ValidationResult { ok: boolean; errors: string[] }
 /** 진행 중/종료 핸드의 카드 위치가 덱 순서와 정확히 일치하는지 검사 */
 export function validateDeckConsistency(g: GameState): string[] {
   const errs: string[] = [];
-  if (g.handNo === 0) return errs;
+  if (g.handNo === 0 || g.deck.length === 0) return errs;
   if (g.deck.length !== 52 || hasDuplicates(g.deck)) return ['덱이 손상됨'];
   const inHand = g.players.map((p, i) => ({ p, i })).filter(({ p }) => p.inHand);
   const n = g.players.length;

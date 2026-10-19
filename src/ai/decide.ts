@@ -5,7 +5,7 @@ import { estimateEquity, holePct, OppRange } from './equity';
 import { handKey } from './handKey';
 import { estimate, OppModel } from './opponentModel';
 import { Observation, PublicPlayer } from './observation';
-import { AISetup, PROFILES, resolveStyle, SKILLS, Style } from './profiles';
+import { AISetup, PROFILES, resolveStyle, Skill, SKILLS, Style } from './profiles';
 
 export interface Decision {
   action: Action | AllInAction;
@@ -21,13 +21,13 @@ const OPEN_BASE: Record<string, number> = {
 };
 
 /** AI 의사결정 — 오직 Observation 과 자신의 설정/기억만 사용한다. */
-export function decide(obs: Observation, setup: AISetup, memory: OppModel, rng: RNG, gameSeed = 0): Decision {
+export function decide(obs: Observation, setup: AISetup, memory: OppModel, rng: RNG, gameSeed = 0, simScale = 1): Decision {
   const style = resolveStyle(setup.profileId, obs.handNo, gameSeed);
-  const skill = SKILLS[setup.difficulty];
+  const skill = simScale === 1 ? SKILLS[setup.difficulty] : { ...SKILLS[setup.difficulty], sims: Math.max(20, Math.round(SKILLS[setup.difficulty].sims * simScale)) };
   const legal = obs.legal;
   const safe = (action: Action | AllInAction, info: Decision['info']): Decision => ({ action: sanitize(action, obs), info });
   try {
-    const d = obs.street === 'preflop' ? preflop(obs, style, setup, memory, rng) : postflop(obs, style, setup, memory, rng);
+    const d = obs.street === 'preflop' ? preflop(obs, style, setup, memory, rng, skill) : postflop(obs, style, setup, memory, rng, skill);
     // 의도치 않은 실수: 폴드↔콜 뒤집기 (합법 행동 범위 안에서만)
     if (rng.next() < skill.mistake) {
       if (d.action.type === 'fold' && legal.canCall && obs.legal.callAmount <= obs.pot * 0.6) return safe({ type: 'call' }, { ...d.info, note: d.info.note + ' [실수:과콜]' });
@@ -68,8 +68,7 @@ function raiseTo(obs: Observation, to: number): Action | AllInAction {
 const activeOpp = (obs: Observation): PublicPlayer[] => obs.players.filter((p) => !p.isHero && p.inHand && !p.folded);
 
 // ───────────── 프리플랍 ─────────────
-function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng: RNG): Decision {
-  const skill = SKILLS[setup.difficulty];
+function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng: RNG, skill: Skill): Decision {
   const l = obs.legal;
   const hero = obs.players[obs.seat];
   const key = handKey(obs.hole[0], obs.hole[1]);
@@ -200,8 +199,7 @@ function boardDraws(board: Card[], hole: Card[]): boolean {
   return false;
 }
 
-function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng: RNG): Decision {
-  const skill = SKILLS[setup.difficulty];
+function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng: RNG, skill: Skill): Decision {
   const l = obs.legal;
   const hero = obs.players[obs.seat];
   const opp = activeOpp(obs);

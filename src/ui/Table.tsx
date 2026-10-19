@@ -28,7 +28,7 @@ export function TableView({ sess, revealAll = false }: { sess: Session; revealAl
 
   return (
     <div className="relative w-full mx-auto" style={{ ...anim, maxWidth: 980 }}>
-      <div className="relative w-full aspect-[3/4] sm:aspect-[16/10] max-h-[68vh] landscape:max-h-[62vh] landscape:aspect-[16/8]" data-testid="table">
+      <div className="relative w-full aspect-[3/4] sm:aspect-[16/10] max-h-[68vh] [@media(max-height:520px)_and_(orientation:landscape)]:aspect-auto [@media(max-height:520px)_and_(orientation:landscape)]:max-h-none [@media(max-height:520px)_and_(orientation:landscape)]:h-[calc(100dvh-178px)]" data-testid="table">
         <div className="felt absolute inset-[11%] sm:inset-[9%] rounded-[50%]" />
         {/* 중앙: 보드 + 팟 */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5 w-[70%]">

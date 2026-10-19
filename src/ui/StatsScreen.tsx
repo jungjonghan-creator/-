@@ -4,7 +4,7 @@ import { reviewHand, DecisionReview } from '../analysis/review';
 import { RecordGroup, useGame } from '../store/useGame';
 
 export function StatsScreen() {
-  const { recordsFor, setScreen } = useGame();
+  const { recordsFor, setScreen, tourneys } = useGame();
   const [group, setGroup] = useState<RecordGroup>('competitive');
   const records = recordsFor(group);
   const st = useMemo(() => heroStats(records), [records]);
@@ -56,6 +56,19 @@ export function StatsScreen() {
           ))}
         </tbody>
       </table>
+      <h2 className="font-bold">토너먼트 기록</h2>
+      {tourneys.length === 0 ? <div className="text-sm text-slate-400">완료한 토너먼트가 없습니다.</div> : (() => {
+        const n = tourneys.length;
+        const itm = tourneys.filter((x) => x.prize > 0).length;
+        const cost = tourneys.reduce((t, x) => t + x.buyIn * x.entries, 0);
+        const prize = tourneys.reduce((t, x) => t + x.prize, 0);
+        return (
+          <div className="text-sm space-y-1" data-testid="tourney-stats">
+            <div>ITM {itm}/{n} ({((100 * itm) / n).toFixed(0)}%) · 우승 {tourneys.filter((x) => x.place === 1).length}회 · ROI {(((prize - cost) / cost) * 100).toFixed(0)}% (비용 {cost.toLocaleString()} / 상금 {prize.toLocaleString()}, 가상 칩, n={n})</div>
+            {tourneys.slice(-5).reverse().map((x) => <div key={x.date} className="text-xs text-slate-400">{new Date(x.date).toLocaleDateString()} · {x.mode} · {x.place}위/{x.entrants}명 · 상금 {x.prize}</div>)}
+          </div>
+        );
+      })()}
       <h2 className="font-bold">포지션별 결과</h2>
       <table className="w-full text-sm"><tbody>
         {st.byPos.map((p) => <tr key={p.label} className="border-t border-slate-800"><td>{p.label}</td><td className="text-right text-xs text-slate-400">{p.hands}핸드</td><td className="text-right font-mono">{p.net.toLocaleString()}</td><td className="text-right font-mono text-xs">{p.bb100.toFixed(0)} BB/100</td></tr>)}

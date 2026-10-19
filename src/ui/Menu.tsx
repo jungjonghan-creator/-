@@ -4,7 +4,7 @@ import { Mode, Speed, defaultAIs } from '../game/session';
 import { useGame } from '../store/useGame';
 
 export function Menu() {
-  const { start, resume, hasSave, setScreen, corrupt, dismissCorrupt } = useGame();
+  const { start, startMTT, resume, hasSave, setScreen, corrupt, dismissCorrupt } = useGame();
   const [mode, setMode] = useState<Mode>('cash');
   const [seats, setSeats] = useState(2);
   const [startBB, setStartBB] = useState(50);
@@ -13,9 +13,15 @@ export function Menu() {
   const [diff, setDiff] = useState<Difficulty>(3);
   const [profile, setProfile] = useState('Balanced');
   const [name, setName] = useState('TETO');
+  const [entrants, setEntrants] = useState(27);
+  const [reentry, setReentry] = useState(false);
 
   const effSeats = mode === 'headsup-sng' ? 2 : seats;
   const go = () => {
+    if (mode === 'mtt') {
+      startMTT({ mtt: { entrants, tableSize: seats === 6 ? 6 : 9, buyIn: 100, reentry, reentryUntilLevel: 4, maxReentries: 2 }, startBB: Math.max(startBB, 20), bb, speed, humanName: name || 'TETO', difficulty: diff, profileId: profile });
+      return;
+    }
     const first = profile;
     const ais: AISetup[] = defaultAIs(effSeats - 1, diff, first);
     start({ mode, seats: effSeats, startBB: mode === 'sng' || mode === 'headsup-sng' ? Math.max(startBB, 20) : startBB, bb, speed, humanName: name || 'TETO', ais });
@@ -39,6 +45,7 @@ export function Menu() {
           <button className={sel(mode === 'cash')} onClick={() => setMode('cash')} data-testid="mode-cash">캐시게임</button>
           <button className={sel(mode === 'headsup-sng')} onClick={() => setMode('headsup-sng')} data-testid="mode-hu-sng">헤즈업 싯앤고</button>
           <button className={sel(mode === 'sng')} onClick={() => { setMode('sng'); if (seats === 2) setSeats(6); }} data-testid="mode-sng">6/9인 싯앤고</button>
+          <button className={sel(mode === 'mtt')} onClick={() => { setMode('mtt'); if (seats === 2) setSeats(9); }} data-testid="mode-mtt">멀티테이블 토너먼트</button>
           <button className={sel(mode === 'trainer')} onClick={() => setMode('trainer')} data-testid="mode-trainer">훈련 테이블(힌트)</button>
         </div>
       </section>
@@ -46,7 +53,7 @@ export function Menu() {
         <section className="space-y-2">
           <h2 className="font-bold">인원</h2>
           <div className="flex gap-2">
-            {(mode === 'sng' ? [6, 9] : [2, 6, 9]).map((n) => <button key={n} className={sel(seats === n)} onClick={() => setSeats(n)} data-testid={`seats-${n}`}>{n === 2 ? '헤즈업' : n === 6 ? '6-Max' : 'Full Ring'}</button>)}
+            {(mode === 'sng' || mode === 'mtt' ? [6, 9] : [2, 6, 9]).map((n) => <button key={n} className={sel(seats === n)} onClick={() => setSeats(n)} data-testid={`seats-${n}`}>{n === 2 ? '헤즈업' : n === 6 ? '6-Max' : 'Full Ring'}</button>)}
           </div>
         </section>
       )}
@@ -58,9 +65,15 @@ export function Menu() {
           <span className="text-xs text-slate-400">BB={bb}</span>
         </div>
       </section>
-      {(mode === 'sng' || mode === 'headsup-sng') && (
+      {mode === 'mtt' && (
+        <section className="space-y-2"><h2 className="font-bold">참가자 수</h2>
+          <div className="flex gap-2 flex-wrap">{[18, 27, 45, 90].map((n) => <button key={n} className={sel(entrants === n)} onClick={() => setEntrants(n)} data-testid={`entrants-${n}`}>{n}명</button>)}</div>
+          <label className="text-sm flex items-center gap-2"><input type="checkbox" checked={reentry} onChange={(e) => setReentry(e.target.checked)} data-testid="reentry" /> 재진입 허용 (레벨 5 이전, 최대 2회)</label>
+        </section>
+      )}
+      {(mode === 'sng' || mode === 'headsup-sng' || mode === 'mtt') && (
         <section className="space-y-2"><h2 className="font-bold">블라인드 속도</h2>
-          <div className="flex gap-2">{(['normal', 'turbo', 'hyper'] as Speed[]).map((s) => <button key={s} className={sel(speed === s)} onClick={() => setSpeed(s)}>{{ normal: '일반', turbo: '터보', hyper: '하이퍼터보' }[s]}</button>)}</div>
+          <div className="flex gap-2">{(['normal', 'turbo', 'hyper'] as Speed[]).map((s) => <button key={s} className={sel(speed === s)} onClick={() => setSpeed(s)} data-testid={`speed-${s}`}>{{ normal: '일반', turbo: '터보', hyper: '하이퍼터보' }[s]}</button>)}</div>
         </section>
       )}
       <section className="space-y-2">

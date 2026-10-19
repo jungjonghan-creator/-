@@ -133,3 +133,75 @@ test('모바일: 9인 테이블 좌석과 행동 버튼이 화면 안에 보인�
   expect(sw).toBeLessThanOrEqual(vp.width + 1);
   await page.screenshot({ path: 'test-results/mobile-9max.png' });
 });
+
+test('헤즈업 싯앤고: 올인 반복 → 종료 → 토너먼트 기록(ITM/ROI)', async ({ page }) => {
+  test.setTimeout(120000);
+  await startGame(page, { mode: 'mode-hu-sng', stack: 20, speed: 'hyper' });
+  for (let h = 0; h < 150; h++) {
+    await waitTurnOrEnd(page);
+    if (await page.getByTestId('hand-end').isVisible()) {
+      if (await page.getByTestId('game-over').count()) break;
+      if (await page.getByTestId('btn-next').count() === 0) continue;
+      await page.getByTestId('btn-next').click({ timeout: 5000 }).catch(() => {});
+      continue;
+    }
+    if (await page.getByTestId('btn-allin').isEnabled()) { await page.getByTestId('btn-allin').click(); await page.getByTestId('allin-ok').click(); }
+    else await page.getByTestId('btn-call').click();
+    await page.waitForTimeout(30);
+  }
+  await expect(page.getByTestId('game-over')).toBeVisible();
+  await page.getByTestId('btn-menu').click();
+  await page.getByTestId('nav-stats').click();
+  await expect(page.getByTestId('tourney-stats')).toContainText('ITM');
+});
+
+test('멀티테이블 토너먼트: 시작, 남은 인원/테이블 표시, 다음 핸드 진행', async ({ page }) => {
+  test.setTimeout(120000);
+  await startGame(page, { mode: 'mode-mtt' });
+  // startGame 은 모드 클릭 후 시작 — MTT 는 기본 27명
+  await expect(page.getByTestId('blinds')).toContainText('남은');
+  const first = await page.getByTestId('blinds').innerText();
+  for (let h = 0; h < 4; h++) {
+    await waitTurnOrEnd(page);
+    for (let i = 0; i < 40 && !(await page.getByTestId('hand-end').isVisible()); i++) {
+      await waitTurnOrEnd(page);
+      if (await page.getByTestId('hand-end').isVisible()) break;
+      if (await page.getByTestId('btn-fold').isEnabled()) await page.getByTestId('btn-fold').click(); else await page.getByTestId('btn-check').click();
+      await page.waitForTimeout(30);
+    }
+    if (await page.getByTestId('btn-next').isEnabled()) await page.getByTestId('btn-next').click();
+    await page.waitForTimeout(300);
+  }
+  const later = await page.getByTestId('blinds').innerText();
+  expect(later).toContain('테이블');
+  expect(later).not.toBe(first);
+});
+
+test('오프라인: 서비스워커 캐시 후 네트워크 없이 게임 시작·플레이', async ({ page, context }) => {
+  await page.goto('/');
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+  await page.waitForTimeout(800); // 프리캐시 완료 대기
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByTestId('menu')).toBeVisible();
+  await page.getByTestId('seats-2').click();
+  await page.getByTestId('btn-start').click();
+  await expect(page.getByTestId('table')).toBeVisible();
+  await page.getByTestId('speed').selectOption('0');
+  await waitTurnOrEnd(page);
+  await context.setOffline(false);
+});
+
+test('핸드 기록: 즐겨찾기와 검색', async ({ page }) => {
+  await startGame(page, { seats: 2, stack: 50 });
+  await playPassively(page);
+  await page.getByTestId('btn-menu').click();
+  await page.getByTestId('nav-history').click();
+  await page.getByTestId('history-item').click();
+  await page.getByTestId('btn-fav').click();
+  await page.getByTestId('replay-back').click();
+  await page.getByTestId('only-fav').check();
+  await expect(page.getByTestId('history-item')).toHaveCount(1);
+  await page.getByTestId('history-search').fill('zzzz');
+  await expect(page.getByTestId('history-item')).toHaveCount(0);
+});
