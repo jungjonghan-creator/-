@@ -156,8 +156,8 @@ export function summarize(w: Wallet): WalletSummary {
     balance: w.balance, atTable: atTable(w), peak: w.peak, cashNet, cashSessions: cash.length,
     tourneyEntries: tour.reduce((t, a) => t + a.entries, 0), tourneyCost: cost, tourneyPrizes: prizes, tourneyNet: prizes - cost, roi: cost ? (prizes - cost) / cost : null,
     itm: tour.filter((a) => a.returned > 0).length, wins: tour.filter((a) => a.place === 1).length, tourneys: tour.length, totalNet: total,
-    cashBuyIns: -w.txs.filter((t) => t.kind === 'cash-buyin' || t.kind === 'cash-topup').reduce((s, t) => s + t.amount, 0),
-    feesPaid: -w.txs.filter((t) => t.kind === 'tourney-fee').reduce((s, t) => s + t.amount, 0),
+    cashBuyIns: 0 - w.txs.filter((t) => t.kind === 'cash-buyin' || t.kind === 'cash-topup').reduce((s, t) => s + t.amount, 0),
+    feesPaid: 0 - w.txs.filter((t) => t.kind === 'tourney-fee').reduce((s, t) => s + t.amount, 0),
     overallRoi: (() => { const done = acc.filter((a) => a.kind !== 'practice' && a.status === 'closed'); const sp = done.reduce((s, a) => s + a.spent, 0); return sp ? (done.reduce((s, a) => s + a.returned, 0) - sp) / sp : null; })(),
   };
 }

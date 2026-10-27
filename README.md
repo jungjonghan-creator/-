@@ -37,7 +37,8 @@ npm run build && npm run preview   # 프로덕션 빌드 확인
 npm test                         # 단위·속성·시뮬레이션·저장/복구 (Vitest)
 npm run e2e                      # Playwright (데스크톱 + 모바일)
 npm run sim -- 2000              # 5가지 성격 통계
-npx tsx scripts/difficulty.ts 12000   # 4단계 난이도 대표본
+npx tsx scripts/difficulty.ts 12000   # 4단계 난이도 대표본 (일반 세션)
+npx tsx scripts/duplicate.ts 4000     # 듀플리케이트(카드 운 상쇄) 난이도 측정
 npx tsx scripts/exploit.ts 8000       # 같은 상대에 대한 상급 vs 프로
 npm run stress                   # 엔진 대량 무결성 시뮬레이션
 ```
