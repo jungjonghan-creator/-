@@ -8,6 +8,7 @@ export function Menu() {
   const { wallet, walletErrors, resetWallet, saved, resume, hasSave, setScreen, corrupt, dismissCorrupt, ready, tourneys } = useGame();
   const sm = summarize(wallet);
   const at = atTable(wallet);
+  const recent = Object.values(wallet.accounts).filter((a) => a.kind !== 'practice' && a.status === 'closed').sort((a, b) => (b.closedAt ?? 0) - (a.closedAt ?? 0)).slice(0, 3);
   const savedLabel = saved ? (saved.config.cash ? `${cashTableById(saved.config.cash.tableId).name} · 테이블 칩 ${fmt(saved.game.players[0].stack)}` : saved.tierId ? tournamentById(saved.tierId)?.name ?? '토너먼트' : '연습 경기') : '';
   return (
     <div className="max-w-xl mx-auto p-4 space-y-4 safe-pad overflow-y-auto h-full" data-testid="menu">
@@ -48,6 +49,12 @@ export function Menu() {
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('trainer')} data-testid="nav-trainer">푸시/폴드·스팟 훈련</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('practice')} data-testid="nav-practice">연습 경기(통장 무관)</button>
       </div>
+      {recent.length > 0 && (
+        <section className="space-y-1" data-testid="recent">
+          <h2 className="font-bold text-sm">최근 경기 결과</h2>
+          {recent.map((a) => { const net = a.returned - a.spent; return <div key={a.id} className="flex justify-between text-xs bg-slate-800/70 rounded px-2 py-1"><span>{a.label}{a.place ? ` · ${a.place}위/${a.fieldSize}명` : ''}</span><span className={`font-mono ${net >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{net >= 0 ? '+' : ''}{fmt(net)}</span></div>; })}
+        </section>
+      )}
       <div className="text-[11px] text-slate-500">전적: 토너먼트 {tourneys.length}회 · 입상 {tourneys.filter((t) => t.prize > 0).length}회</div>
     </div>
   );

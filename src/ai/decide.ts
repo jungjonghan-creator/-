@@ -172,7 +172,13 @@ function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng
     if (bluffable && rng.next() < st.bluff * 0.28 * st.threeBet * widen * (skill.mistake > 0.1 ? 1.4 : 1)) {
       return { action: raiseTo(obs, lastRaiseTo * 3.4), info: info('3벳 (블러프)') };
     }
-    if (pct <= callPct && potOddsNeed < 0.45 + st.bluffCatch * 0.2) return { action: { type: 'call' }, info: info(`콜 (상위 ${(callPct * 100).toFixed(0)}%)`, potOddsNeed) };
+    // 빅블라인드 방어: 이미 낸 칩과 팟오즈 때문에 실제로는 훨씬 넓게 방어한다 (헤즈업 BB ≈ 50%, 6-max BB vs 레이트 ≈ 40%)
+    let defendPct = callPct;
+    if (pos === 'BB' && callersAfter === 0) {
+      const target = 0.3 * (0.27 / Math.max(0.12, potOddsNeed)) * (lateOpener ? 1.55 : 1) * (nHands === 2 ? 1.5 : 1) * Math.pow(st.vpipMul, 0.7) * foldAdj * icmTight;
+      defendPct = clamp(Math.max(callPct, target * (0.85 + 0.15 * skill.potOddsAware)), 0.01, 0.72);
+    }
+    if (pct <= defendPct && potOddsNeed < 0.45 + st.bluffCatch * 0.2) return { action: { type: 'call' }, info: info(`콜 (상위 ${(defendPct * 100).toFixed(0)}%)`, potOddsNeed) };
     if (l.canCheck) return { action: { type: 'check' }, info: info('체크') };
     return { action: { type: 'fold' }, info: info('폴드', potOddsNeed) };
   }
@@ -206,6 +212,19 @@ function oppRange(obs: Observation, o: PublicPlayer, st: Style, skill: ReturnTyp
   }
   const reading = skill.rangeReading as number;
   return { pct: clamp(pct * reading + 1 * (1 - reading), 0.04, 1), boardTop: clamp(top * reading + 1 * (1 - reading), 0.05, 1) };
+}
+
+/** 보드 텍스처: 0(매우 드라이) ~ 1(매우 웻). 같은 무늬 집중과 연결성(스트레이트 가능성)으로 계산 */
+export function boardWetness(board: Card[]): number {
+  if (board.length < 3) return 0;
+  const suits = [0, 0, 0, 0];
+  board.forEach((c) => suits[suitOf(c)]++);
+  const flushy = Math.max(...suits) >= 3 ? 1 : Math.max(...suits) === 2 ? 0.35 : 0;
+  const rs = [...new Set(board.map(rankOf))].sort((a, b) => a - b);
+  let conn = 0;
+  for (let i = 1; i < rs.length; i++) { const gap = rs[i] - rs[i - 1]; if (gap === 1) conn += 1; else if (gap === 2) conn += 0.6; else if (gap === 3) conn += 0.25; }
+  const paired = rs.length < board.length ? -0.15 : 0;
+  return clamp(0.55 * flushy + 0.28 * Math.min(conn, 2.5) + paired, 0, 1);
 }
 
 function boardDraws(board: Card[], hole: Card[]): boolean {
@@ -242,11 +261,13 @@ function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rn
   // 적응 보정
   let bluffMul = 1, callAdj = 0;
   if (mainOpp && mainOpp.hands >= 10 && skill.rangeReading > 0) {
-    const k = st.adapt * skill.rangeReading;
+    const k = st.adapt * skill.exploit;
     const fcb = estimate.foldToCbet(mainOpp);
-    bluffMul = clamp(1 + (fcb - 0.45) * 3 * k, 0.3, 2.2);
+    bluffMul = clamp(1 + (fcb - 0.45) * 3 * k, 0.3, 2.4);
     const af = estimate.aggFreq(mainOpp);
-    callAdj = clamp((af - 0.4) * 0.25 * k, -0.04, 0.08); // 공격적인 상대에겐 더 얇게 콜
+    callAdj = clamp((af - 0.4) * 0.25 * k, -0.05, 0.1); // 공격적인 상대에겐 더 얇게 콜
+    // 거의 폴드하지 않는 상대에겐 블러프를 줄이고 밸류를 두껍게
+    if (fcb < 0.3) bluffMul *= clamp(0.5 + fcb, 0.3, 1);
   }
 
   const betTo = (frac: number) => obs.currentBet + Math.max(obs.bb, frac * (pot + toCall)) + (obs.currentBet > 0 ? toCall * 0 : 0);
@@ -285,8 +306,10 @@ function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rn
     return { action: { type: 'check' }, info: info('슬로우플레이') };
   }
   const multiway = Math.pow(0.8, nOpp - 1);
-  if (obs.street === 'flop' && preAgg && rng.next() < st.cbet * multiway * (inPosition ? 1 : 0.92) * clamp(bluffMul, 0.5, 1.6)) {
-    const frac = clamp(0.33 + (st.betSize - 0.6) * 0.5, 0.25, 0.9);
+  // 보드 텍스처: 드라이한 보드는 작은 사이즈로 자주, 웻한 보드는 크게(또는 덜 자주)
+  const wet = boardWetness(obs.board);
+  if (obs.street === 'flop' && preAgg && rng.next() < st.cbet * multiway * (inPosition ? 1 : 0.92) * clamp(bluffMul, 0.5, 1.6) * (1.12 - 0.3 * wet)) {
+    const frac = clamp(0.28 + (st.betSize - 0.6) * 0.5 + 0.35 * wet, 0.25, 0.9);
     return { action: raiseTo(obs, frac * pot), info: info('C-bet') };
   }
   // 블러프 (약한 핸드, 리버는 에어일 때)

@@ -24,6 +24,7 @@ export function WalletScreen() {
         {card(`캐시게임 손익 (${s.cashSessions}회)`, `${s.cashNet >= 0 ? '+' : ''}${fmt(s.cashNet)}`, s.cashNet >= 0 ? 'text-emerald-300' : 'text-rose-300')}
         {card(`토너먼트 손익 (${s.tourneys}회)`, `${s.tourneyNet >= 0 ? '+' : ''}${fmt(s.tourneyNet)}`, s.tourneyNet >= 0 ? 'text-emerald-300' : 'text-rose-300')}
       </div>
+      <div className="text-xs text-slate-400" data-testid="wallet-totals">누적 캐시 바이인 {fmt(s.cashBuyIns)} · 누적 수수료 {fmt(s.feesPaid)} · 전체 수익률 {s.overallRoi === null ? '-' : `${(s.overallRoi * 100).toFixed(1)}%`}</div>
       <div className="text-sm text-slate-300" data-testid="wallet-roi">토너먼트: 참가비·수수료 합계 {fmt(s.tourneyCost)} / 상금 합계 {fmt(s.tourneyPrizes)} · ROI {s.roi === null ? '-' : `${(s.roi * 100).toFixed(0)}%`} · 입상 {s.itm}/{s.tourneys} · 우승 {s.wins}회 <span className="text-slate-500">(표본 {s.tourneys}회)</span></div>
       <section className="space-y-1">
         <h2 className="font-bold text-sm">경기별 결산</h2>

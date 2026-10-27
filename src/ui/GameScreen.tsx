@@ -70,9 +70,6 @@ export function GameScreen({ sess }: { sess: Session }) {
         <div className="flex-1 truncate" data-testid="blinds">
           블라인드 {bl.sb}/{bl.bb}{bl.ante ? ` 앤티 ${bl.ante}` : ''} · 핸드 #{g.handNo}{effBB !== null ? ` · 유효 ${effBB.toFixed(1)}BB` : ''}
           {sess.config.mode === 'trainer' && ' · 훈련 모드'}
-          {cash && acct && acct.kind !== 'practice' && ` · 테이블 손익 ${(() => { const n = hero.stack + hero.bet + hero.invested * (complete ? 0 : 1) - acct.spent; return (n >= 0 ? '+' : '') + n.toLocaleString(); })()}`}
-          {cash && ` · ${cash.label}`}
-          {sess.prize && ` · 참가비 ${(sess.prize.buyIn + sess.prize.fee).toLocaleString()}`}
         </div>
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => setSettings({ sound: !settings.sound })} aria-label="소리" data-testid="btn-sound">{settings.sound ? '🔊' : '🔇'}</button>
         <select className="bg-slate-800 rounded px-1 py-1" value={settings.animMs} onChange={(e) => setSettings({ animMs: Number(e.target.value) })} aria-label="속도" data-testid="speed">
@@ -81,6 +78,23 @@ export function GameScreen({ sess }: { sess: Session }) {
         <button className={`btn !min-h-[34px] !py-1 ${settings.autoCoach ? 'bg-emerald-800' : 'bg-slate-700'}`} onClick={() => setSettings({ autoCoach: !settings.autoCoach })} title="핸드 종료 후 자동 코치" data-testid="btn-coach-toggle">코치 {settings.autoCoach ? 'ON' : 'OFF'}</button>
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => setPanel(panel === 'log' ? null : 'log')} data-testid="btn-log">기록</button>
       </header>
+      {(cash || tourney) && (() => {
+        const live = hero.stack + (complete ? 0 : hero.invested);
+        const chips = hero.stack + (complete ? 0 : hero.invested);
+        const ts = tourney ? tourneyStatus(sess) : null;
+        const spent = acct?.spent ?? 0;
+        const net = chips - spent;
+        return (
+          <div className="px-2 py-1 text-[11px] sm:text-xs text-slate-300 bg-slate-900/60 border-b border-slate-800 flex flex-wrap gap-x-3 gap-y-0.5" data-testid="econ-strip">
+            {cash && <><span className="font-semibold text-slate-100">{cash.label}</span><span>블라인드 고정 {bl.sb}/{bl.bb}</span><span>테이블 칩 <b data-testid="strip-chips">{live.toLocaleString()}</b></span>
+              {acct && acct.kind !== 'practice' && <><span>이번 손익 <b className={net >= 0 ? 'text-emerald-300' : 'text-rose-300'} data-testid="strip-net">{net >= 0 ? '+' : ''}{net.toLocaleString()}</b> (투입 {spent.toLocaleString()})</span><span>통장 <b className="text-yellow-300">{wallet.balance.toLocaleString()}</b></span></>}
+              {acct?.kind === 'practice' && <span className="text-slate-500">연습 — 통장 무관</span>}</>}
+            {ts && <><span className="font-semibold text-slate-100">{acct?.label ?? '토너먼트'}</span>{acct && acct.kind !== 'practice' && <span>투입 {spent.toLocaleString()}</span>}<span>우승 상금 {ts.firstPrize.toLocaleString()}</span>
+              <span>{ts.inTheMoney ? `현재 보장 ${ts.heroPrizeNow.toLocaleString()}` : `입상 ${ts.paidPlaces}명`}</span><span>블라인드 {sess.config.blindMode === 'adaptive' ? '적응형' : '정규'}</span>
+              {acct && acct.kind !== 'practice' && <span>통장 <b className="text-yellow-300">{wallet.balance.toLocaleString()}</b></span>}</>}
+          </div>
+        );
+      })()}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {announce && <div className="mx-2 mt-2 rounded-lg bg-amber-500 text-black font-semibold text-xs sm:text-sm px-3 py-2 shadow-lg" role="alert" data-testid="announce">📣 {announce}</div>}
         {tourney && <TourneyHud sess={sess} />}

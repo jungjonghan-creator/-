@@ -215,6 +215,8 @@ test('[경제] 홈에 통장 30,000 → 캐시 착석(바이인 차감) → 퇴�
   }
   await foldThroughHand(page);
   const chips = num(await page.getByTestId('stack-0').innerText());
+  expect(num(await page.getByTestId('strip-chips').innerText())).toBe(chips);
+  expect(num(await page.getByTestId('strip-net').innerText())).toBe(chips - 2000); // 이번 손익 = 테이블 칩 − 바이인
   await page.getByTestId('btn-leave').click();
   await expect(page.getByTestId('lobby')).toBeVisible();
   const bal = num(await page.getByTestId('lobby-balance').innerText());

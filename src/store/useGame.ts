@@ -219,7 +219,10 @@ export const useGame = create<Store>((set, get) => {
     startPractice(cfg) {
       const sid = newSid();
       const wallet = W.openPractice(get().wallet, sid, '연습 경기');
-      let s = newSession({ ...cfg, seed: cfg.seed ?? randomSeed() });
+      // 연습 캐시/훈련 테이블은 칩이 바닥나도 계속할 수 있도록 리바이 패널을 붙인다 (통장 무관)
+      const stack = cfg.buyInChips ?? cfg.startBB * cfg.bb;
+      const cashCfg = cfg.mode === 'cash' || cfg.mode === 'trainer' ? { tableId: 'practice', label: '연습 경기', min: stack, max: stack } : undefined;
+      let s = newSession({ ...cfg, seed: cfg.seed ?? randomSeed(), buyInChips: stack, ...(cashCfg ? { cash: cashCfg } : {}) });
       s = { ...s, sid, memory: structuredClone(get().memory) };
       s = beginHand(s);
       s = { ...s, tstat: tourneyStatus(s) ?? undefined };

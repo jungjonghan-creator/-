@@ -73,15 +73,16 @@ export interface Skill {
   potOddsAware: number; // 팟오즈 고려 정도 0~1
   rangeReading: number; // 상대 레인지 추론 정도 0~1
   pushFoldAcc: number;
+  exploit: number;    // 상대 통계를 실제 의사결정에 반영하는 정도 0~1 (프로 = 1)
   eqBias: number;     // 에퀴티 과대평가 편향 (초보일수록 +)
   realize: number;    // 에퀴티 실현 할인 인식(포지션/미래 베팅)
 }
 export const SKILLS: Record<Difficulty, Skill> = {
-  1: { noise: 0.16, sims: 50, mistake: 0.2, potOddsAware: 0.3, rangeReading: 0.1, pushFoldAcc: 0.5, eqBias: 0.08, realize: 0 },
-  2: { noise: 0.1, sims: 100, mistake: 0.12, potOddsAware: 0.6, rangeReading: 0.45, pushFoldAcc: 0.7, eqBias: 0.04, realize: 0.3 },
-  3: { noise: 0.06, sims: 220, mistake: 0.06, potOddsAware: 0.85, rangeReading: 0.75, pushFoldAcc: 0.85, eqBias: 0.015, realize: 0.7 },
-  4: { noise: 0.03, sims: 450, mistake: 0.025, potOddsAware: 1, rangeReading: 0.92, pushFoldAcc: 0.95, eqBias: 0, realize: 1 },
-  5: { noise: 0.012, sims: 900, mistake: 0.006, potOddsAware: 1, rangeReading: 1, pushFoldAcc: 1, eqBias: 0, realize: 1 },
+  1: { noise: 0.16, sims: 50, mistake: 0.2, potOddsAware: 0.3, rangeReading: 0.1, pushFoldAcc: 0.5, eqBias: 0.08, realize: 0, exploit: 0 },
+  2: { noise: 0.1, sims: 100, mistake: 0.12, potOddsAware: 0.6, rangeReading: 0.45, pushFoldAcc: 0.7, eqBias: 0.04, realize: 0.3, exploit: 0.2 },
+  3: { noise: 0.06, sims: 220, mistake: 0.06, potOddsAware: 0.85, rangeReading: 0.75, pushFoldAcc: 0.85, eqBias: 0.015, realize: 0.7, exploit: 0.45 },
+  4: { noise: 0.03, sims: 450, mistake: 0.025, potOddsAware: 1, rangeReading: 0.92, pushFoldAcc: 0.95, eqBias: 0, realize: 1, exploit: 0.7 },
+  5: { noise: 0.012, sims: 1600, mistake: 0.006, potOddsAware: 1, rangeReading: 1, pushFoldAcc: 1, eqBias: 0, realize: 1, exploit: 1.25 },
 };
 
 export interface AISetup { profileId: string; difficulty: Difficulty }
