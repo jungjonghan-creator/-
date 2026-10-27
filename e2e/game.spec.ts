@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startGame, waitTurnOrEnd, playPassively, heroCards, boardCards, handOver } from './helpers';
+import { startGame, waitTurnOrEnd, playPassively, heroCards, boardCards, handOver, seedWallet, wipe, sitCash, joinTournament, foldThroughHand, num } from './helpers';
 
 test('헤즈업: 생성 → 테이블 → 클릭 행동 → 핸드 종료 → 다음 핸드', async ({ page }) => {
   await startGame(page, { seats: 2, stack: 50 });
@@ -134,56 +134,15 @@ test('모바일: 9인 테이블 좌석과 행동 버튼이 화면 안에 보인�
   await page.screenshot({ path: 'test-results/mobile-9max.png' });
 });
 
-test('헤즈업 싯앤고: 올인 반복 → 종료 → 토너먼트 기록(ITM/ROI)', async ({ page }) => {
-  test.setTimeout(120000);
-  await startGame(page, { mode: 'mode-hu-sng', stack: 20, speed: 'hyper' });
-  for (let h = 0; h < 150; h++) {
-    await waitTurnOrEnd(page);
-    if (await page.getByTestId('hand-end').isVisible()) {
-      if (await page.getByTestId('game-over').count()) break;
-      if (await page.getByTestId('btn-next').count() === 0) continue;
-      await page.getByTestId('btn-next').click({ timeout: 5000 }).catch(() => {});
-      continue;
-    }
-    if (await page.getByTestId('btn-allin').isEnabled()) { await page.getByTestId('btn-allin').click(); await page.getByTestId('allin-ok').click(); }
-    else await page.getByTestId('btn-call').click();
-    await page.waitForTimeout(30);
-  }
-  await expect(page.getByTestId('game-over')).toBeVisible();
-  await page.getByTestId('btn-menu').click();
-  await page.getByTestId('nav-stats').click();
-  await expect(page.getByTestId('tourney-stats')).toContainText('ITM');
-});
-
-test('멀티테이블 토너먼트: 시작, 남은 인원/테이블 표시, 다음 핸드 진행', async ({ page }) => {
-  test.setTimeout(120000);
-  await startGame(page, { mode: 'mode-mtt' });
-  // startGame 은 모드 클릭 후 시작 — MTT 는 기본 27명
-  await expect(page.getByTestId('tourney-hud')).toBeVisible();
-  await expect(page.getByTestId('hud-rank')).toContainText('/ 27');
-  const first = await page.getByTestId('hud-level').innerText();
-  for (let h = 0; h < 4; h++) {
-    await waitTurnOrEnd(page);
-    for (let i = 0; i < 40 && !(await page.getByTestId('hand-end').isVisible()); i++) {
-      await waitTurnOrEnd(page);
-      if (await page.getByTestId('hand-end').isVisible()) break;
-      if (await page.getByTestId('btn-fold').isEnabled()) await page.getByTestId('btn-fold').click(); else await page.getByTestId('btn-check').click();
-      await page.waitForTimeout(30);
-    }
-    if (await page.getByTestId('btn-next').isEnabled()) await page.getByTestId('btn-next').click();
-    await page.waitForTimeout(300);
-  }
-  const later = await page.getByTestId('hud-level').innerText();
-  expect(later).not.toBe(first); // 레벨/다음 레벨까지 핸드 수가 변했다
-});
-
-test('오프라인: 서비스워커 캐시 후 네트워크 없이 게임 시작·플레이', async ({ page, context }) => {
+test('오프라인: 서비스워커 캐시 후 네트워크 없이 연습 경기 시작·플레이', async ({ page, context }) => {
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
   await page.waitForTimeout(800); // 프리캐시 완료 대기
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByTestId('menu')).toBeVisible();
+  await expect(page.getByTestId('home-balance')).toBeVisible();
+  await page.getByTestId('nav-practice').click();
   await page.getByTestId('seats-2').click();
   await page.getByTestId('btn-start').click();
   await expect(page.getByTestId('table')).toBeVisible();
@@ -206,17 +165,11 @@ test('핸드 기록: 즐겨찾기와 검색', async ({ page }) => {
   await expect(page.getByTestId('history-item')).toHaveCount(0);
 });
 
-async function nextHandOrRebuy(page: import('@playwright/test').Page) {
-  if (await page.getByTestId('btn-rebuy').count()) await page.getByTestId('btn-rebuy').click();
-  await page.getByTestId('btn-next').click({ timeout: 5000 });
-}
-
 test('핸드가 끝나면 코치 카드가 자동으로 뜬다', async ({ page }) => {
   await startGame(page, { seats: 2, stack: 50 });
   await playPassively(page);
   await expect(page.getByTestId('coach-card')).toBeVisible({ timeout: 15000 });
   await expect(page.getByTestId('coach-headline')).not.toBeEmpty();
-  // 끄면 나타나지 않는다
   await page.getByTestId('btn-coach-toggle').click();
   await expect(page.getByTestId('coach-card')).toBeHidden();
   await page.getByTestId('btn-coach-toggle').click();
@@ -224,44 +177,14 @@ test('핸드가 끝나면 코치 카드가 자동으로 뜬다', async ({ page }
   await expect(page.getByTestId('review')).toBeVisible();
 });
 
-test('스토리 모드: 앉기 → 해설 피드 → 코치 → 일어나기 → 정산·저널', async ({ page }) => {
-  test.setTimeout(90000);
-  await page.goto('/');
-  await page.evaluate(async () => { const r = indexedDB.deleteDatabase('poker-arena'); await new Promise((res) => { r.onsuccess = r.onerror = r.onblocked = () => res(null); }); });
-  await page.reload();
-  await page.getByTestId('nav-story').click();
-  await expect(page.getByTestId('bankroll')).toHaveText('3,000');
-  await expect(page.getByTestId('chapter-card')).toContainText('지하 클럽');
-  await expect(page.getByTestId('rival-kang')).toBeVisible();
-  await page.getByTestId('sit-50').click();
-  await expect(page.getByTestId('table')).toBeVisible();
-  await page.getByTestId('speed').selectOption('0');
-  await expect(page.getByTestId('story-feed')).toBeVisible();
-  await expect(page.getByTestId('blinds')).toContainText('챕터 1');
-  // 라이벌 이름이 캐릭터 이름으로 표시된다 (NOVA 포함)
-  await expect(page.locator('[data-testid^=name-]', { hasText: '강 사장' })).toHaveCount(1);
-  await playPassively(page);
-  await expect(page.getByTestId('coach-card')).toBeVisible({ timeout: 15000 });
-  await page.getByTestId('btn-leave').click();
-  await expect(page.getByTestId('story')).toBeVisible();
-  await expect(page.getByTestId('story-summary')).toBeVisible();
-  const bank = Number((await page.getByTestId('bankroll').innerText()).replace(/,/g, ''));
-  expect(bank).toBeGreaterThan(1000); // 정산 후 자본 = 3000 - 1000 + 현재 스택
-  expect(bank).toBeLessThan(5000);
-  await expect(page.getByTestId('journal')).toBeVisible();
-  // 다시 앉아 이어서 하기 → 새로고침 후에도 이어하기 가능
-  await page.getByTestId('sit-50').click();
-  await expect(page.getByTestId('table')).toBeVisible();
-  await page.waitForTimeout(400);
-  await page.reload();
-  await page.getByTestId('nav-story').click();
-  await expect(page.getByTestId('story-resume')).toBeVisible();
-});
-
 test('분석실: 여러 핸드 후 심층 리포트(누수·계획·상대 분석)', async ({ page }) => {
   test.setTimeout(150000);
   await startGame(page, { seats: 2, stack: 50 });
-  for (let h = 0; h < 9; h++) { await playPassively(page); await nextHandOrRebuy(page); }
+  for (let h = 0; h < 9; h++) {
+    await playPassively(page);
+    if (await page.getByTestId('btn-rebuy').count()) await page.getByTestId('btn-rebuy').click();
+    await page.getByTestId('btn-next').click({ timeout: 5000 });
+  }
   await page.getByTestId('btn-menu').click();
   await page.getByTestId('nav-coach').click();
   await expect(page.getByTestId('coach-summary')).toBeVisible({ timeout: 90000 });
@@ -271,76 +194,143 @@ test('분석실: 여러 핸드 후 심층 리포트(누수·계획·상대 분�
   await expect(page.getByTestId('coach-tilt')).toBeVisible();
 });
 
-async function seedCashes(page: import('@playwright/test').Page, ids: string[]) {
-  await page.goto('/');
-  await page.evaluate(async () => { const r = indexedDB.deleteDatabase('poker-arena'); await new Promise((res) => { r.onsuccess = r.onerror = r.onblocked = () => res(null); }); });
-  await page.reload(); // 열린 연결을 닫아 삭제를 완료시킨다
-  await page.evaluate(async (tiers) => {
-    const db: IDBDatabase = await new Promise((res, rej) => { const o = indexedDB.open('poker-arena', 1); o.onupgradeneeded = () => { if (!o.result.objectStoreNames.contains('kv')) o.result.createObjectStore('kv'); }; o.onsuccess = () => res(o.result); o.onerror = () => rej(o.error); });
-    await new Promise<void>((res) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(tiers.map((id, i) => ({ tierId: id, date: i, mode: 'x', entrants: 10, place: 1, prize: 100, buyIn: 100, entries: 1 })), 'tourneys'); tx.oncomplete = () => res(); });
-    db.close();
-  }, ids);
-  await page.reload();
-}
-async function foldThroughHand(page: import('@playwright/test').Page) {
-  for (let i = 0; i < 40; i++) {
-    await waitTurnOrEnd(page);
-    if (await page.getByTestId('hand-end').isVisible()) return;
-    if (await page.getByTestId('btn-fold').isEnabled()) await page.getByTestId('btn-fold').click(); else await page.getByTestId('btn-check').click();
-    await page.waitForTimeout(30);
-  }
-}
-
-test('[lobby] 토너먼트 로비: 7단계 래더, 입상해야 다음 단계가 열린다', async ({ page }) => {
-  await seedCashes(page, ['hu']);
+// ─────────────── 경제 시스템 ───────────────
+test('[경제] 홈에 통장 30,000 → 캐시 착석(바이인 차감) → 퇴장 정산 → 원장 기록', async ({ page }) => {
+  test.setTimeout(90000);
+  await wipe(page);
+  await expect(page.getByTestId('home-balance')).toHaveText('30,000');
   await page.getByTestId('nav-lobby').click();
+  await page.getByTestId('cash-open-c2').click();
+  await expect(page.getByTestId('cash-buy-c2')).toContainText('2,000'); // 최소 바이인 40BB
+  await page.getByTestId('cash-level-c2-intermediate').click();
+  await page.getByTestId('cash-sit-c2').click();
+  await expect(page.getByTestId('table')).toBeVisible();
+  await page.getByTestId('speed').selectOption('0');
+  await expect(page.getByTestId('blinds')).toContainText('25/50');
+  for (let h = 0; h < 3; h++) {
+    await foldThroughHand(page);
+    await page.getByTestId('btn-next').click({ timeout: 8000 });
+    await page.waitForTimeout(150);
+    await expect(page.getByTestId('blinds')).toContainText('25/50'); // 캐시게임은 블라인드 고정
+  }
+  await foldThroughHand(page);
+  const chips = num(await page.getByTestId('stack-0').innerText());
+  await page.getByTestId('btn-leave').click();
   await expect(page.getByTestId('lobby')).toBeVisible();
-  for (const id of ['hu', 'sng6', 'sng9', 'mtt27', 'mtt54', 'mtt108', 'mtt216']) await expect(page.getByTestId(`tier-${id}`)).toBeVisible();
-  await expect(page.getByTestId('start-hu')).toBeEnabled();
-  await expect(page.getByTestId('start-sng6')).toBeEnabled();   // hu 입상 → 2단계 개방
-  await expect(page.getByTestId('start-sng9')).toBeDisabled();
-  await expect(page.getByTestId('start-mtt216')).toBeDisabled();
+  const bal = num(await page.getByTestId('lobby-balance').innerText());
+  expect(bal).toBe(30000 - 2000 + chips);              // 남은 테이블 칩만 반환
+  await page.getByTestId('lobby-wallet').click();
+  await expect(page.getByTestId('wallet')).toBeVisible();
+  const rows = await page.getByTestId('ledger-row').allInnerTexts();
+  expect(rows.join('\n')).toContain('캐시 바이인');
+  expect(rows.join('\n')).toContain('캐시 정산');
 });
 
-test('[hud] MTT 진행: 순위·평균 스택·M·블라인드 상승·인원 감소가 HUD에 반영된다', async ({ page }) => {
-  test.setTimeout(120000);
-  await seedCashes(page, ['hu', 'sng6', 'sng9']);
+test('[경제] 잔액 부족: 바이인·참가비 모두 참가 불가 안내, 통장 불변', async ({ page }) => {
+  await seedWallet(page, 1500);
   await page.getByTestId('nav-lobby').click();
-  await page.getByTestId('start-mtt27').click();
-  await expect(page.getByTestId('tourney-hud')).toBeVisible();
+  await page.getByTestId('cash-open-c2').click();
+  await expect(page.getByTestId('cash-poor-c2')).toBeVisible();
+  await expect(page.getByTestId('cash-sit-c2')).toHaveCount(0);
+  await page.getByTestId('tab-tourney').click();
+  await page.getByTestId('tourney-open-sng9c').click();
+  await expect(page.getByTestId('tourney-poor-sng9c')).toBeVisible();
+  await expect(page.getByTestId('tourney-start-sng9c')).toBeDisabled();
+  await page.getByTestId('tourney-open-free9').click();
+  await expect(page.getByTestId('tourney-start-free9')).toBeEnabled(); // 프리롤은 언제든 가능
+  await expect(page.getByTestId('lobby-balance')).toHaveText('1,500');
+});
+
+test('[경제] 토너먼트: 참가비 차감 → 완주 → 상금 정산(한 번) → 새로고침 후에도 동일', async ({ page }) => {
+  test.setTimeout(150000);
+  await wipe(page);
+  await joinTournament(page, 'hu', 'beginner');
+  // 등록 즉시 참가비+수수료 차감 (250 + 25)
+  await page.getByTestId('btn-menu').click();
+  await expect(page.getByTestId('home-balance')).toHaveText((30000 - 275).toLocaleString());
+  await page.getByTestId('btn-resume').click();
   await page.getByTestId('speed').selectOption('0');
+  for (let h = 0; h < 200; h++) {
+    await waitTurnOrEnd(page);
+    if (await page.getByTestId('hand-end').isVisible()) {
+      if (await page.getByTestId('btn-to-lobby').count()) break;
+      await page.getByTestId('btn-next').click({ timeout: 8000 }).catch(() => {});
+      continue;
+    }
+    if (await page.getByTestId('btn-allin').isEnabled()) { await page.getByTestId('btn-allin').click(); await page.getByTestId('allin-ok').click(); }
+    else await page.getByTestId('btn-call').click();
+    await page.waitForTimeout(30);
+  }
+  await expect(page.getByTestId('btn-to-lobby')).toBeVisible();
+  await page.getByTestId('btn-to-lobby').click();
+  await expect(page.getByTestId('lobby')).toBeVisible();
+  const bal = num(await page.getByTestId('lobby-balance').innerText());
+  expect([30000 - 275, 30000 - 275 + 500]).toContain(bal); // 헤즈업은 승자독식 (풀 250×2=500)
+  await page.waitForTimeout(300);
+  await page.reload();
+  await expect(page.getByTestId('home-balance')).toHaveText(bal.toLocaleString());
+  await expect(page.getByTestId('btn-resume')).toHaveCount(0); // 끝난 경기는 이어하기에 남지 않는다
+  await page.getByTestId('nav-wallet').click();
+  const text = (await page.getByTestId('ledger').innerText());
+  expect(text).toContain('토너먼트 참가비');
+  expect((text.match(/토너먼트 상금/g) ?? []).length).toBe(bal > 30000 - 275 ? 1 : 0);
+});
+
+test('[경제] 캐시 착석 중 새로고침: 이어하기로 같은 카드·같은 통장', async ({ page }) => {
+  await wipe(page);
+  await sitCash(page, 'c1', 'beginner');
+  await waitTurnOrEnd(page);
+  const hc = await heroCards(page);
+  await page.waitForTimeout(300);
+  await page.reload();
+  await expect(page.getByTestId('home-balance')).toHaveText((30000 - 400).toLocaleString());
+  await page.getByTestId('btn-resume').click();
+  await waitTurnOrEnd(page);
+  expect(await heroCards(page)).toEqual(hc);
+});
+
+test('[경제] 토너먼트 카드: 상금표·적응형 블라인드 규칙 공개, 프리롤 상금', async ({ page }) => {
+  await wipe(page);
+  await page.getByTestId('nav-lobby').click();
+  await page.getByTestId('tab-tourney').click();
+  await page.getByTestId('tourney-open-sng9d').click();
+  await expect(page.getByTestId('prizes-sng9d')).toContainText('108,000');
+  await expect(page.getByTestId('adaptive-rules-sng9d')).toContainText('평균 스택');
+  await page.getByTestId('blind-regular-sng9d').click();
+  await expect(page.getByTestId('adaptive-rules-sng9d')).toHaveCount(0);
+  await page.getByTestId('tourney-open-free9').click();
+  await expect(page.getByTestId('prizes-free9')).toContainText('180');
+});
+
+test('[경제] MTT 진행: 순위·평균 스택·블라인드 상승이 HUD에 반영', async ({ page }) => {
+  test.setTimeout(120000);
+  await wipe(page);
+  await joinTournament(page, 'mtt27');
+  await expect(page.getByTestId('tourney-hud')).toBeVisible();
   await expect(page.getByTestId('hud-rank')).toContainText('/ 27');
   await expect(page.getByTestId('hud-avg')).toContainText('5,000');
   await expect(page.locator('[data-stage=early]')).toHaveAttribute('data-current', 'true');
   const lv0 = await page.getByTestId('hud-level').innerText();
-  expect(lv0).toContain('레벨 1');
-  for (let h = 0; h < 6; h++) {
+  for (let h = 0; h < 8; h++) {
     await foldThroughHand(page);
     if (await page.getByTestId('btn-next').count() === 0) break;
     await page.getByTestId('btn-next').click({ timeout: 8000 });
     await page.waitForTimeout(250);
   }
-  await expect(page.getByTestId('hud-level')).not.toContainText('레벨 1 ');
-  const rank = await page.getByTestId('hud-rank').innerText();
-  expect(rank).toMatch(/\d+\s*\/\s*\d+/);
-  const left = Number(rank.split('/')[1].trim());
-  expect(left).toBeLessThanOrEqual(27);
+  expect(await page.getByTestId('hud-level').innerText()).not.toBe(lv0);
   await page.getByTestId('hud-toggle').click();
-  await expect(page.getByTestId('hud-detail')).toContainText('순위표');
   await expect(page.getByTestId('hud-detail')).toContainText('상금표');
 });
 
-test('[latereg] 레이트 등록 대회: 등록 중 표시와 참가자 증가', async ({ page }) => {
+test('[경제] 레이트 등록 대회: 등록 중 표시와 참가자 증가', async ({ page }) => {
   test.setTimeout(120000);
-  await seedCashes(page, ['hu', 'sng6', 'sng9', 'mtt27']);
-  await page.getByTestId('nav-lobby').click();
-  await page.getByTestId('start-mtt54').click();
-  await page.getByTestId('speed').selectOption('0');
+  await wipe(page);
+  await joinTournament(page, 'mtt54');
   await expect(page.getByTestId('reg-open')).toBeVisible();
   await page.getByTestId('hud-toggle').click();
   const entries0 = Number((await page.getByTestId('hud-detail').innerText()).match(/총 (\d+)엔트리/)![1]);
   expect(entries0).toBe(54);
-  for (let h = 0; h < 5; h++) {
+  for (let h = 0; h < 6; h++) {
     await foldThroughHand(page);
     if (await page.getByTestId('btn-next').count() === 0) break;
     await page.getByTestId('btn-next').click({ timeout: 8000 });

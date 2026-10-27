@@ -1,103 +1,54 @@
-import { useState } from 'react';
-import { Difficulty, DIFFICULTY_NAMES, PROFILE_IDS, PROFILES, AISetup } from '../ai/profiles';
-import { Mode, Speed, defaultAIs } from '../game/session';
 import { useGame } from '../store/useGame';
+import { summarize, atTable } from '../economy/wallet';
+import { cashTableById, tournamentById } from '../economy/catalog';
+
+const fmt = (n: number) => Math.round(n).toLocaleString();
 
 export function Menu() {
-  const { start, startMTT, resume, hasSave, setScreen, corrupt, dismissCorrupt } = useGame();
-  const [mode, setMode] = useState<Mode>('cash');
-  const [seats, setSeats] = useState(2);
-  const [startBB, setStartBB] = useState(50);
-  const [bb, setBB] = useState(100);
-  const [speed, setSpeed] = useState<Speed>('normal');
-  const [diff, setDiff] = useState<Difficulty>(3);
-  const [profile, setProfile] = useState('Balanced');
-  const [name, setName] = useState('TETO');
-  const [entrants, setEntrants] = useState(27);
-  const [reentry, setReentry] = useState(false);
-
-  const effSeats = mode === 'headsup-sng' ? 2 : seats;
-  const go = () => {
-    if (mode === 'mtt') {
-      startMTT({ mtt: { entrants, tableSize: seats === 6 ? 6 : 9, buyIn: 100, reentry, reentryUntilLevel: 4, maxReentries: 2 }, startBB: Math.max(startBB, 20), bb, speed, humanName: name || 'TETO', difficulty: diff, profileId: profile });
-      return;
-    }
-    const first = profile;
-    const ais: AISetup[] = defaultAIs(effSeats - 1, diff, first);
-    start({ mode, seats: effSeats, startBB: mode === 'sng' || mode === 'headsup-sng' ? Math.max(startBB, 20) : startBB, bb, speed, humanName: name || 'TETO', ais });
-  };
-  const sel = (v: boolean) => `btn ${v ? 'bg-sky-600' : 'bg-slate-700 hover:bg-slate-600'}`;
+  const { wallet, walletErrors, resetWallet, saved, resume, hasSave, setScreen, corrupt, dismissCorrupt, ready, tourneys } = useGame();
+  const sm = summarize(wallet);
+  const at = atTable(wallet);
+  const savedLabel = saved ? (saved.config.cash ? `${cashTableById(saved.config.cash.tableId).name} · 테이블 칩 ${fmt(saved.game.players[0].stack)}` : saved.tierId ? tournamentById(saved.tierId)?.name ?? '토너먼트' : '연습 경기') : '';
   return (
-    <div className="max-w-xl mx-auto p-4 space-y-4 safe-pad" data-testid="menu">
-      <h1 className="text-3xl font-extrabold tracking-wide">♠ POKER ARENA <span className="text-sky-400">5.0</span></h1>
-      <p className="text-xs text-slate-400">가상 칩 기반 개인용 노리밋 홀덤 시뮬레이터 — 실제 돈 없음.</p>
+    <div className="max-w-xl mx-auto p-4 space-y-4 safe-pad overflow-y-auto h-full" data-testid="menu">
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-wide">♠ POKER ARENA <span className="text-sky-400">5.0</span></h1>
+        <p className="text-xs text-slate-400">가상 크레딧 기반 개인용 포커 시뮬레이터 — 실제 돈·결제·환전 없음.</p>
+      </div>
+      {walletErrors && (
+        <div className="p-3 rounded-lg bg-rose-900/60 text-sm space-y-1" data-testid="wallet-corrupt">
+          <b>통장 데이터에 문제가 있어 경기를 시작할 수 없습니다.</b>
+          <ul className="list-disc pl-5 text-xs">{walletErrors.slice(0, 4).map((e, i) => <li key={i}>{e}</li>)}</ul>
+          <button className="btn !min-h-[34px] bg-rose-700 text-xs" onClick={() => resetWallet()}>통장 초기화 (30,000 크레딧)</button>
+        </div>
+      )}
       {corrupt && (
         <div className="p-3 rounded-lg bg-rose-900/60 text-sm space-y-1" data-testid="corrupt">
-          <b>저장 데이터가 손상되어 불러올 수 없습니다.</b>
+          <b>저장된 경기 데이터가 손상되어 불러올 수 없습니다.</b>
           <ul className="list-disc pl-5 text-xs">{corrupt.errors.slice(0, 4).map((e, i) => <li key={i}>{e}</li>)}</ul>
-          <button className="btn !min-h-[34px] bg-rose-700 text-xs" onClick={() => dismissCorrupt()}>손상된 저장 삭제</button>
+          <div className="text-xs text-slate-300">삭제하면 그 경기에 묶여 있던 바이인/참가비는 통장으로 환불됩니다.</div>
+          <button className="btn !min-h-[34px] bg-rose-700 text-xs" onClick={() => dismissCorrupt()} data-testid="btn-dismiss-corrupt">손상된 경기 삭제 + 환불</button>
         </div>
       )}
-      <button className="w-full text-left rounded-xl p-3 bg-gradient-to-r from-sky-900 to-indigo-900 border border-sky-500/60" onClick={() => setScreen('lobby')} data-testid="nav-lobby">
-        <div className="font-bold">토너먼트 — 규모가 커지는 7단계 래더</div>
-        <div className="text-xs text-slate-300">헤즈업 SNG부터 200명 이상 MTT까지. 순위·평균 스택·M값·버블·파이널 테이블의 긴장감.</div>
+      <button className="w-full text-left rounded-xl p-4 bg-gradient-to-r from-slate-900 to-slate-800 border border-yellow-600/50" onClick={() => setScreen('wallet')} data-testid="nav-wallet">
+        <div className="text-xs text-slate-400">내 통장 (가상 크레딧)</div>
+        <div className="text-3xl font-extrabold text-yellow-300" data-testid="home-balance">{ready ? fmt(wallet.balance) : '…'}</div>
+        <div className="text-xs text-slate-300 mt-1">테이블/대회 진행 중 {fmt(at)} · 누적 손익 <b className={sm.totalNet >= 0 ? 'text-emerald-300' : 'text-rose-300'}>{sm.totalNet >= 0 ? '+' : ''}{fmt(sm.totalNet)}</b> · 최고 {fmt(sm.peak)}</div>
       </button>
-      {hasSave && <button className="btn w-full bg-emerald-600" onClick={() => resume()} data-testid="btn-resume">▶ 이어하기</button>}
-      <section className="space-y-2">
-        <h2 className="font-bold">게임 모드</h2>
-        <div className="grid grid-cols-2 gap-2">
-          <button className={sel(mode === 'cash')} onClick={() => setMode('cash')} data-testid="mode-cash">캐시게임</button>
-          <button className={sel(mode === 'headsup-sng')} onClick={() => setMode('headsup-sng')} data-testid="mode-hu-sng">헤즈업 싯앤고</button>
-          <button className={sel(mode === 'sng')} onClick={() => { setMode('sng'); if (seats === 2) setSeats(6); }} data-testid="mode-sng">6/9인 싯앤고</button>
-          <button className={sel(mode === 'mtt')} onClick={() => { setMode('mtt'); if (seats === 2) setSeats(9); }} data-testid="mode-mtt">멀티테이블 토너먼트</button>
-          <button className={sel(mode === 'trainer')} onClick={() => setMode('trainer')} data-testid="mode-trainer">훈련 테이블(힌트)</button>
-        </div>
-      </section>
-      {mode !== 'headsup-sng' && (
-        <section className="space-y-2">
-          <h2 className="font-bold">인원</h2>
-          <div className="flex gap-2">
-            {(mode === 'sng' || mode === 'mtt' ? [6, 9] : [2, 6, 9]).map((n) => <button key={n} className={sel(seats === n)} onClick={() => setSeats(n)} data-testid={`seats-${n}`}>{n === 2 ? '헤즈업' : n === 6 ? '6-Max' : 'Full Ring'}</button>)}
-          </div>
-        </section>
+      {hasSave && (
+        <button className="btn w-full bg-emerald-600 !min-h-[56px]" onClick={() => resume()} data-testid="btn-resume">▶ 이어하기 — {savedLabel}</button>
       )}
-      <section className="space-y-2">
-        <h2 className="font-bold">시작 스택 (BB)</h2>
-        <div className="flex gap-2 items-center flex-wrap">
-          {[20, 50, 100].map((n) => <button key={n} className={sel(startBB === n)} onClick={() => setStartBB(n)} data-testid={`stack-${n}`}>{n}BB</button>)}
-          <input className="w-24 bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-right" inputMode="numeric" value={startBB} onChange={(e) => setStartBB(Math.max(5, Math.min(500, Number(e.target.value.replace(/\D/g, '')) || 5)))} data-testid="stack-custom" aria-label="사용자 지정 스택" />
-          <span className="text-xs text-slate-400">BB={bb}</span>
-        </div>
-      </section>
-      {mode === 'mtt' && (
-        <section className="space-y-2"><h2 className="font-bold">참가자 수</h2>
-          <div className="flex gap-2 flex-wrap">{[18, 27, 45, 90].map((n) => <button key={n} className={sel(entrants === n)} onClick={() => setEntrants(n)} data-testid={`entrants-${n}`}>{n}명</button>)}</div>
-          <label className="text-sm flex items-center gap-2"><input type="checkbox" checked={reentry} onChange={(e) => setReentry(e.target.checked)} data-testid="reentry" /> 재진입 허용 (레벨 5 이전, 최대 2회)</label>
-        </section>
-      )}
-      {(mode === 'sng' || mode === 'headsup-sng' || mode === 'mtt') && (
-        <section className="space-y-2"><h2 className="font-bold">블라인드 속도</h2>
-          <div className="flex gap-2">{(['normal', 'turbo', 'hyper'] as Speed[]).map((s) => <button key={s} className={sel(speed === s)} onClick={() => setSpeed(s)} data-testid={`speed-${s}`}>{{ normal: '일반', turbo: '터보', hyper: '하이퍼터보' }[s]}</button>)}</div>
-        </section>
-      )}
-      <section className="space-y-2">
-        <h2 className="font-bold">AI 난이도</h2>
-        <div className="flex gap-1 flex-wrap">{([1, 2, 3, 4, 5] as Difficulty[]).map((d) => <button key={d} className={sel(diff === d)} onClick={() => setDiff(d)} data-testid={`diff-${d}`}>{DIFFICULTY_NAMES[d]}</button>)}</div>
-        <h2 className="font-bold pt-1">대표 상대(NOVA) 성향</h2>
-        <select className="w-full bg-slate-800 rounded-lg px-2 py-2" value={profile} onChange={(e) => setProfile(e.target.value)} data-testid="profile">
-          {PROFILE_IDS.map((p) => <option key={p} value={p}>{PROFILES[p].label} — {PROFILES[p].desc}</option>)}
-        </select>
-        <p className="text-xs text-slate-400">나머지 AI는 서로 다른 성향으로 자동 배정됩니다. 실전에서는 성향이 숨겨집니다.</p>
-      </section>
-      <input className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} aria-label="이름" />
-      <button className="btn w-full bg-gradient-to-r from-sky-600 to-indigo-600 text-lg" onClick={go} data-testid="btn-start">게임 시작</button>
+      <div className="grid grid-cols-2 gap-2">
+        <button className="btn bg-gradient-to-r from-sky-700 to-sky-600 !min-h-[64px] text-lg" onClick={() => setScreen('lobby')} data-testid="nav-lobby">캐시게임 · 토너먼트<div className="text-xs font-normal opacity-80">로비 입장</div></button>
+        <button className="btn bg-gradient-to-r from-indigo-700 to-indigo-600 !min-h-[64px] text-lg" onClick={() => setScreen('coach')} data-testid="nav-coach">분석실<div className="text-xs font-normal opacity-80">내 플레이 분석</div></button>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <button className="btn bg-indigo-800 text-sm" onClick={() => setScreen('coach')} data-testid="nav-coach">분석실</button>
-        <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('story')} data-testid="nav-story">캐시 스토리</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('stats')} data-testid="nav-stats">통계</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('history')} data-testid="nav-history">핸드 기록</button>
         <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('trainer')} data-testid="nav-trainer">푸시/폴드·스팟 훈련</button>
+        <button className="btn bg-slate-800 text-sm" onClick={() => setScreen('practice')} data-testid="nav-practice">연습 경기(통장 무관)</button>
       </div>
+      <div className="text-[11px] text-slate-500">전적: 토너먼트 {tourneys.length}회 · 입상 {tourneys.filter((t) => t.prize > 0).length}회</div>
     </div>
   );
 }

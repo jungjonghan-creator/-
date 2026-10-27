@@ -5,7 +5,7 @@ import { estimateEquity, holePct, OppRange } from './equity';
 import { handKey } from './handKey';
 import { estimate, OppModel } from './opponentModel';
 import { Observation, PublicPlayer } from './observation';
-import { AISetup, PROFILES, resolveStyle, Skill, SKILLS, Style } from './profiles';
+import { AISetup, applyMood, PROFILES, resolveStyle, Skill, SKILLS, Style } from './profiles';
 
 export interface Decision {
   action: Action | AllInAction;
@@ -22,7 +22,9 @@ export const OPEN_BASE: Record<string, number> = {
 
 /** AI 의사결정 — 오직 Observation 과 자신의 설정/기억만 사용한다. */
 export function decide(obs: Observation, setup: AISetup, memory: OppModel, rng: RNG, gameSeed = 0, simScale = 1): Decision {
-  const style = resolveStyle(setup.profileId, obs.handNo, gameSeed);
+  const hero0 = obs.players[obs.seat];
+  const ratio = obs.startStack ? (hero0.stack + hero0.bet) / obs.startStack : 1;
+  const style = applyMood(resolveStyle(setup.profileId, obs.handNo, gameSeed), ratio);
   const skill = simScale === 1 ? SKILLS[setup.difficulty] : { ...SKILLS[setup.difficulty], sims: Math.max(20, Math.round(SKILLS[setup.difficulty].sims * simScale)) };
   const legal = obs.legal;
   const safe = (action: Action | AllInAction, info: Decision['info']): Decision => ({ action: sanitize(action, obs), info });
@@ -117,6 +119,8 @@ function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng
   const bigPress = bf > 0 && ratio > 1.8 ? 1 + 0.25 * bf : 1;
 
   if (raises === 0) {
+    // 함정형: 최상위 핸드로 림프해 리레이즈를 노린다
+    if (st.trap > 0.3 && pct <= 0.025 && pos !== 'BB' && l.canCall && rng.next() < st.trap * 0.6) return { action: { type: 'call' }, info: info('함정 림프 (프리미엄)') };
     // 오픈 (BB 는 체크 옵션)
     const base = OPEN_BASE[pos] ?? 0.2;
     let openPct = clamp(base * st.vpipMul * tableScale * (limpers > 0 ? 0.8 : 1) * (icmTight < 1 ? 0.88 : 1) * bigPress, 0, 0.95);
@@ -152,12 +156,16 @@ function preflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rng
   const posBonus = ['BTN', 'BTN/SB', 'CO'].includes(pos) ? 1.3 : pos === 'BB' ? 1.25 : 1;
   const posPenalty = ['UTG', 'UTG+1'].includes(pos) ? 0.8 : 1;
   if (raises === 1) {
-    const tb = clamp(0.045 * st.threeBet * (lateOpener ? 1.6 : 1) * widen * posPenalty * bigPress, 0.01, 0.4);
+    // 스퀴즈: 오픈 레이즈 뒤에 콜러가 있으면 3벳 빈도·크기를 늘린다
+    const raiseIdx = obs.history.findIndex((e) => e.street === 'preflop' && (e.type === 'raise' || e.type === 'bet'));
+    const callersAfter = obs.history.slice(raiseIdx + 1).filter((e) => e.street === 'preflop' && e.type === 'call').length;
+    const squeeze = 1 + 0.45 * callersAfter;
+    const tb = clamp(0.045 * st.threeBet * (lateOpener ? 1.6 : 1) * widen * posPenalty * bigPress * squeeze, 0.01, 0.4);
     const callPct = clamp(0.11 * st.vpipMul * posBonus * sizePenalty * foldAdj * widen * icmTight, 0.01, 0.8);
     const toCall = l.callAmount;
     const potOddsNeed = toCall / (obs.pot + toCall);
     if (pct <= tb) {
-      return { action: raiseTo(obs, lastRaiseTo * (['BTN', 'BTN/SB', 'CO'].includes(pos) ? 3 : 3.8) + limpers * bb), info: info('3벳 (밸류)') };
+      return { action: raiseTo(obs, lastRaiseTo * (['BTN', 'BTN/SB', 'CO'].includes(pos) ? 3 : 3.8) + (limpers + callersAfter) * lastRaiseTo * 0.9), info: info(callersAfter ? '스퀴즈 (밸류)' : '3벳 (밸류)') };
     }
     // 블러프 3벳: A5s 류/수티드 커넥터 일부
     const bluffable = /^A[2-5]s$/.test(key) || /^(T9s|98s|87s|76s|65s|KQo|KJs)$/.test(key);
@@ -229,6 +237,7 @@ function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rn
   const preAgg = obs.history.filter((e) => e.street === 'preflop' && (e.type === 'raise')).pop()?.seat === obs.seat;
   const inPosition = isLast(obs);
   const mainOpp = opp[0] ? mem[opp[0].id] : undefined;
+  const spr = obs.effStack / Math.max(1, obs.pot);
 
   // 적응 보정
   let bluffMul = 1, callAdj = 0;
@@ -266,7 +275,9 @@ function postflop(obs: Observation, st: Style, setup: AISetup, mem: OppModel, rn
   // 체크 가능 — 벳 여부
   const valueT = st.valueThresh + (nOpp - 1) * 0.04 - (obs.street === 'river' ? 0 : 0.0);
   if (eq >= valueT) {
-    const slow = rng.next() < 0.12 * (1 - st.bluff) && obs.street !== 'river' && inPosition === false;
+    // SPR 이 낮으면(스택 대비 팟이 큼) 강한 핸드는 바로 커밋
+    if (spr < 2 && eq >= valueT + 0.05 && l.canRaise) return { action: { type: 'allin' }, info: info('SPR 낮음: 커밋') };
+    const slow = obs.street !== 'river' && (st.trap > 0 ? rng.next() < st.trap * 0.75 && eq > 0.78 : rng.next() < 0.12 * (1 - st.bluff) && inPosition === false);
     if (!slow) {
       const frac = clamp(st.betSize + (eq > 0.85 ? 0.2 : 0) + gauss(rng) * 0.05, 0.25, 1.3);
       return { action: raiseTo(obs, frac * pot), info: info('밸류 벳') };

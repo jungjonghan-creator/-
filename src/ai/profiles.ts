@@ -14,6 +14,8 @@ export interface Style {
   valueThresh: number;  // 밸류벳 최소 에퀴티 (낮을수록 얇게 벳)
   betSize: number;      // 벳 크기 (팟 비율)
   adapt: number;        // 상대 적응 속도 0~1
+  trap: number;         // 강한 핸드 슬로우플레이/체크레이즈 함정 성향 0~1
+  swing: number;        // 상황(칩 변화)에 따른 스타일 변화 폭 0~1
 }
 
 export interface AIProfile {
@@ -27,7 +29,7 @@ export interface AIProfile {
 
 const S = (o: Partial<Style>): Style => ({
   vpipMul: 1, openSize: 2.5, threeBet: 1, foldToRaise: 0.5, cbet: 0.6, checkRaise: 0.08, bluff: 0.25, bluffCatch: 0.5,
-  valueThresh: 0.62, betSize: 0.6, adapt: 0.3, ...o,
+  valueThresh: 0.62, betSize: 0.6, adapt: 0.3, trap: 0, swing: 0.5, ...o,
 });
 
 export const PROFILES: Record<string, AIProfile> = {
@@ -38,9 +40,30 @@ export const PROFILES: Record<string, AIProfile> = {
   Maniac: { id: 'Maniac', label: '매니악', desc: '거의 항상 공격', style: S({ vpipMul: 2.2, openSize: 4, threeBet: 2.4, foldToRaise: 0.15, cbet: 0.92, checkRaise: 0.2, bluff: 0.65, bluffCatch: 0.6, valueThresh: 0.5, betSize: 0.95, adapt: 0.1 }) },
   Balanced: { id: 'Balanced', label: '균형형 레귤러', desc: '표준적인 빈도로 균형 플레이', style: S({ vpipMul: 1, openSize: 2.5, threeBet: 1, foldToRaise: 0.5, cbet: 0.6, checkRaise: 0.09, bluff: 0.3, bluffCatch: 0.5, valueThresh: 0.6, betSize: 0.66, adapt: 0.5 }) },
   AdaptivePro: { id: 'AdaptivePro', label: '적응형 프로', desc: '상대 데이터를 읽고 익스플로잇', style: S({ vpipMul: 1.05, openSize: 2.5, threeBet: 1.1, foldToRaise: 0.5, cbet: 0.6, checkRaise: 0.1, bluff: 0.3, bluffCatch: 0.5, valueThresh: 0.6, betSize: 0.66, adapt: 1 }) },
+  Rock: { id: 'Rock', label: '보수적', desc: '강한 패 위주로 참여, 약하면 쉽게 폴드, 강한 패는 크게 공격', style: S({ vpipMul: 0.62, openSize: 2.6, threeBet: 0.85, foldToRaise: 0.72, cbet: 0.5, checkRaise: 0.05, bluff: 0.06, bluffCatch: 0.25, valueThresh: 0.6, betSize: 0.85, adapt: 0.25, swing: 0.2 }) },
+  Wild: { id: 'Wild', label: '예측불가', desc: '넓게 참여하고 가끔 극단적으로 공격 (무작위는 아님)', style: S({ vpipMul: 1.9, openSize: 3.2, threeBet: 1.9, foldToRaise: 0.25, cbet: 0.8, checkRaise: 0.18, bluff: 0.5, bluffCatch: 0.6, valueThresh: 0.55, betSize: 0.85, adapt: 0.15, swing: 0.9 }) },
+  Trapper: { id: 'Trapper', label: '함정형', desc: '강한 패로 슬로우플레이·체크레이즈로 베팅을 유도', style: S({ vpipMul: 0.95, openSize: 2.4, threeBet: 0.8, foldToRaise: 0.5, cbet: 0.4, checkRaise: 0.38, bluff: 0.18, bluffCatch: 0.5, valueThresh: 0.58, betSize: 0.6, adapt: 0.5, trap: 0.55, swing: 0.4 }) },
   Mixed: { id: 'Mixed', label: '믹스드', desc: '경기 중 성향이 바뀜', style: S({ adapt: 0.4 }), mixOf: ['TAG', 'LAG', 'Nit', 'CallingStation', 'Maniac', 'Balanced'] },
 };
 export const PROFILE_IDS = Object.keys(PROFILES);
+
+/** 로비에서 보이는 5가지 대표 성격 (실제 의사결정 파라미터가 서로 다르다) */
+export const PERSONAS = [
+  { id: 'conservative', label: '보수적', profileId: 'Rock', short: '강한 패만 참여' },
+  { id: 'aggressive', label: '공격적', profileId: 'LAG', short: '레이즈·리레이즈·블러프' },
+  { id: 'wild', label: '예측불가', profileId: 'Wild', short: '넓은 범위, 가끔 극단적' },
+  { id: 'trapper', label: '함정형', profileId: 'Trapper', short: '슬로우플레이·체크레이즈' },
+  { id: 'balanced', label: '숙련 균형형', profileId: 'AdaptivePro', short: '포지션·레인지·적응' },
+] as const;
+
+/** 사용자에게 보이는 4단계 난이도 → 내부 실력 수치 (카드 확률에는 관여하지 않음) */
+export const AI_LEVELS = [
+  { id: 'beginner', label: '초급', difficulty: 2 as Difficulty, desc: '규칙은 알지만 명백한 실수가 있음' },
+  { id: 'intermediate', label: '중급', difficulty: 3 as Difficulty, desc: '포지션·팟오즈·기본 레이즈 전략' },
+  { id: 'advanced', label: '상급', difficulty: 4 as Difficulty, desc: '상대 분석, 세미블러프, 3벳·체크레이즈' },
+  { id: 'pro', label: '프로', difficulty: 5 as Difficulty, desc: '상대 적응, 레인지 추론, 기대값 중심' },
+] as const;
+export const levelByDifficulty = (d: Difficulty) => AI_LEVELS.find((l) => l.difficulty === d)?.label ?? DIFFICULTY_NAMES[d];
 
 /** 난이도별 내부 실력 수치 */
 export interface Skill {
@@ -62,6 +85,19 @@ export const SKILLS: Record<Difficulty, Skill> = {
 };
 
 export interface AISetup { profileId: string; difficulty: Difficulty }
+
+/** 칩 변화에 따른 심리 변화. 공개 정보(시작 스택 대비 현재 스택)에만 의존하며 카드 확률과 무관하다. */
+export function applyMood(st: Style, stackRatio: number): Style {
+  if (!(stackRatio > 0) || st.swing <= 0) return st;
+  const k = st.swing;
+  if (stackRatio < 0.5) { // 크게 잃음: 만회하려고 넓고 공격적으로
+    return { ...st, vpipMul: st.vpipMul * (1 + 0.18 * k), bluff: st.bluff * (1 + 0.3 * k), foldToRaise: st.foldToRaise * (1 - 0.15 * k) };
+  }
+  if (stackRatio > 1.8) { // 크게 이김: 안정적으로 지키는 쪽
+    return { ...st, vpipMul: st.vpipMul * (1 - 0.06 * k), bluff: st.bluff * (1 - 0.15 * k) };
+  }
+  return st;
+}
 
 export function resolveStyle(profileId: string, handNo: number, gameSeed: number): Style {
   const p = PROFILES[profileId] ?? PROFILES.Balanced;

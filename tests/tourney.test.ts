@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { newMTTSession, mttAdvance, chipTotal } from '../src/game/mtt';
 import { tourneyStatus, tourneyAnnouncements, zoneOf, TourneyStatus } from '../src/game/tourney';
-import { TIERS, unlockedTiers, tierById } from '../src/game/tiers';
+import { TOURNAMENTS, tournamentById } from '../src/economy/catalog';
 import { createRng } from '../src/engine/rng';
 import { newSession, beginHand, defaultAIs, tournamentContext } from '../src/game/session';
 import { decide, bubbleFactor } from '../src/ai/decide';
@@ -97,16 +97,12 @@ describe('레이트 등록·재진입으로 필드가 변한다', () => {
   });
 });
 
-describe('래더', () => {
-  it('규모가 단계마다 커지고, 입상해야 다음 단계가 열린다', () => {
-    for (let i = 1; i < TIERS.length; i++) expect(TIERS[i].entrants).toBeGreaterThanOrEqual(TIERS[i - 1].entrants);
-    expect(TIERS.length).toBeGreaterThanOrEqual(6);
-    expect(unlockedTiers([])).toBe(1);
-    expect(unlockedTiers([{ tierId: 'hu', place: 3, prize: 0, entrants: 2, date: 0 }])).toBe(1);
-    expect(unlockedTiers([{ tierId: 'hu', place: 1, prize: 100, entrants: 2, date: 0 }])).toBe(2);
-    // 중간 단계를 건너뛸 수 없다
-    expect(unlockedTiers([{ tierId: 'sng6', place: 1, prize: 100, entrants: 6, date: 0 }])).toBe(1);
-    expect(tierById('mtt54').lateRegUntilLevel).toBeGreaterThan(0);
+describe('토너먼트 카탈로그', () => {
+  it('규모가 단계마다 커지고, 레이트 등록/재진입 대회가 있다', () => {
+    const mtts = TOURNAMENTS.filter((d) => d.kind === 'mtt');
+    for (let i = 1; i < mtts.length; i++) expect(mtts[i].entrants).toBeGreaterThan(mtts[i - 1].entrants);
+    expect(mtts.some((d) => (d.lateRegUntilLevel ?? 0) > 0)).toBe(true);
+    expect(tournamentById('mtt54').aiReentry).toBe(true);
   });
 });
 

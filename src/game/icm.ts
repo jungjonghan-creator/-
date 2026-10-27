@@ -40,10 +40,10 @@ export function payoutStructure(entrants: number, buyIn: number): number[] {
   return pays;
 }
 
-/** 싯앤고 상금 구조 (가상 바이인 기준): 헤즈업 승자독식, 6인 65/35, 9인 50/30/20 */
+/** 싯앤고 상금 구조 (참가비 풀 기준): 2인 승자독식, 3~6인 65/35, 7~9인 60/30/10 */
 export function sngPayouts(entrants: number, buyIn: number): number[] {
   const pool = buyIn * entrants;
-  const w = entrants <= 2 ? [1] : entrants <= 6 ? [0.65, 0.35] : [0.5, 0.3, 0.2];
+  const w = entrants <= 2 ? [1] : entrants <= 6 ? [0.65, 0.35] : [0.6, 0.3, 0.1];
   const p = w.map((x) => Math.floor(x * pool));
   p[0] += pool - p.reduce((a, b) => a + b, 0);
   return p;

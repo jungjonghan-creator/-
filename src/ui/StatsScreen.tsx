@@ -64,8 +64,8 @@ export function StatsScreen() {
         const prize = tourneys.reduce((t, x) => t + x.prize, 0);
         return (
           <div className="text-sm space-y-1" data-testid="tourney-stats">
-            <div>ITM {itm}/{n} ({((100 * itm) / n).toFixed(0)}%) · 우승 {tourneys.filter((x) => x.place === 1).length}회 · ROI {(((prize - cost) / cost) * 100).toFixed(0)}% (비용 {cost.toLocaleString()} / 상금 {prize.toLocaleString()}, 가상 칩, n={n})</div>
-            {tourneys.slice(-5).reverse().map((x) => <div key={x.date} className="text-xs text-slate-400">{new Date(x.date).toLocaleDateString()} · {x.mode} · {x.place}위/{x.entrants}명 · 상금 {x.prize}</div>)}
+            <div>ITM {itm}/{n} ({((100 * itm) / n).toFixed(0)}%) · 우승 {tourneys.filter((x) => x.place === 1).length}회 · ROI {cost > 0 ? (((prize - cost) / cost) * 100).toFixed(0) + '%' : '-'} (비용 {cost.toLocaleString()} / 상금 {prize.toLocaleString()}, 가상 칩, n={n})</div>
+            {tourneys.slice(-5).reverse().map((x) => <div key={x.date} className="text-xs text-slate-400">{new Date(x.date).toLocaleDateString()} · {x.mode} · {x.place}위/{x.entrants}명 · 상금 {x.prize.toLocaleString()}</div>)}
           </div>
         );
       })()}

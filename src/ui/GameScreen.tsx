@@ -3,7 +3,7 @@ import { CoachCard } from './CoachCard';
 import { StoryFeed } from './StoryFeed';
 import { TourneyHud } from './TourneyHud';
 import { tourneyStatus, ZONE_LABEL, STAGES } from '../game/tourney';
-import { chapterOf, netWorth } from '../story/state';
+import { RebuyPanel } from './RebuyPanel';
 import { currentBlinds, blindStructure, HANDS_PER_LEVEL, LEVEL_COUNT, sessionOver, Session } from '../game/session';
 import { ActionBar } from './ActionBar';
 import { ReviewPanel } from './Review';
@@ -15,7 +15,7 @@ import { createRng } from '../engine/rng';
 import { legalActions } from '../engine/game';
 
 export function GameScreen({ sess }: { sess: Session }) {
-  const { nextHand, quit, busy, settings, setSettings, notice, doRebuy, reenter, declineReentry, simToEnd, skipAI, story, leaveStory, loanRebuy } = useGame();
+  const { nextHand, quit, busy, settings, setSettings, notice, reenter, declineReentry, simToEnd, skipAI, leaveTable, wallet } = useGame();
   const [panel, setPanel] = useState<'log' | 'hist' | null>(null);
   const [review, setReview] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
@@ -36,8 +36,8 @@ export function GameScreen({ sess }: { sess: Session }) {
     const t = setTimeout(() => setAnnounce(null), 7000);
     return () => clearTimeout(t);
   }, [lastSys?.id]); // eslint-disable-line
-  const storyCfg = sess.config.story;
-  const chapter = storyCfg ? chapterOf(storyCfg.chapter) : null;
+  const cash = sess.config.cash;
+  const acct = sess.sid ? wallet.accounts[sess.sid] : undefined;
   const g = sess.game;
   const complete = g.street === 'complete';
   const heroSeat = g.players.findIndex((p) => p.isHuman);
@@ -70,7 +70,9 @@ export function GameScreen({ sess }: { sess: Session }) {
         <div className="flex-1 truncate" data-testid="blinds">
           블라인드 {bl.sb}/{bl.bb}{bl.ante ? ` 앤티 ${bl.ante}` : ''} · 핸드 #{g.handNo}{effBB !== null ? ` · 유효 ${effBB.toFixed(1)}BB` : ''}
           {sess.config.mode === 'trainer' && ' · 훈련 모드'}
-          {chapter && ` · 챕터 ${chapter.id} · 순자산 ${netWorth(story, hero.stack + hero.bet).toLocaleString()} / ${chapter.goalNetWorth.toLocaleString()}`}
+          {cash && acct && acct.kind !== 'practice' && ` · 테이블 손익 ${(() => { const n = hero.stack + hero.bet + hero.invested * (complete ? 0 : 1) - acct.spent; return (n >= 0 ? '+' : '') + n.toLocaleString(); })()}`}
+          {cash && ` · ${cash.label}`}
+          {sess.prize && ` · 참가비 ${(sess.prize.buyIn + sess.prize.fee).toLocaleString()}`}
         </div>
         <button className="btn !min-h-[34px] !py-1 bg-slate-700" onClick={() => setSettings({ sound: !settings.sound })} aria-label="소리" data-testid="btn-sound">{settings.sound ? '🔊' : '🔇'}</button>
         <select className="bg-slate-800 rounded px-1 py-1" value={settings.animMs} onChange={(e) => setSettings({ animMs: Number(e.target.value) })} aria-label="속도" data-testid="speed">
@@ -132,6 +134,7 @@ export function GameScreen({ sess }: { sess: Session }) {
                 <div className="text-sm">토너먼트 순위: {g.players.slice().sort((a, b) => (a.finishPlace ?? 99) - (b.finishPlace ?? 99)).map((p) => `${p.finishPlace ?? '-'}. ${p.name}`).join(' · ')}</div>
               </div>
             )}
+            {cash && !over && <RebuyPanel sess={sess} />}
             {rec && settings.autoCoach && <CoachCard tctx={(() => { const ts = tourneyStatus(sess); return ts ? { M: ts.M, zone: ts.zone, zoneLabel: ZONE_LABEL[ts.zone], nearBubble: ts.nearBubble, bubble: ts.bubble, stageLabel: STAGES[ts.stageIndex].label, heroVsAvg: ts.heroVsAvg } : undefined; })()} rec={rec} onDetail={() => setReview(!review)} detailOpen={review} />}
             {review && rec && <ReviewPanel rec={rec} defaultLevel="detail" />}
           </div>
@@ -140,18 +143,13 @@ export function GameScreen({ sess }: { sess: Session }) {
       {complete ? (
         <div className="p-2 space-y-2 border-t border-slate-700 bg-slate-950/90" data-testid="hand-end-bar">
           {over ? (
-            <div className="flex gap-2 items-center"><div className="text-sm text-slate-300 flex-1">세션이 종료되었습니다.</div><button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button></div>
+            <div className="flex gap-2 items-center"><div className="text-sm text-slate-300 flex-1">경기가 종료되었습니다. 상금은 통장에 정산되었습니다.</div><button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button><button className="btn bg-emerald-600" onClick={() => leaveTable()} data-testid="btn-to-lobby">로비로</button></div>
           ) : mtt?.heroOut && mtt.heroCanReenter ? (
             <div className="text-sm text-amber-200">재진입 여부를 선택하세요.</div>
           ) : (
             <div className="flex gap-2 [&>button]:whitespace-nowrap [&>button]:px-3">
-              {sess.config.mode === 'cash' && heroBusted
-                ? <button className="btn flex-1 bg-amber-600 text-black" onClick={() => doRebuy(sess.config.startBB * sess.config.bb)} data-testid="btn-rebuy">리바이 {(sess.config.startBB * sess.config.bb).toLocaleString()}</button>
-                : null}
-              {sess.config.mode === 'cash' && !heroBusted && <button className="btn bg-slate-700" onClick={() => doRebuy(sess.config.startBB * sess.config.bb - hero.stack > 0 ? sess.config.startBB * sess.config.bb - hero.stack : 1)} disabled={hero.stack >= sess.config.startBB * sess.config.bb} data-testid="btn-topup">탑업</button>}
-              {storyCfg && chapter && sess.config.mode === 'cash' && heroBusted && story.bankroll < sess.config.startBB * sess.config.bb && <button className="btn bg-rose-700 text-sm" onClick={() => loanRebuy()} data-testid="btn-loan">스폰서 빚으로 재도전</button>}
-              {storyCfg && <button className="btn bg-slate-700 text-xs sm:text-sm" onClick={() => leaveStory()} data-testid="btn-leave">일어나기</button>}
-              <button className="btn flex-1 bg-emerald-600" onClick={() => { setReview(false); setHint(null); nextHand(); }} disabled={busy || (heroBusted && sess.config.mode === 'cash') || !!(mtt?.heroOut && mtt.heroCanReenter)} data-testid="btn-next">{mtt && heroBusted ? '결과 확인' : '다음 핸드'}</button>
+              {cash && <button className="btn bg-slate-700 text-xs sm:text-sm" onClick={() => leaveTable()} data-testid="btn-leave">테이블 나가기(정산)</button>}
+              <button className="btn flex-1 bg-emerald-600" onClick={() => { setReview(false); setHint(null); nextHand(); }} disabled={busy || (heroBusted && !!cash) || !!(mtt?.heroOut && mtt.heroCanReenter)} data-testid="btn-next">{mtt && heroBusted ? '결과 확인' : '다음 핸드'}</button>
               <button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button>
             </div>
           )}

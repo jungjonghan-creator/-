@@ -1,4 +1,6 @@
-import { AISetup, Difficulty, PROFILE_IDS } from '../ai/profiles';
+import { AISetup, Difficulty, PERSONAS, PROFILE_IDS } from '../ai/profiles';
+import { pickOpponents, ROSTER } from '../economy/roster';
+import { nextLevelLength } from './blinds';
 import { aiStep, beginHand, blindStructure, LEVEL_COUNT, HANDS_PER_LEVEL, Session, SessionConfig, Speed } from './session';
 import { icm, payoutStructure } from './icm';
 import { createGame, makePlayer, startHand } from '../engine/game';
@@ -26,6 +28,9 @@ export interface MTTState {
   tables: MTTTable[];            // 내 테이블 포함 모든 테이블
   heroTable: number | null;      // 내가 앉은 테이블 id (탈락 시 null)
   round: number;                 // 완료한 라운드 수
+  level: number;                 // 현재 블라인드 레벨(0 부터)
+  levelRound: number;            // 현재 레벨에서 진행한 라운드
+  levelLen: number;              // 현재 레벨의 계획된 길이(라운드)
   startStack: number;
   prizePool: number;
   payouts: number[];
@@ -56,18 +61,21 @@ export interface MTTState {
 
 const nextId = (m: MTTState) => m.nextTableId++;
 
-export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais'> & { mtt: MTTConfig; difficulty: Difficulty; profileId: string }): Session {
+export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais' | 'blindMode'> & { blindMode?: 'regular' | 'adaptive'; mtt: MTTConfig; difficulty: Difficulty; profileId: string }): Session {
   const cfg = base.mtt;
   const stack = base.startBB * base.bb;
   const rng = createRng(base.seed);
   const aiById: Record<string, AISetup> = {};
   const names: Record<string, string> = { hero: base.humanName };
   const all: { id: string; name: string; isHuman: boolean }[] = [{ id: 'hero', name: base.humanName, isHuman: true }];
+  // 앞쪽 14명은 고정 이름을 가진 로스터(경기 사이에 관찰 기록 유지), 나머지는 일반 봇
+  const roster = pickOpponents(Math.min(ROSTER.length, cfg.entrants - 1), base.seed);
   for (let i = 1; i < cfg.entrants; i++) {
-    const id = `ai${i - 1}`;
-    const diff = Math.max(1, Math.min(5, base.difficulty + (rng.int(3) - 1))) as Difficulty;
-    aiById[id] = { profileId: i === 1 ? base.profileId : PROFILE_IDS[rng.int(PROFILE_IDS.length)], difficulty: diff };
-    names[id] = i === 1 ? 'NOVA' : `Bot${String(i).padStart(2, '0')}`;
+    const r = roster[i - 1];
+    const id = r ? r.id : `ai${i - 1}`;
+    const diff = Math.max(2, Math.min(5, base.difficulty + (rng.int(3) - 1))) as Difficulty;
+    aiById[id] = { profileId: r ? r.profileId : PERSONAS[rng.int(PERSONAS.length)].profileId, difficulty: diff };
+    names[id] = r ? r.name : `Bot${String(i).padStart(2, '0')}`;
     all.push({ id, name: names[id], isHuman: false });
   }
   // 무작위 좌석 배정
@@ -83,10 +91,10 @@ export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais'
   const heroTable = tables.find((t) => t.game.players.some((p) => p.isHuman))!;
   const payouts = payoutStructure(cfg.entrants, cfg.buyIn);
   const mtt: MTTState = {
-    config: cfg, tables, heroTable: heroTable.id, round: 0, startStack: stack, prizePool: cfg.buyIn * cfg.entrants, payouts, places: {}, names,
+    config: cfg, tables, heroTable: heroTable.id, round: 0, level: 0, levelRound: 0, levelLen: nextLevelLength(base.blindMode ?? 'regular', base.speed, { avgBB: base.startBB, playersLeft: cfg.entrants, entrants: cfg.entrants, handsPlayed: 0 }), startStack: stack, prizePool: cfg.buyIn * cfg.entrants, payouts, places: {}, names,
     remaining: cfg.entrants, entries: 1, totalEntries: cfg.entrants, bustSeq: [], registrationOpen: (cfg.lateRegUntilLevel ?? 0) > 0, lateJoined: 0, aiCounter: cfg.entrants - 1, heroOut: false, heroCanReenter: false, finished: false, heroPrize: 0, bubble: false, finalTable: false, nextTableId: nTables, elims: [], icmLog: [], log: [],
   };
-  const config: SessionConfig = { mode: 'mtt', seats: cfg.tableSize, startBB: base.startBB, bb: base.bb, speed: base.speed, humanName: base.humanName, ais: [], seed: base.seed };
+  const config: SessionConfig = { blindMode: base.blindMode ?? 'regular', mode: 'mtt', seats: cfg.tableSize, startBB: base.startBB, bb: base.bb, speed: base.speed, humanName: base.humanName, ais: [], seed: base.seed };
   return {
     version: 1, config, game: heroTable.game, memory: {}, records: [], aiBySeat: {}, aiById, mtt, level: 0, levelHand: 0, startedAt: Date.now(), buyIns: stack * 1, aiLog: [],
   };
@@ -136,7 +144,7 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
   const hid = m.heroTable;
   if (hid !== null && !autoHero) m.tables.find((t) => t.id === hid)!.game = structuredClone(sess.game);
   if (autoHero) sess = { ...sess, aiById: { hero: { profileId: 'Balanced', difficulty: 3 }, ...(sess.aiById ?? {}) } };
-  const level = Math.floor(m.round / HANDS_PER_LEVEL[sess.config.speed]);
+  const level = m.level;
   const busts: { id: string; start: number }[] = [];
 
   // 1) 다른 테이블 1핸드 진행 (내 테이블은 이미 진행됨)
@@ -168,6 +176,13 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
     m.log.push(`탈락: ${place}위${m.heroPrize ? ` (상금 ${m.heroPrize.toLocaleString()})` : ''}`);
   }
   m.round++;
+  m.levelRound++;
+  // 블라인드 레벨은 모든 테이블의 핸드가 끝난 라운드 사이에서만 바뀐다 (정규/적응형 정책)
+  if (m.levelRound >= m.levelLen) {
+    m.level++; m.levelRound = 0;
+    const bbNow = blindStructure(sess.config.bb)[Math.min(m.level, LEVEL_COUNT - 1)].bb;
+    m.levelLen = nextLevelLength(sess.config.blindMode ?? 'regular', sess.config.speed, { avgBB: (m.startStack * m.totalEntries) / Math.max(1, m.remaining) / bbNow, playersLeft: m.remaining, entrants: m.totalEntries, handsPlayed: m.round });
+  }
   // 2.5) 레이트 등록 / AI 재진입 (종료 판정 전에 인원 반영)
   const lvNow = level + 1;
   const open = (m.config.lateRegUntilLevel ?? 0) >= lvNow && m.remaining > 1;
@@ -207,7 +222,7 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
     }
   }
   const ng = blankHand(hg ?? sess.game);
-  return { ...sess, mtt: m, game: ng, level };
+  return { ...sess, mtt: m, game: ng, level: m.level };
 }
 
 function recomputePlaces(m: MTTState) {
@@ -218,12 +233,12 @@ function recomputePlaces(m: MTTState) {
 function addLateEntrants(m: MTTState, n: number, rng: RNG, sess: Session): Record<string, AISetup> {
   const out: Record<string, AISetup> = {};
   const size = m.config.tableSize;
-  const baseDiff = (sess.aiById?.ai0?.difficulty ?? 3) as Difficulty;
+  const baseDiff = (Object.values(sess.aiById ?? {})[0]?.difficulty ?? 3) as Difficulty;
   for (let k = 0; k < n; k++) {
     m.aiCounter++;
     const id = `ai${m.aiCounter}`;
     const diff = Math.max(1, Math.min(5, baseDiff + (rng.int(3) - 1))) as Difficulty;
-    const setup: AISetup = { profileId: PROFILE_IDS[rng.int(PROFILE_IDS.length)], difficulty: diff };
+    const setup: AISetup = { profileId: PERSONAS[rng.int(PERSONAS.length)].profileId, difficulty: diff };
     out[id] = setup;
     m.names[id] = `Bot${String(m.aiCounter + 1).padStart(2, '0')}`;
     const p = makePlayer(id, m.names[id], m.startStack, false, setup.profileId);

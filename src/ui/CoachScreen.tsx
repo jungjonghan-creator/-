@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deepReport, DeepReport, PlayerMeta } from '../analysis/coach';
-import { byName } from '../story/characters';
+import { rosterById, rosterByName } from '../economy/roster';
 import { useGame } from '../store/useGame';
 
 const sevLabel = ['', '낮음', '중간', '높음'];
@@ -34,7 +34,7 @@ export function CoachScreen() {
 
   const players = useMemo<PlayerMeta[]>(() => {
     const m = new Map<string, PlayerMeta>();
-    records.forEach((r) => r.startStacks.forEach((s) => { if (!m.has(s.id)) m.set(s.id, { id: s.id, name: s.name, profileId: byName(s.name)?.profileId }); }));
+    records.forEach((r) => r.startStacks.forEach((s) => { if (!m.has(s.id)) m.set(s.id, { id: s.id, name: s.name, profileId: rosterById(s.id)?.profileId ?? rosterByName(s.name)?.profileId }); }));
     session?.game.players.forEach((p, i) => { const prev = m.get(p.id); m.set(p.id, { id: p.id, name: p.name, profileId: session.aiById?.[p.id]?.profileId ?? session.aiBySeat[i]?.profileId ?? prev?.profileId }); });
     return [...m.values()];
   }, [records, session]);
@@ -141,7 +141,7 @@ export function CoachScreen() {
               <h2 className="font-bold text-sm">상대별 공략</h2>
               {report.opponents.map((o) => (
                 <div key={o.id} className="p-2 rounded-lg bg-slate-800/70 text-sm space-y-0.5">
-                  <div className="flex justify-between"><b>{byName(o.name)?.emoji ?? ''} {o.name}</b><span className={o.netBB >= 0 ? 'text-emerald-300' : 'text-rose-300'}>{o.netBB >= 0 ? '+' : ''}{o.netBB.toFixed(0)}BB <span className="text-xs text-slate-500">맞대결 {o.hands}</span></span></div>
+                  <div className="flex justify-between"><b>{o.name}</b><span className={o.netBB >= 0 ? 'text-emerald-300' : 'text-rose-300'}>{o.netBB >= 0 ? '+' : ''}{o.netBB.toFixed(0)}BB <span className="text-xs text-slate-500">맞대결 {o.hands}</span></span></div>
                   <div className="text-xs text-slate-400">관찰: VPIP {o.vpip === null ? '-' : (o.vpip * 100).toFixed(0) + '%'} · PFR {o.pfr === null ? '-' : (o.pfr * 100).toFixed(0) + '%'} · 공격성 {o.af === null ? '-' : (o.af * 100).toFixed(0) + '%'} (표본 {o.sample}핸드)</div>
                   <div className="text-slate-200">{o.advice}</div>
                 </div>

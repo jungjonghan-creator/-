@@ -1,4 +1,5 @@
 import { decide, Decision } from '../ai/decide';
+import { nextLevelLength } from './blinds';
 import { observe } from '../ai/observation';
 import { AISetup, Difficulty, PROFILE_IDS } from '../ai/profiles';
 import { OppModel, updateModel } from '../ai/opponentModel';
@@ -7,7 +8,7 @@ import { createRng, randomSeed } from '../engine/rng';
 import { Action, AllInAction, GameConfig, GameState, HandRecord } from '../engine/types';
 
 export type Mode = 'cash' | 'headsup-sng' | 'sng' | 'trainer' | 'mtt';
-export type Speed = 'normal' | 'turbo' | 'hyper';
+export type Speed = 'slow' | 'normal' | 'turbo' | 'hyper';
 
 export interface BlindLevel { sb: number; bb: number; ante: number }
 
@@ -24,6 +25,15 @@ export interface SessionConfig {
   /** 스토리 모드: AI 표시 이름과 챕터 정보 */
   aiNames?: string[];
   story?: { chapter: number; buyIn: number };
+  /** 바이인 칩(BB 배수가 아니어도 됨). 있으면 startBB×bb 대신 사용 */
+  /** AI 플레이어 id (로스터 id 를 쓰면 경기 사이에도 같은 인물로 관찰 기록이 이어진다) */
+  aiIds?: string[];
+  buyInChips?: number;
+  /** 토너먼트 블라인드 정책 */
+  blindMode?: 'regular' | 'adaptive';
+  /** 캐시게임 테이블 정보 (블라인드 고정) */
+  cash?: { tableId: string; label: string; min: number; max: number };
+  tierId?: string;
 }
 
 export interface Session {
@@ -37,6 +47,11 @@ export interface Session {
   aiById?: Record<string, AISetup>;
   mtt?: import('./mtt').MTTState;
   tourneyRecorded?: boolean;
+  /** 경제 시스템 연동용 세션 id (없으면 연습/레거시) */
+  sid?: string;
+  prize?: { pool: number; payouts: number[]; buyIn: number; fee: number; name: string };
+  /** 현재 레벨의 계획된 길이(핸드) — 정규/적응형 정책 */
+  levelLen?: number;
   /** 해설/대사 피드 (스토리·해설) */
   feed?: import('../story/director').StoryLine[];
   directedHand?: number;
@@ -50,7 +65,7 @@ export interface Session {
   aiLog: { handNo: number; seat: number; note: string }[];
 }
 
-export const HANDS_PER_LEVEL: Record<Speed, number> = { normal: 10, turbo: 6, hyper: 3 };
+export const HANDS_PER_LEVEL: Record<Speed, number> = { slow: 15, normal: 10, turbo: 6, hyper: 3 };
 
 export const LEVEL_COUNT = 40;
 export function blindStructure(baseBB: number): BlindLevel[] {
@@ -70,15 +85,16 @@ export function currentBlinds(sess: Session): BlindLevel {
 }
 
 export function newSession(config: SessionConfig): Session {
-  const stack = config.startBB * config.bb;
+  const stack = config.buyInChips ?? config.startBB * config.bb;
   const players = [makePlayer('hero', config.humanName, stack, true)];
   const aiBySeat: Record<number, AISetup> = {};
   const aiById: Record<string, AISetup> = {};
   const names = ['NOVA', 'ORION', 'LYRA', 'VEGA', 'ATLAS', 'IRIS', 'RIGEL', 'SIRIUS'];
   config.ais.forEach((ai, i) => {
-    players.push(makePlayer(`ai${i}`, config.aiNames?.[i] ?? names[i % names.length], stack, false, ai.profileId));
+    const pid = config.aiIds?.[i] ?? `ai${i}`;
+    players.push(makePlayer(pid, config.aiNames?.[i] ?? names[i % names.length], stack, false, ai.profileId));
     aiBySeat[i + 1] = ai;
-    aiById[`ai${i}`] = ai;
+    aiById[pid] = ai;
   });
   const gc: GameConfig = { sb: Math.round(config.bb / 2), bb: config.bb, ante: 0, maxSeats: config.seats };
   const game = createGame(gc, players, config.seed);
@@ -93,15 +109,30 @@ export function defaultAIs(n: number, difficulty: Difficulty = 3, first = 'Balan
 }
 
 /** 다음 핸드 시작 (이전 핸드가 complete 상태여야 함) */
+/** 공개된 필드 상태 (정책 입력): 남은 인원과 평균 스택(BB)만 사용 */
+export function fieldOf(sess: Session) {
+  const g = sess.game;
+  const alive = g.players.filter((p) => !p.busted && p.stack + p.invested > 0);
+  const chips = alive.reduce((t, p) => t + p.stack + (g.street !== 'complete' ? p.invested : 0), 0);
+  const bb = Math.max(1, currentBlinds(sess).bb);
+  if (sess.mtt) {
+    const m = sess.mtt;
+    return { avgBB: (m.startStack * m.totalEntries) / Math.max(1, m.remaining) / bb, playersLeft: m.remaining, entrants: m.totalEntries, handsPlayed: m.round };
+  }
+  return { avgBB: chips / Math.max(1, alive.length) / bb, playersLeft: alive.length, entrants: g.players.length, handsPlayed: g.handNo };
+}
+
 export function beginHand(sess: Session, rng = createRng(randomSeed())): Session {
   let { level, levelHand } = sess;
+  let levelLen = sess.levelLen ?? nextLevelLength(sess.config.blindMode ?? 'regular', sess.config.speed, fieldOf(sess));
   const cfg = sess.config;
   let game = sess.game;
   if (game.handNo > 0 && (cfg.mode === 'sng' || cfg.mode === 'headsup-sng')) {
     levelHand++;
-    if (levelHand >= HANDS_PER_LEVEL[cfg.speed]) { level++; levelHand = 0; }
+    // 블라인드 변경은 핸드 사이(지금)에만 적용된다
+    if (levelHand >= levelLen) { level++; levelHand = 0; levelLen = nextLevelLength(cfg.blindMode ?? 'regular', cfg.speed, fieldOf(sess)); }
   }
-  const tmp: Session = { ...sess, level, levelHand };
+  const tmp: Session = { ...sess, level, levelHand, levelLen };
   const b = currentBlinds(tmp);
   game = { ...game, config: { ...game.config, ...b } };
   // 캐시게임: AI 가 칩이 바닥나면 자동 리바이 (사람은 직접 선택)
@@ -110,7 +141,7 @@ export function beginHand(sess: Session, rng = createRng(randomSeed())): Session
     game.gameOver = false;
     game.players.forEach((p, i) => {
       if (!p.isHuman && p.stack < game.config.bb) {
-        const add = cfg.startBB * cfg.bb - p.stack;
+        const add = (cfg.buyInChips ?? cfg.startBB * cfg.bb) - p.stack;
         p.stack += add; p.busted = false; game.ledger.push({ handNo: game.handNo + 1, seat: i, kind: 'rebuy', amount: add });
       }
     });
@@ -170,7 +201,7 @@ export function aiStep(sess: Session, simScale = 1): { sess: Session; decision: 
   const g = sess.game;
   const seat = g.toAct as number;
   const setup = sess.aiById?.[g.players[seat].id] ?? sess.aiBySeat[seat];
-  const obs = observe(g, seat, tournamentContext(sess));
+  const obs = observe(g, seat, tournamentContext(sess), sess.config.buyInChips ?? sess.config.startBB * sess.config.bb);
   const rng = createRng((g.seed ^ Math.imul(g.handNo + 1, 2654435761) ^ Math.imul(g.events.length + 7, 40503) ^ (seat * 977)) >>> 0);
   const decision = decide(obs, setup, sess.memory, rng, sess.config.seed, simScale);
   let next: GameState;

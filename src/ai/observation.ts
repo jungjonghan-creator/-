@@ -30,6 +30,8 @@ export interface Observation {
   position: string;
   /** 토너먼트 공개 정보 (남은 인원, 입상 인원, 평균 스택). 캐시게임이면 없음 */
   tournament?: { playersLeft: number; paid: number; avgStack: number };
+  /** 이 경기 시작 시 내 칩(바이인/시작 스택) — 심리 변화 계산용 공개 정보 */
+  startStack?: number;
 }
 
 export function positionLabels(s: GameState): Record<number, string> {
@@ -55,7 +57,7 @@ export function positionLabels(s: GameState): Record<number, string> {
   return labels;
 }
 
-export function observe(s: GameState, seat: number, tournament?: Observation['tournament']): Observation {
+export function observe(s: GameState, seat: number, tournament?: Observation['tournament'], startStack?: number): Observation {
   const hero = s.players[seat];
   const labels = positionLabels(s);
   const legal = (s.toAct === seat ? legalActions(s) : null) ?? {
@@ -73,5 +75,6 @@ export function observe(s: GameState, seat: number, tournament?: Observation['to
     players, history: s.events.map((e) => ({ ...e })), legal: { ...legal }, effStack: Math.min(hero.stack + hero.bet, maxOpp),
     position: labels[seat] ?? '',
     ...(tournament ? { tournament } : {}),
+    ...(startStack ? { startStack } : {}),
   };
 }

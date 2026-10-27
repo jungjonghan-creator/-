@@ -84,8 +84,8 @@ export function tourneyStatus(sess: Session): TourneyStatus | null {
   const heroRank = hero ? standings.indexOf(hero) + 1 : playersLeft + 1;
 
   const entrants = mtt ? mtt.totalEntries : g.players.length;
-  const payouts = mtt ? mtt.payouts : sngPayouts(g.players.length, 100);
-  const prizePool = mtt ? mtt.prizePool : 100 * g.players.length;
+  const payouts = mtt ? mtt.payouts : sess.prize?.payouts ?? sngPayouts(g.players.length, 100);
+  const prizePool = mtt ? mtt.prizePool : sess.prize?.pool ?? 100 * g.players.length;
   const paidPlaces = payouts.length;
   const toMoney = playersLeft - paidPlaces;
 
@@ -94,7 +94,7 @@ export function tourneyStatus(sess: Session): TourneyStatus | null {
   const cur = structure[Math.min(lvl, structure.length - 1)];
   const nxt = lvl + 1 < structure.length ? structure[lvl + 1] : null;
   const hpl = HANDS_PER_LEVEL[sess.config.speed];
-  const handsToNext = mtt ? hpl - (mtt.round % hpl) : hpl - sess.levelHand;
+  const handsToNext = mtt ? Math.max(1, (mtt.levelLen ?? hpl) - (mtt.levelRound ?? mtt.round % hpl)) : Math.max(1, (sess.levelLen ?? hpl) - sess.levelHand);
   const heroTableSize = g.players.filter((p) => !p.busted && (p.stack > 0 || p.invested > 0)).length || 1;
   const orbit = cur.sb + cur.bb + cur.ante * heroTableSize;
   const M = heroChips / Math.max(1, orbit);
