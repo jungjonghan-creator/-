@@ -8,9 +8,12 @@ import type { SimEntrant } from './batch';
 
 const KR_SUR = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '류', '전', '홍', '고', '문', '양', '손', '배', '백', '허', '유', '남'];
 const KR_GIV = ['민준', '서준', '도윤', '예준', '시우', '하준', '주원', '지호', '지후', '준서', '서연', '서윤', '지우', '서현', '하은', '하윤', '민서', '지유', '윤서', '채원', '현우', '건우', '우진', '선우', '유준', '연우', '정우', '승우', '승현', '시윤', '다은', '수아', '지민', '예은', '수빈'];
-const ASIA = ['Wei Chen', 'Hao Lin', 'Kenji Mori', 'Yuki Tanaka', 'Aiko Sato', 'Ryo Hayashi', 'Minh Tran', 'Linh Pham', 'Anan Chai', 'Nida Srisai', 'Rahul Verma', 'Priya Nair', 'Budi Santoso', 'Citra Dewi', 'Jose Reyes', 'Maria Santos', 'Jia Hui Lim', 'Wen Xu', 'Ming Zhao', 'Xiao Han', 'Hana Ito', 'Sora Kimura', 'Dao Nguyen', 'Kai Wong'];
-const EU = ['Luca Bianchi', 'Marta Silva', 'Jonas Becker', 'Hanna Schmidt', 'Pierre Dubois', 'Camille Laurent', 'Oskar Nilsson', 'Ingrid Berg', 'Tomas Novak', 'Eva Horvat', 'Diego Navarro', 'Lucia Ortega', 'Harry Collins', 'Grace Whitman', 'Pavel Ivanov', 'Nina Kowalski', 'Andrei Popescu', 'Sofia Moreau', 'Felix Meyer', 'Clara Jensen'];
-const AM = ['Mason Clark', 'Emma Turner', 'Ethan Brooks', 'Olivia Hayes', 'Liam Foster', 'Mia Sullivan', 'Carlos Vega', 'Daniela Cruz', 'Lucas Pereira', 'Valentina Ruiz', 'Jacob Miller', 'Chloe Adams', 'Ryan Cooper', 'Zoe Mitchell', 'Andres Molina', 'Isabela Lopes', 'Noah Bennett', 'Ella Parker'];
+const ASIA_F = ['Wei', 'Hao', 'Kenji', 'Yuki', 'Aiko', 'Ryo', 'Minh', 'Linh', 'Anan', 'Nida', 'Rahul', 'Priya', 'Budi', 'Citra', 'Jose', 'Maria', 'Jia', 'Xiao', 'Ming', 'Hana', 'Sora', 'Dao', 'Kai', 'Mei', 'Arjun', 'Lakshmi', 'Dewi', 'Noel', 'Tomoko', 'Haruto'];
+const ASIA_L = ['Chen', 'Lin', 'Mori', 'Tanaka', 'Sato', 'Hayashi', 'Tran', 'Pham', 'Chai', 'Srisai', 'Verma', 'Nair', 'Santoso', 'Reyes', 'Santos', 'Lim', 'Xu', 'Zhao', 'Han', 'Ito', 'Kimura', 'Nguyen', 'Wong', 'Sharma', 'Putra', 'Cruz', 'Yamada', 'Suzuki', 'Huang', 'Teo'];
+const EU_F = ['Luca', 'Marta', 'Jonas', 'Hanna', 'Pierre', 'Camille', 'Oskar', 'Ingrid', 'Tomas', 'Eva', 'Diego', 'Lucia', 'Harry', 'Grace', 'Pavel', 'Nina', 'Andrei', 'Sofia', 'Felix', 'Clara', 'Matteo', 'Elise', 'Bruno', 'Greta', 'Viktor', 'Anya', 'Hugo', 'Lena', 'Marco', 'Ines'];
+const EU_L = ['Bianchi', 'Silva', 'Becker', 'Schmidt', 'Dubois', 'Laurent', 'Nilsson', 'Berg', 'Novak', 'Horvat', 'Navarro', 'Ortega', 'Collins', 'Whitman', 'Ivanov', 'Kowalski', 'Popescu', 'Moreau', 'Meyer', 'Jensen', 'Rossi', 'Fischer', 'Costa', 'Lindqvist', 'Petrov', 'Mercier', 'Vogel', 'Santini', 'Weber', 'Baptiste'];
+const AM_F = ['Mason', 'Emma', 'Ethan', 'Olivia', 'Liam', 'Mia', 'Carlos', 'Daniela', 'Lucas', 'Valentina', 'Jacob', 'Chloe', 'Ryan', 'Zoe', 'Andres', 'Isabela', 'Noah', 'Ella', 'Tyler', 'Naomi', 'Diego', 'Camila', 'Owen', 'Grace', 'Mateo', 'Sienna', 'Caleb', 'Ruby', 'Julian', 'Paloma'];
+const AM_L = ['Clark', 'Turner', 'Brooks', 'Hayes', 'Foster', 'Sullivan', 'Vega', 'Cruz', 'Pereira', 'Ruiz', 'Miller', 'Adams', 'Cooper', 'Mitchell', 'Molina', 'Lopes', 'Bennett', 'Parker', 'Reed', 'Hughes', 'Ortiz', 'Navarro', 'Price', 'Ward', 'Torres', 'Gómez', 'Rivera', 'Knight', 'Fox', 'Morales'];
 
 export interface Regular {
   id: string; name: string; nationality: string; region: Region; skill: SkillProfile;
@@ -21,12 +24,10 @@ export interface Regular {
 const NAT: Record<Region, string[]> = { KR: ['대한민국'], ASIA: ['일본', '대만', '중국', '베트남', '태국', '싱가포르', '필리핀', '인도', '인도네시아'], EU: ['프랑스', '독일', '이탈리아', '스페인', '영국', '폴란드', '체코'], AM: ['미국', '캐나다', '멕시코', '브라질'], GLOBAL: ['미국'] };
 
 function pickName(region: Region, rng: RNG, serial: number): string {
+  void serial;
   if (region === 'KR') return `${KR_SUR[rng.int(KR_SUR.length)]}${KR_GIV[rng.int(KR_GIV.length)]}`;
-  const pool = region === 'ASIA' ? ASIA : region === 'EU' ? EU : AM;
-  const n = pool[rng.int(pool.length)];
-  const [a, ...b] = n.split(' ');
-  // 같은 조합이 많아지므로 성에 기호를 붙여 구분(시리얼은 id 로 보장)
-  return `${a} ${b.join(' ')}${serial % 7 === 0 ? ' Jr.' : ''}`.trim();
+  const [F, L] = region === 'ASIA' ? [ASIA_F, ASIA_L] : region === 'EU' ? [EU_F, EU_L] : [AM_F, AM_L];
+  return `${F[rng.int(F.length)]} ${L[rng.int(L.length)]}`;
 }
 
 const randSkill = (rng: RNG, mean: number, sd: number): SkillProfile => {
@@ -39,6 +40,7 @@ const randSkill = (rng: RNG, mean: number, sd: number): SkillProfile => {
 export function buildRegulars(count = 1500, seed = 2035): Regular[] {
   const rng = createRng(seed);
   const out: Regular[] = [];
+  const used = new Set<string>(NAMED.map((p) => p.name));
   const regions: Region[] = ['KR', 'ASIA', 'EU', 'AM'];
   const weights = [0.4, 0.25, 0.2, 0.15];
   for (let i = 0; i < count; i++) {
@@ -46,7 +48,12 @@ export function buildRegulars(count = 1500, seed = 2035): Regular[] {
     const region = regions[ri];
     const nats = NAT[region];
     const mean = 50 + (rng.next() - 0.5) * 14; // 레귤러 평균 실력 분포
-    out.push({ id: `reg${String(i).padStart(4, '0')}`, name: pickName(region, rng, i), nationality: nats[rng.int(nats.length)], region, skill: randSkill(rng, mean, 9), activity: 0.2 + rng.next() * 0.8 });
+    // 이름은 등록부 전체에서 유일해야 한다(랭킹·검색에서 동명이인 혼동 방지)
+    let name = pickName(region, rng, i);
+    for (let t = 0; used.has(name) && t < 30; t++) name = pickName(region, rng, i + t + 1);
+    if (used.has(name)) name = `${name} ${String.fromCharCode(65 + (i % 26))}.`;
+    used.add(name);
+    out.push({ id: `reg${String(i).padStart(4, '0')}`, name, nationality: nats[rng.int(nats.length)], region, skill: randSkill(rng, mean, 9), activity: 0.2 + rng.next() * 0.8 });
   }
   return out;
 }

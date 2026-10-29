@@ -31,7 +31,7 @@ async function newUser(browser: Browser, name: string): Promise<{ ctx: BrowserCo
 }
 const act = async (page: Page, id: string) => { const b = page.getByTestId(id); if ((await b.isVisible()) && (await b.isEnabled())) { await b.click(); return true; } return false; };
 /** 폴드/체크만 하며 정산 패널이 보일 때까지 진행 */
-async function foldUntilSettled(page: Page, limit = 400) {
+async function foldUntilSettled(page: Page, limit = 1500) {
   for (let i = 0; i < limit; i++) {
     if (await page.getByTestId('settle-done').isVisible()) return;
     if (await page.getByTestId('settle-error').isVisible()) throw new Error('정산 오류 표시');
@@ -61,6 +61,7 @@ test('가입 → 로그아웃 → 로그인, 잘못된 비밀번호, 서버 모�
 });
 
 test('월드 대회 완주: 서버 확정 정산이 한 번만 반영되고 새로고침·재로그인 후에도 같다', async ({ browser }) => {
+  test.setTimeout(150000);
   const { ctx, page, username } = await newUser(browser, 'play');
   await page.getByTestId('nav-world').click();
   await page.getByTestId('event-open-kcl-m1').click();
@@ -85,6 +86,21 @@ test('월드 대회 완주: 서버 확정 정산이 한 번만 반영되고 새�
   await p2.getByTestId('nav-wallet2').click();
   expect(await p2.getByTestId('ledger-row').count()).toBe(rows);
   await c2.close(); await ctx.close();
+});
+
+test('헤즈업 토너먼트표(단계형): 1라운드 매치 후 공동 순위로 정산', async ({ browser }) => {
+  test.setTimeout(150000);
+  const { ctx, page } = await newUser(browser, 'hu');
+  await page.getByTestId('nav-world').click();
+  await page.getByTestId('event-open-seoul-hu-hyper').click();
+  await expect(page.getByTestId('event-reason-seoul-hu-hyper')).toHaveCount(0);
+  await page.getByTestId('event-enter-seoul-hu-hyper').click();
+  await expect(page.getByTestId('table')).toBeVisible();
+  await page.getByTestId('speed').selectOption('0');
+  await foldUntilSettled(page, 600);
+  await expect(page.getByTestId('settle-done')).toContainText('/ 32명');
+  await expect(page.getByTestId('staged-final')).toBeVisible();
+  await ctx.close();
 });
 
 test('가족 3계정: 같은 통합 랭킹에 AI와 함께 등록, B의 공식 성적이 A 화면에 반영, C의 지갑은 독립', async ({ browser }) => {

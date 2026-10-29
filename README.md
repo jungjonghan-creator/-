@@ -1,50 +1,46 @@
-# ♠ POKER ARENA 5.0 — Poker Evolution v2
+# ♠ POKER ARENA 5.0 — WORLD POKER UNIVERSE 2035
 
-가상 크레딧 기반 개인용 노리밋 텍사스 홀덤 시뮬레이터. **실제 돈·결제·환전과 무관**합니다.
-TypeScript(strict) · React · Vite · Tailwind · Zustand · IndexedDB · PWA · Vitest · fast-check · Playwright.
+가상 크레딧 기반 노리밋 텍사스 홀덤. 가족·친구가 각자 모바일/PC에서 **AI와 싱글플레이**하고, 성적을 **공통 국내·세계 랭킹**(AI와 사람이 한 순위표)에 반영합니다. 실제 돈·결제·환전·베팅과 무관하며 2033~2035 시즌의 대회·선수는 **가상 설정**입니다 (공식 WSOP/WPT/EPT 등과 제휴 없음).
 
-## 실행 (PC · 모바일 공통)
+TypeScript(strict) · React 19 · Vite 8 · Tailwind · Zustand · IndexedDB · PWA · Cloudflare Worker + D1 (또는 Node + SQLite) · Vitest · Playwright.
+
+## 가장 쉬운 실행 (PC 한 대를 서버로)
 
 ```bash
 npm install
-npm run dev -- --host     # PC: http://localhost:5173  /  같은 와이파이의 폰: 화면에 나오는 Network 주소
-npm run build && npm run preview   # 프로덕션 빌드 확인
+npm run build
+npm run serve            # http://localhost:8787  (API + 앱 + SQLite)
 ```
-외부 API·서버가 필요 없고, 첫 로드 후에는 오프라인에서도 플레이됩니다(PWA).
+같은 와이파이의 폰: `http://<PC의 IP>:8787` → 가입 → 「홈 화면에 추가」. 아이디+비밀번호만 있으면 가입됩니다.
+서버 없이 보려면 `npm run dev` (로컬 모드: 이 기기에서만, 랭킹은 이 기기 기록 + 공식 AI 스냅샷).
+무료 공개 배포(Cloudflare)는 [docs/DEPLOY_FREE.md](docs/DEPLOY_FREE.md) — **계정 로그인이 필요해 직접 해야 합니다.**
 
-## 게임 구조
+## 주요 기능
 
-| 화면 | 내용 |
+| 영역 | 내용 |
 |---|---|
-| **홈** | 통장 잔액, 진행 중 경기 이어하기, 최근 경기 결과 |
-| **로비 › 캐시게임** | 초급 5/10 · 중급 25/50 · 상급 100/200 · 프로 500/1,000 (블라인드 **고정**, 바이인 40~100BB). 판돈과 AI 실력은 따로 선택(추천 조합 ★) |
-| **로비 › 토너먼트** | 프리롤 · 헤즈업 · 싯앤고 9(초급~프로) · MTT 27/54+/108+/216+ . 참가비+수수료, 총상금, 순위별 상금, 블라인드 정책(정규/상황 적응형), 속도, 예상 길이, 재진입 여부 표시 |
-| **통장** | 잔액, 최대 자산, 캐시/토너먼트 손익, ROI, 입출금 원장, 경기별 결산 |
-| **분석실 / 통계 / 기록 / 훈련** | 핸드 복기, 누수 진단, 올인 EV 운 보정, 상대별 공략, 푸시/폴드·스팟 훈련 |
-| **연습 경기** | 통장과 무관한 자유 설정 경기 |
+| 계정 | 아이디+비밀번호(PBKDF2·세션 쿠키·로그인 제한·CSRF), 기기 간 자동 저장(클라우드 이어하기), 로컬 모드, 기존 기록 복사 이관·백업 |
+| 월드 투어 | 2035 시즌 이벤트 51개 / 도시 14 / 시리즈 15 — 한국(서울·부산·인천·제주…), 아시아·마카오, 유럽, 라스베이거스. 카드마다 개최지·형식·인원·바이인(크레딧+표시통화)·시작 BB·레벨·상금 풀·ITM·예상 길이·등록 상태 |
+| 형식 | 캐시, SNG, 헤즈업, MTT(6/8/9맥스·재진입·레이트 등록·터보/하이퍼/딥스택/슈퍼딥), PKO·미스터리 바운티, 새틀라이트(티켓), 보장 상금(오버레이), 프리즈아웃, 초청전, **최대 10,000명**(벤치마크). 구현 현황 표: [docs/TOURNAMENT_RULES.md](docs/TOURNAMENT_RULES.md) |
+| 자금 | 서버 원장(append-only, 멱등 키): 탈락 **즉시** ITM 상금, 우승 직후 1등 상금, 바운티, 티켓 — 각각 한 번만. 일일 무료 크레딧(KST 하루 1회) |
+| 랭킹 | 사람+AI 통합 세계/대한민국 랭킹, 실제 사용자만/AI만/친구·가족/시리즈/형식 필터, 검색·페이지네이션, 내 순위·바로 앞뒤, 공개 점수 산식 |
+| 선수 | 실존 레전드 24(2026 전성기 타임캡슐) + 2035 가상 66 + 기존 로스터 15 + 레귤러 1,500 = 1,605 AI. 90명은 대표 선수일 뿐 상한 아님 |
+| 분석실 | 리플레이·복기(숨은 카드는 「알 수 없음」), 프리플랍 13×13, 포스트플랍 질감, ICM(정확/몬테카를로), 약점 지도, 맞춤 훈련(사전→사후→7일 복습), 상대 데이터, 경제 감사 |
 
-## 돈의 흐름
-
-* 초기 자산 30,000 크레딧(설정값 `INITIAL_BALANCE`). 경기를 시작해도 초기화되지 않고, 브라우저를 닫아도 이어집니다.
-* **캐시**: 바이인 → 통장 차감 / 테이블 퇴장 시 **남은 테이블 칩만** 반환 (예: 30,000 → 바이인 3,000 → 칩 5,200 퇴장 → 32,200).
-* **토너먼트**: 등록 즉시 참가비+수수료 차감. 상금 풀 = 참가비 × 참가자 수(NPC 포함, 수수료 제외). 9인 60/30/10, 6인 이하 65/35, 헤즈업 승자독식. 상금은 대회당 **한 번만** 지급.
-* **파산 구제**: 프리롤(무료, 가상 상금 300)과 연습 경기. 연습 칩은 통장으로 전환되지 않습니다.
-* 모든 거래는 고유 id 의 원장(`src/economy/wallet.ts`)에 기록되고 멱등입니다(같은 거래는 두 번 적용 안 됨). 세션과 통장은 **한 트랜잭션**으로 저장됩니다.
-
-## 테스트
+## 테스트·벤치마크
 
 ```bash
-npm test                         # 단위·속성·시뮬레이션·저장/복구 (Vitest)
-npm run e2e                      # Playwright (데스크톱 + 모바일)
-npm run sim -- 2000              # 5가지 성격 통계
-npx tsx scripts/difficulty.ts 12000   # 4단계 난이도 대표본 (일반 세션)
-npx tsx scripts/duplicate.ts 4000     # 듀플리케이트(카드 운 상쇄) 난이도 측정
-npx tsx scripts/exploit.ts 8000       # 같은 상대에 대한 상급 vs 프로
-npm run stress                   # 엔진 대량 무결성 시뮬레이션
+npm test                 # Vitest: 엔진·AI·경제·서버·월드·분석실·이관
+npm run e2e              # Playwright: 데스크톱 + 모바일(Pixel 5), 온라인 계정/가족 3계정/클라우드 이어하기
+npm run stress           # 엔진 무작위 합법 행동 대량 시뮬레이션
+npm run bench:world      # 배치 시뮬레이터 규모별 시간
+npx tsx scripts/mttBench.ts   # 개인 인스턴스 MTT 180/1,000/5,000/10,000명
+npm run build:world      # 공식 AI 세계 시즌 스냅샷 재생성 (결정론: 같은 시드 → 같은 SHA-256)
 ```
+결과와 한계는 [docs/TEST_REPORT.md](docs/TEST_REPORT.md), 전체 상태는 [STATUS.md](STATUS.md).
+
+## 문서
+[00 저장소 감사](docs/00_REPOSITORY_AUDIT.md) · [01 이관 계획](docs/01_MIGRATION_PLAN.md) · [아키텍처](docs/ARCHITECTURE.md) · [경제 불변식](docs/ECONOMY_INVARIANTS.md) · [토너먼트 규칙/현황](docs/TOURNAMENT_RULES.md) · [월드 2035](docs/WORLD_2035_BIBLE.md) · [선수 근거](docs/PLAYERS_EVIDENCE.md) · [코칭 수학](docs/COACHING_MATH.md) · [테스트 보고서](docs/TEST_REPORT.md) · [무료 배포](docs/DEPLOY_FREE.md) · [이관 보고서](docs/MIGRATION_REPORT.md) · [랭킹 계약](RANKING_MODEL_v2.md)
 
 ## 구조
-
-`src/engine` 규칙·상태머신 / `src/ai` 의사결정·성격·상대 모델 / `src/economy` 통장·카탈로그·로스터·경제 액션 / `src/game` 세션·블라인드 정책·토너먼트·MTT / `src/persist` IndexedDB·검증 / `src/analysis` 복기·통계·훈련 / `src/ui`, `src/store`.
-
-자세한 구현 범위·측정치·한계는 [STATUS.md](./STATUS.md).
+`src/engine` 규칙 · `src/ai` 의사결정 · `src/game` 세션/MTT/블라인드/ICM · `src/economy` 지갑/카탈로그/정산 · `src/world` 월드(선수·캘린더·상금·배치 시뮬레이터·스냅샷·랭킹) · `src/analysis` 복기/분석실 · `src/net` 서버 연동 · `src/ui`, `src/store` · `server/` API(Worker/Node 공용) · `scripts/` 측정·빌드.

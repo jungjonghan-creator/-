@@ -7,7 +7,7 @@ import { simulateBatch, simulateCash, SimEntrant } from './batch';
 import { amateur, ALL_RANKED, hash, Roster } from './field';
 import { EVENT_TEMPLATES, EventDef, SEASONS, SEASON_GROWTH, eventKey, seriesById, venueById } from './calendar';
 import { absDay, ageWeight, eventPoints } from './points';
-import { bracketGroups, prizeFor, prizeStructure, sharePrizes } from './prizes';
+import { bracketGroups, paidPlacesOf, prizeFor, prizeStructure, sharePrizes } from './prizes';
 import { HANDS_PER_LEVEL } from '../game/session';
 import type { SkillProfile } from './cast';
 
@@ -216,7 +216,7 @@ export function simulateEvent(def: EventDef, season: number, st: Standings, targ
   void bountyTotalCash;
   const w = info.get(order[0].pid)!;
   return {
-    key, season, id: def.id, day: def.day, players: sim.length, entries: totalEntries, prizePool: ps.prizePool, overlay: ps.overlay, paid: tieGroups ? Math.max(...tieGroups.filter((g) => g.some((p) => (ps.payouts[p - 1] ?? 0) > 0)).flat(), 0) || ps.paid : ps.paid,
+    key, season, id: def.id, day: def.day, players: sim.length, entries: totalEntries, prizePool: ps.prizePool, overlay: ps.overlay, paid: tieGroups ? paidPlacesOf(def, sim.length, target?.buyIn ?? 0) : ps.paid,
     bountyPool: ps.bountyPool, tickets: ps.tickets, ticketValue: ps.ticketValue, winnerId: w.id, winnerName: w.name, hands, rounds, top,
     ranked, ...(matches.length ? { matches } : {}), ...(ticketHolders.length ? { ticketHolders } : {}),
   };

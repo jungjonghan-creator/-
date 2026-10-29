@@ -3,9 +3,10 @@ import { OppModel } from '../ai/opponentModel';
 import { createRng } from '../engine/rng';
 import { beginHand, newSession, rebuy, Session, SessionConfig } from '../game/session';
 import { newMTTSession, heroBountyCash } from '../game/mtt';
+import { newStagedSession } from '../game/staged';
 import { worldOpponents } from '../world/personal';
 import { templateById } from '../world/calendar';
-import { ticketsFor } from '../world/prizes';
+import { prizeAtPlace, ticketsFor } from '../world/prizes';
 import { CashTable, entryCost, levelDifficulty, LevelId, prizePoolOf, sngPrizeTable, TournamentDef } from './catalog';
 import { pickOpponents } from './roster';
 import * as W from './wallet';
@@ -73,6 +74,11 @@ export function launchTournament(wallet: W.Wallet, def: TournamentDef, level: Le
   const blindMode = opts.blindMode ?? def.blindMode;
   const speed = opts.speed ?? def.speed;
   let s: Session;
+  if (def.staged && def.world) {
+    const ev = templateById(def.world.eventId);
+    s = newStagedSession({ eventId: ev.id, seed, opponents: worldOpponents(ev, def.world.season, seed, def.entrants), humanName, tierId: def.id, sid, memory });
+    return { session: { ...s, config: { ...s.config, tierId: def.id } }, wallet: w };
+  }
   if (def.kind === 'mtt') {
     const ev = def.world ? templateById(def.world.eventId) : null;
     s = newMTTSession({
@@ -100,6 +106,11 @@ export function launchTournament(wallet: W.Wallet, def: TournamentDef, level: Le
 /** 히어로의 최종 순위와 상금 (대회가 끝났거나 내가 탈락·재진입을 포기했을 때) */
 export interface TResult { place: number; prize: number; field: number; bounty: number; ticket: { eventId: string; value: number } | null }
 export function tournamentResult(session: Session): TResult | null {
+  if (session.staged) {
+    const st = session.staged;
+    if (st.heroPlace === undefined) return null;
+    return { place: st.heroPlace, prize: prizeAtPlace(templateById(st.eventId), st.entries, st.heroPlace), field: st.entries, bounty: 0, ticket: null };
+  }
   const hero = session.game.players.find((p) => p.isHuman);
   if (session.mtt) {
     const m = session.mtt;

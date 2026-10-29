@@ -243,6 +243,15 @@ describe('[서버] 통합 랭킹 · 가족 3계정 (RANKING_MODEL_v2 자동 테�
     await A.post('/api/entry/settle', { sid: m, place: 500, totalEntries: 3000, hands: 90 });
     expect((await A.post('/api/entry', { sid: sid(), source: 'world', defId: 'vss-main', useTicket: true })).status).toBe(409);
   });
+  it('헤즈업 표/슛아웃 정산: 공동 순위 상금 균등, 합리적 범위', async () => {
+    const A = await signup('hu1'); const s1 = sid(); const s2 = sid();
+    await A.post('/api/entry', { sid: s1, source: 'world', defId: 'seoul-hu-hyper' });
+    const r = await A.post('/api/entry/settle', { sid: s1, place: 5, totalEntries: 32, hands: 30 });
+    expect(r.status).toBe(200); expect(r.body.result.prize).toBeGreaterThan(0);
+    await A.post('/api/entry', { sid: s2, source: 'world', defId: 'seoul-hu-hyper' });
+    const r2 = await A.post('/api/entry/settle', { sid: s2, place: 8, totalEntries: 32, hands: 30 });
+    expect(Math.abs(r2.body.result.prize - r.body.result.prize)).toBeLessThanOrEqual(1); // 같은 라운드(5~8위) 탈락 = 같은 상금
+  });
   it('클라우드 저장: 버전 충돌 감지, 큰 데이터 분할 저장', async () => {
     const A = await signup('teto');
     const big = 'x'.repeat(1_300_000);

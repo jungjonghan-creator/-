@@ -45,6 +45,8 @@ export interface TournamentDef {
   desc: string;
   /** 월드 이벤트에서 만들어진 정의(개인 인스턴스). 상금표·바운티·재진입 규칙이 이벤트 정의를 따른다 */
   world?: { eventId: string; season: number };
+  /** 헤즈업 토너먼트표/슛아웃 */
+  staged?: 'hu' | 'shootout';
   bounty?: { share: number; mystery?: boolean };
   reentryMax?: number;
 }
@@ -64,8 +66,7 @@ export const TOURNAMENTS: TournamentDef[] = [
 export const PERSONAL_SEASON = 2035;
 /** 이벤트가 개인 인스턴스로 플레이 가능한가 (엔진이 규칙을 완전히 구현한 형식만). 아니면 이유를 돌려준다 */
 export function playableReason(ev: EventDef): string | null {
-  if (ev.kind === 'hu') return '헤즈업 토너먼트표(브래킷) 개인 인스턴스는 아직 구현되지 않았습니다 — 공식 AI 결과만 열람할 수 있습니다';
-  if (ev.kind === 'shootout') return '슛아웃(테이블 승자 진출) 개인 인스턴스는 아직 구현되지 않았습니다 — 공식 AI 결과만 열람할 수 있습니다';
+  void ev; // HU 브래킷·슛아웃은 단계형 세션(src/game/staged.ts)으로 개인 참가를 지원한다
   return null;
 }
 export function worldDef(ev: EventDef, season = PERSONAL_SEASON): TournamentDef {
@@ -73,7 +74,7 @@ export function worldDef(ev: EventDef, season = PERSONAL_SEASON): TournamentDef 
   const lateLv = ev.lateRegLevels ?? 0;
   const hpl = { slow: 15, normal: 10, turbo: 6, hyper: 3 }[ev.speed];
   return {
-    id: `world:${ev.id}`, name: ev.name, group: 'mtt', kind: 'mtt', entrants: field, tableSize: ev.tableSize === 2 ? 9 : ev.tableSize, startBB: ev.stackBB, bb: ev.bb0, speed: ev.speed, blindMode: 'regular',
+    id: `world:${ev.id}`, name: ev.name, group: 'mtt', kind: ev.kind === 'hu' ? 'hu' : ev.kind === 'shootout' ? 'sng' : 'mtt', staged: ev.kind === 'hu' ? 'hu' : ev.kind === 'shootout' ? 'shootout' : undefined, entrants: field, tableSize: ev.tableSize === 2 ? 9 : ev.tableSize, startBB: ev.stackBB, bb: ev.bb0, speed: ev.speed, blindMode: 'regular',
     buyIn: ev.buyIn, fee: feeOf(ev.buyIn, ev.feePct), recommended: 'intermediate',
     lateRegUntilLevel: lateLv || undefined, lateRegPerRound: lateLv ? (0.2 * field) / (lateLv * hpl) : undefined, aiReentry: !!ev.reentry, reentry: !!ev.reentry, reentryMax: ev.reentry?.max,
     bounty: ev.pko, world: { eventId: ev.id, season },

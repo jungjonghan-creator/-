@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CoachCard } from './CoachCard';
 import { StoryFeed } from './StoryFeed';
 import { TourneyHud } from './TourneyHud';
 import { tourneyStatus, ZONE_LABEL, STAGES } from '../game/tourney';
 import { RebuyPanel } from './RebuyPanel';
 import { SettlementPanel } from './SettlementPanel';
+import { StagedPanel } from './StagedPanel';
 import { currentBlinds, blindStructure, HANDS_PER_LEVEL, LEVEL_COUNT, sessionOver, Session } from '../game/session';
 import { ActionBar } from './ActionBar';
 import { ReviewPanel } from './Review';
@@ -18,6 +19,7 @@ import { legalActions } from '../engine/game';
 export function GameScreen({ sess }: { sess: Session }) {
   const { nextHand, quit, busy, settings, setSettings, notice, reenter, declineReentry, simToEnd, skipAI, leaveTable, wallet } = useGame();
   const [panel, setPanel] = useState<'log' | 'hist' | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [review, setReview] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [bubble, setBubble] = useState<{ name: string; text: string } | null>(null);
@@ -54,6 +56,14 @@ export function GameScreen({ sess }: { sess: Session }) {
   const effBB = (() => { const live = g.players.filter((p) => p.inHand && !p.folded || (complete && p.stack > 0)); if (live.length < 2) return null; const st = live.map((p) => p.stack + p.bet).sort((a, b) => b - a); return Math.min(hero.stack + hero.bet, st[0] === hero.stack + hero.bet ? st[1] : st[0]) / g.config.bb; })();
   const heroFolded = hero.folded && !complete;
   const heroBusted = hero.busted || hero.stack === 0;
+
+  // 작은 화면: 내 차례/새 핸드마다 내 좌석(홀카드)이 액션바에 가리지 않도록 스크롤한다
+  const heroToAct = g.toAct === heroSeat;
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.innerWidth >= 640) return;
+    const el = scrollRef.current?.querySelector<HTMLElement>(`[data-testid=seat-${heroSeat}]`);
+    el?.scrollIntoView({ block: 'nearest' });
+  }, [g.handNo, heroToAct, g.street]); // eslint-disable-line
 
   const getHint = () => {
     if (g.toAct !== heroSeat || !legalActions(g)) return;
@@ -96,7 +106,7 @@ export function GameScreen({ sess }: { sess: Session }) {
           </div>
         );
       })()}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto" ref={scrollRef}>
         {announce && <div className="mx-2 mt-2 rounded-lg bg-amber-500 text-black font-semibold text-xs sm:text-sm px-3 py-2 shadow-lg" role="alert" data-testid="announce">📣 {announce}</div>}
         {tourney && <TourneyHud sess={sess} />}
         <TableView sess={sess} bubble={bubble} />
@@ -122,6 +132,7 @@ export function GameScreen({ sess }: { sess: Session }) {
                 {' · '}{rec.result!.endedByFold ? '폴드로 종료' : '쇼다운'}
               </div>
             )}
+            {sess.staged && <StagedPanel sess={sess} />}
             {tourney && !(mtt?.heroOut && mtt.heroCanReenter) && <SettlementPanel sess={sess} />}
             {mtt?.heroOut && mtt.heroCanReenter && (
               <div className="p-3 rounded-lg bg-amber-900/50 space-y-2" data-testid="reenter-panel">
@@ -144,7 +155,7 @@ export function GameScreen({ sess }: { sess: Session }) {
                 )}
               </div>
             )}
-            {!mtt && over && (
+            {!mtt && !sess.staged && over && (
               <div className="p-3 rounded-lg bg-indigo-900/60" data-testid="game-over">
                 <div className="text-lg font-bold">{hero.finishPlace === 1 || !heroBusted ? '🏆 우승!' : `종료 — ${hero.finishPlace ?? '-'}위`}</div>
                 <div className="text-sm">토너먼트 순위: {g.players.slice().sort((a, b) => (a.finishPlace ?? 99) - (b.finishPlace ?? 99)).map((p) => `${p.finishPlace ?? '-'}. ${p.name}`).join(' · ')}</div>
@@ -165,7 +176,7 @@ export function GameScreen({ sess }: { sess: Session }) {
           ) : (
             <div className="flex gap-2 [&>button]:whitespace-nowrap [&>button]:px-3">
               {cash && <button className="btn bg-slate-700 text-xs sm:text-sm" onClick={() => leaveTable()} data-testid="btn-leave">테이블 나가기(정산)</button>}
-              <button className="btn flex-1 bg-emerald-600" onClick={() => { setReview(false); setHint(null); nextHand(); }} disabled={busy || (heroBusted && !!cash) || !!(mtt?.heroOut && mtt.heroCanReenter)} data-testid="btn-next">{mtt && heroBusted ? '결과 확인' : '다음 핸드'}</button>
+              <button className="btn flex-1 bg-emerald-600" onClick={() => { setReview(false); setHint(null); nextHand(); }} disabled={busy || (heroBusted && !!cash) || !!(mtt?.heroOut && mtt.heroCanReenter)} data-testid="btn-next">{sess.staged?.advance ? '다음 라운드로' : mtt && heroBusted ? '결과 확인' : '다음 핸드'}</button>
               <button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button>
             </div>
           )}

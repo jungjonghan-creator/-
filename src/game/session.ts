@@ -60,6 +60,8 @@ export interface Session {
   tstat?: import('./tourney').TourneyStatus;
   /** 서버가 발급한 개인 인스턴스 id (온라인 모드) */
   instanceId?: string;
+  /** 헤즈업 토너먼트표 / 슛아웃 진행 상태 */
+  staged?: import('./staged').StagedState;
   level: number;
   levelHand: number;        // 현재 레벨에서 치른 핸드 수
   startedAt: number;
@@ -223,6 +225,7 @@ export function runAIUntilHuman(sess: Session): Session {
 
 export function sessionOver(sess: Session): boolean {
   const g = sess.game;
+  if (sess.staged) return sess.staged.finished;
   if (sess.config.mode === 'mtt') return !!(sess.mtt?.finished || (sess.mtt?.heroOut && !sess.mtt?.heroCanReenter));
   if (sess.config.mode === 'cash' || sess.config.mode === 'trainer') return false;
   return g.gameOver || liveCount(g) < 2;

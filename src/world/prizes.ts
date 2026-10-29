@@ -87,6 +87,21 @@ export function bracketGroups(rounds: number): number[][] {
   return groups;
 }
 
+/** 슛아웃 구조: 테이블마다 1명 진출. alive 가 tableSize 이하가 되면 결승 테이블. rounds[k] = k+1 라운드에서 탈락하는 인원 */
+export function shootoutLayout(entries: number, tableSize: number): { finalSize: number; eliminated: number[] } {
+  let alive = entries; const eliminated: number[] = [];
+  while (alive > tableSize) { const winners = Math.ceil(alive / tableSize); eliminated.push(alive - winners); alive = winners; }
+  return { finalSize: alive, eliminated };
+}
+/** 슛아웃 동순위 묶음: 결승 테이블 단독 순위 → 늦은 라운드 탈락자 → 이른 라운드 탈락자 */
+export function shootoutGroups(entries: number, tableSize: number): number[][] {
+  const { finalSize, eliminated } = shootoutLayout(entries, tableSize);
+  const groups: number[][] = Array.from({ length: finalSize }, (_, i) => [i + 1]);
+  let pos = finalSize + 1;
+  for (let r = eliminated.length - 1; r >= 0; r--) { groups.push(Array.from({ length: eliminated[r] }, (_, k) => pos + k)); pos += eliminated[r]; }
+  return groups;
+}
+
 /** 순위 → 상금(크레딧). 서버 정산과 클라이언트 표시가 같은 함수를 쓴다. 새틀라이트 티켓 구간은 별도(ticketsFor). */
 export function prizeAtPlace(def: Pick<EventDef, 'buyIn' | 'feePct' | 'paidPct' | 'guarantee' | 'pko' | 'kind' | 'satelliteFor' | 'tableSize'>, entries: number, place: number, targetBuyIn = 0): number {
   const ps = prizeStructure(def, entries, targetBuyIn);
@@ -94,8 +109,17 @@ export function prizeAtPlace(def: Pick<EventDef, 'buyIn' | 'feePct' | 'paidPct' 
   if (def.kind === 'hu') return sharePrizes(ps, bracketGroups(Math.round(Math.log2(Math.max(2, entries)))))[place - 1] ?? 0;
   if (def.kind === 'shootout') {
     const ps2 = prizeStructure({ ...def, paidPct: Math.min(0.5, def.tableSize / entries) }, entries, targetBuyIn);
-    return prizeFor(ps2, place);
+    return sharePrizes(ps2, shootoutGroups(entries, def.tableSize))[place - 1] ?? 0;
   }
   return prizeFor(ps, place);
+}
+
+/** 상금이 지급되는 마지막 순위(동순위 묶음은 묶음의 마지막). 랭킹 점수의 입상 인원(paid)으로 쓴다. */
+export function paidPlacesOf(def: Parameters<typeof prizeAtPlace>[0], entries: number, targetBuyIn = 0): number {
+  if (def.kind === 'satellite') return prizeStructure(def, entries, targetBuyIn).tickets;
+  if (def.kind !== 'hu' && def.kind !== 'shootout') return prizeStructure(def, entries, targetBuyIn).paid;
+  let last = 1;
+  for (let p = 1; p <= entries; p++) if (prizeAtPlace(def, entries, p, targetBuyIn) > 0) last = p;
+  return last;
 }
 export const ticketsFor = (def: Parameters<typeof prizeStructure>[0], entries: number, targetBuyIn: number) => prizeStructure(def, entries, targetBuyIn).tickets;

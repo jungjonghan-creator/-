@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Action, AllInAction, HandRecord } from '../engine/types';
 import { randomSeed, createRng } from '../engine/rng';
 import { mttReenter } from '../game/mtt';
+import { stagedAfterHand, startNextRound } from '../game/staged';
 import { mttAdvanceAsync, mttSimToEndAsync } from '../game/workerClient';
 import { aiStep, beginHand, humanAct, isAITurn, newSession, rebuy, Session, SessionConfig, sessionOver, handOver } from '../game/session';
 import { clearSession, importLegacyInto, loadKV, loadSession, loadWallet, saveAll, saveKV, useDbFor } from '../persist/db';
@@ -183,7 +184,8 @@ export const useGame = create<Store>((set, get) => {
     }
     if (gen === myGen) {
       set({ busy: false, skip: false });
-      const s = get().session;
+      let s = get().session;
+      if (s?.staged && handOver(s)) { const ns = stagedAfterHand(s); if (ns !== s) { commit(ns); s = ns; } }
       if (s && handOver(s)) direct();
       if (s && handOver(s) && (sessionOver(s) || tournamentResult(s))) get().finalizeTourney();
       if (s && handOver(s) && get().settings.sound) {
@@ -503,6 +505,10 @@ export const useGame = create<Store>((set, get) => {
         let n = s;
         try {
           const seed = randomSeed();
+          if (s.staged?.advance) {
+            const nx = startNextRound(s, createRng(seed));
+            commit(nx); gen++; void runAI(gen); return;
+          }
           if (s.mtt) {
             n = await mttAdvanceAsync(s, seed);
             if (gen !== myGen) return;

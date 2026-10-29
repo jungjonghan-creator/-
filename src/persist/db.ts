@@ -102,17 +102,20 @@ export async function importLegacyInto(accountId: string): Promise<LegacyReport>
   const src = await open(LEGACY_DB_NAME);
   const copied: Record<string, number> = {};
   let legacyBal: number | undefined;
-  const tx = dst.transaction('kv', 'readwrite');
+  // IndexedDB 트랜잭션은 await 사이에 자동 종료되므로, 원본을 먼저 모두 읽은 뒤 한 번에 쓴다
+  const values: [string, unknown][] = [];
   for (const k of LEGACY_KEYS) {
     const v = await src.get('kv', k);
     if (v === undefined) continue;
-    tx.objectStore('kv').put(v, k);
+    values.push([k, v]);
     copied[k] = Array.isArray(v) ? v.length : typeof v === 'object' && v ? Object.values(v as Record<string, unknown>).reduce<number>((a, x) => a + (Array.isArray(x) ? x.length : 1), 0) : 1;
   }
   const w = (await src.get('kv', 'wallet')) as Wallet | undefined;
   if (w) legacyBal = w.balance;
   const found = Object.keys(copied).length > 0;
   const report: LegacyReport = { found, copied, at: Date.now(), legacyWalletBalance: legacyBal, note: found ? '기존 기기 기록을 복사했습니다 (원본 DB는 그대로 보존). 옛 통장 잔액은 검증되지 않은 값이라 가져오지 않았습니다.' : '이 기기에 이관할 기존 기록이 없습니다' };
+  const tx = dst.transaction('kv', 'readwrite');
+  for (const [k, v] of values) tx.objectStore('kv').put(v, k);
   tx.objectStore('kv').put(report, 'legacy_import');
   await tx.done;
   src.close(); dst.close();

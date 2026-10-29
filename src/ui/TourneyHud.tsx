@@ -12,12 +12,12 @@ export function TourneyHud({ sess }: { sess: Session }) {
   const maxChips = Math.max(st.leader.chips, 1);
   const stages = st.kind === 'sng' ? STAGES.filter((s) => s.id !== 'final') : STAGES;
   return (
-    <div className="mx-2 mt-2 rounded-xl border border-slate-700 bg-slate-900/90 text-xs sm:text-sm" data-testid="tourney-hud">
-      <div className="flex flex-wrap items-center gap-x-1 gap-y-1 px-2 pt-2" data-testid="stage-stepper" aria-label="토너먼트 단계">
+    <div className="mx-2 mt-1 sm:mt-2 rounded-xl border border-slate-700 bg-slate-900/90 text-xs sm:text-sm" data-testid="tourney-hud">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-1 px-2 pt-1.5 sm:pt-2" data-testid="stage-stepper" aria-label="토너먼트 단계">
         {stages.map((s, i) => {
           const cur = s.id === st.stage, done = STAGES.findIndex((x) => x.id === s.id) < st.stageIndex;
           return (
-            <div key={s.id} className="flex items-center gap-1 shrink-0">
+            <div key={s.id} className={`items-center gap-1 shrink-0 ${cur ? 'flex' : 'hidden sm:flex'}`}>
               <span className={`px-2 py-0.5 rounded-full ${cur ? 'bg-sky-600 text-white font-bold' : done ? 'bg-slate-700 text-slate-300' : 'bg-slate-800 text-slate-500'}`} data-stage={s.id} data-current={cur}>{s.label}</span>
               {i < stages.length - 1 && <span className="text-slate-600">›</span>}
             </div>
@@ -25,12 +25,12 @@ export function TourneyHud({ sess }: { sess: Session }) {
         })}
         {st.registrationOpen && <span className="shrink-0 px-2 py-0.5 rounded-full bg-indigo-700 text-white" data-testid="reg-open" title="레이트 등록 진행 중">등록 중 · 신규 +{st.lateJoined}</span>}
       </div>
-      <div className="grid grid-cols-3 gap-1 p-2 text-center">
+      <div className="grid grid-cols-3 gap-1 px-2 py-1 sm:p-2 text-center">
         <div className="rounded-lg bg-slate-800 py-1"><div className="text-[10px] text-slate-400">내 순위</div><div className="font-bold text-base" data-testid="hud-rank">{st.heroRank}<span className="text-xs text-slate-400"> / {st.playersLeft}</span></div></div>
         <div className="rounded-lg bg-slate-800 py-1"><div className="text-[10px] text-slate-400">평균 스택</div><div className="font-bold" data-testid="hud-avg">{fmt(st.avgStack)}<span className="text-[10px] text-slate-400"> · 내 {st.heroVsAvg.toFixed(1)}×</span></div></div>
         <div className={`rounded-lg py-1 ${zoneCls[st.zone]}`}><div className="text-[10px] opacity-80">M · {ZONE_LABEL[st.zone]}</div><div className="font-bold" data-testid="hud-m">{st.M.toFixed(1)}<span className="text-[10px] opacity-80"> · {st.heroBB.toFixed(0)}BB</span></div></div>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-2 pb-2 text-slate-300">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-0 px-2 pb-1.5 sm:pb-2 text-[11px] sm:text-xs text-slate-300">
         <span data-testid="hud-level">레벨 {st.level} · {st.sb}/{st.bb}{st.ante ? ` a${st.ante}` : ''}{st.next ? ` → ${st.handsToNext}핸드 후 ${st.next.sb}/${st.next.bb}` : ''}</span>
         <span data-testid="hud-money" className={st.bubble ? 'text-amber-300 font-bold' : st.inTheMoney ? 'text-emerald-300' : ''}>{st.inTheMoney ? `입상 확정 · 지금 탈락 시 ${fmt(st.heroPrizeNow)}` : st.bubble ? '버블! 한 명만 더 탈락하면 입상' : `입상까지 ${st.toMoney}명`}</span>
         <span className="text-slate-500">탈락 {st.eliminated}명</span>

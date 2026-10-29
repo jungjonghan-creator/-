@@ -7,7 +7,7 @@ import * as W from '../src/economy/wallet';
 import { CASH_TABLES, TOURNAMENTS, TournamentDef, sngPrizeTable } from '../src/economy/catalog';
 import { payoutStructure } from '../src/game/icm';
 import { EVENT_TEMPLATES, EventDef, SEASON_GROWTH, WORLD_ANCHOR_DAY, worldDay } from '../src/world/calendar';
-import { prizeAtPlace, prizeStructure, ticketsFor } from '../src/world/prizes';
+import { paidPlacesOf, prizeAtPlace, prizeStructure, ticketsFor } from '../src/world/prizes';
 import { eventPoints } from '../src/world/points';
 import { RULES_VERSION, isRankedEvent, Entity, HumanResult, buildPointRows, computeRanking, describeRules, PointRow, RankQuery } from '../src/world/rankings';
 import { aiEntities, ALL_RANKED } from '../src/world/field';
@@ -119,9 +119,7 @@ function prizeOf(e: EntryDef, totalEntries: number, place: number, targetBuyIn =
 }
 const paidOf = (e: EntryDef, totalEntries: number): number => {
   if (e.def) return e.def.kind === 'mtt' ? payoutStructure(totalEntries, e.def.buyIn).length : e.def.entrants <= 2 ? 1 : e.def.entrants <= 6 ? 2 : 3;
-  const ps = prizeStructure(e.ev!, totalEntries, e.ev!.satelliteFor ? TEMPLATE.get(e.ev!.satelliteFor)!.buyIn : 0);
-  if (e.ev!.kind === 'hu') return Math.max(2, Math.min(8, totalEntries / 2));
-  return ps.paid;
+  return paidPlacesOf(e.ev!, totalEntries, e.ev!.satelliteFor ? TEMPLATE.get(e.ev!.satelliteFor)!.buyIn : 0);
 };
 
 // ───────── 본문 파서 ─────────
