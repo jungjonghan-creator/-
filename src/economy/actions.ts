@@ -2,7 +2,10 @@ import { AI_LEVELS } from '../ai/profiles';
 import { OppModel } from '../ai/opponentModel';
 import { createRng } from '../engine/rng';
 import { beginHand, newSession, rebuy, Session, SessionConfig } from '../game/session';
-import { newMTTSession } from '../game/mtt';
+import { newMTTSession, heroBountyCash } from '../game/mtt';
+import { worldOpponents } from '../world/personal';
+import { templateById } from '../world/calendar';
+import { ticketsFor } from '../world/prizes';
 import { CashTable, entryCost, levelDifficulty, LevelId, prizePoolOf, sngPrizeTable, TournamentDef } from './catalog';
 import { pickOpponents } from './roster';
 import * as W from './wallet';
@@ -59,19 +62,25 @@ export function cashRebuy(wallet: W.Wallet, session: Session, amount: number, no
 }
 
 // ───────── 토너먼트 ─────────
-export function launchTournament(wallet: W.Wallet, def: TournamentDef, level: LevelId, memory: OppModel, seed: number, opts: { sid?: string; blindMode?: 'regular' | 'adaptive'; speed?: TournamentDef['speed']; humanName?: string; now?: number } = {}): Launch {
+export function launchTournament(wallet: W.Wallet, def: TournamentDef, level: LevelId, memory: OppModel, seed: number, opts: { sid?: string; blindMode?: 'regular' | 'adaptive'; speed?: TournamentDef['speed']; humanName?: string; now?: number; ticket?: boolean } = {}): Launch {
   const sid = opts.sid ?? newSid();
   const now = opts.now ?? Date.now();
   const humanName = opts.humanName ?? 'TETO';
-  const w = W.enterTournament(wallet, sid, { id: def.id, name: def.name, buyIn: def.buyIn, fee: def.fee }, def.group === 'free' ? 'freeroll' : 'tournament', now);
+  const w = W.enterTournament(wallet, sid, { id: def.id, name: def.name, buyIn: def.buyIn, fee: def.fee }, def.group === 'free' ? 'freeroll' : 'tournament', now, !!opts.ticket);
   const d = levelDiff(level);
   const blindMode = opts.blindMode ?? def.blindMode;
   const speed = opts.speed ?? def.speed;
   let s: Session;
   if (def.kind === 'mtt') {
+    const ev = def.world ? templateById(def.world.eventId) : null;
     s = newMTTSession({
       startBB: def.startBB, bb: def.bb, speed, humanName, seed, difficulty: d, profileId: 'AdaptivePro', blindMode,
-      mtt: { entrants: def.entrants, tableSize: def.tableSize as 6 | 9, buyIn: def.buyIn, reentry: !!def.reentry, reentryUntilLevel: def.lateRegUntilLevel ?? 4, maxReentries: 2, lateRegUntilLevel: def.lateRegUntilLevel, lateRegPerRound: def.lateRegPerRound, aiReentry: def.aiReentry },
+      opponents: ev ? worldOpponents(ev, def.world!.season, seed, def.entrants) : undefined,
+      mtt: {
+        entrants: def.entrants, tableSize: def.tableSize as 6 | 9, buyIn: def.buyIn, reentry: !!def.reentry, reentryUntilLevel: ev?.reentry?.untilLevel ?? def.lateRegUntilLevel ?? 4, maxReentries: def.reentryMax ?? 2,
+        lateRegUntilLevel: def.lateRegUntilLevel, lateRegPerRound: def.lateRegPerRound, aiReentry: def.aiReentry,
+        fast: def.entrants > 120, bounty: def.bounty, world: def.world ? { eventId: def.world.eventId } : undefined,
+      },
     });
   } else {
     const opps = pickOpponents(def.tableSize - 1, seed);
@@ -87,13 +96,26 @@ export function launchTournament(wallet: W.Wallet, def: TournamentDef, level: Le
 }
 
 /** 히어로의 최종 순위와 상금 (대회가 끝났거나 내가 탈락·재진입을 포기했을 때) */
-export function tournamentResult(session: Session): { place: number; prize: number; field: number } | null {
+export interface TResult { place: number; prize: number; field: number; bounty: number; ticket: { eventId: string; value: number } | null }
+export function tournamentResult(session: Session): TResult | null {
   const hero = session.game.players.find((p) => p.isHuman);
   if (session.mtt) {
     const m = session.mtt;
     if (!(m.finished || (m.heroOut && !m.heroCanReenter))) return null;
     const place = m.places['hero'] ?? (m.winner === 'hero' ? 1 : m.totalEntries);
-    return { place, prize: m.payouts[place - 1] ?? 0, field: m.totalEntries };
+    let ticket: TResult['ticket'] = null;
+    let prize = m.payouts[place - 1] ?? 0;
+    if (m.config.world) {
+      const ev = templateById(m.config.world.eventId);
+      if (ev.kind === 'satellite') {
+        const target = templateById(ev.satelliteFor!).buyIn;
+        const n = ticketsFor(ev, m.totalEntries, target);
+        if (place <= n) ticket = { eventId: ev.satelliteFor!, value: target };
+        else if (place === n + 1) prize = prizeStructureRemainder(ev, m.totalEntries, target);
+        else prize = 0;
+      }
+    }
+    return { place, prize, field: m.totalEntries, bounty: heroBountyCash(m), ticket };
   }
   if (!hero) return null;
   const alive = !hero.busted && hero.stack > 0;
@@ -101,7 +123,7 @@ export function tournamentResult(session: Session): { place: number; prize: numb
   if (!(session.game.gameOver || (hero.busted && hero.finishPlace !== undefined))) return null;
   const place = alive ? 1 : hero.finishPlace ?? session.game.players.length;
   const payouts = session.prize?.payouts ?? [];
-  return { place, prize: payouts[place - 1] ?? 0, field: session.game.players.length };
+  return { place, prize: payouts[place - 1] ?? 0, field: session.game.players.length, bounty: 0, ticket: null };
 }
 
 /** 대회 정산: 상금을 통장에 한 번만 지급 (멱등) */
@@ -110,7 +132,9 @@ export function settleTournament(wallet: W.Wallet, session: Session, now = Date.
   const r = tournamentResult(session);
   if (!r) return wallet;
   if (!wallet.accounts[session.sid]) return wallet; // 레거시(통장 미연동) 경기
-  return W.payPrize(wallet, session.sid, r.prize, r.place, r.field, now);
+  let w = W.payPrize(wallet, session.sid, r.prize, r.place, r.field, now, r.bounty);
+  if (r.ticket) w = W.grantTicket(w, { id: `tk:${session.sid}`, eventId: r.ticket.eventId, season: 2035, value: r.ticket.value, sourceEntry: session.sid }, now);
+  return w;
 }
 
 export function reenterEconomy(wallet: W.Wallet, session: Session, def: TournamentDef, now = Date.now()): Launch {
@@ -131,3 +155,6 @@ export function reconcile(wallet: W.Wallet, saved: Session | null): W.Wallet {
   return w;
 }
 export { AI_LEVELS };
+
+import { prizeStructure } from '../world/prizes';
+function prizeStructureRemainder(ev: Parameters<typeof prizeStructure>[0], total: number, target: number): number { return prizeStructure(ev, total, target).ticketCashRemainder; }

@@ -1,6 +1,8 @@
 import { AI_LEVELS, Difficulty } from '../ai/profiles';
 import { Speed } from '../game/session';
 import { BlindMode } from '../game/blinds';
+import { EventDef, SEASON_GROWTH, templateById } from '../world/calendar';
+import { feeOf } from '../world/prizes';
 
 export type LevelId = (typeof AI_LEVELS)[number]['id'];
 
@@ -30,7 +32,7 @@ export const cashTableById = (id: string) => [...CASH_TABLES, PRACTICE_TABLE].fi
 export interface TournamentDef {
   id: string; name: string; group: 'free' | 'sng' | 'mtt';
   kind: 'hu' | 'sng' | 'mtt';
-  entrants: number; tableSize: 2 | 6 | 9;
+  entrants: number; tableSize: 2 | 6 | 8 | 9;
   startBB: number;        // 시작 스택(BB)
   bb: number;             // 레벨 1의 BB
   speed: Speed;
@@ -41,6 +43,10 @@ export interface TournamentDef {
   lateRegUntilLevel?: number; lateRegPerRound?: number; aiReentry?: boolean; reentry?: boolean;
   recommended: LevelId;
   desc: string;
+  /** 월드 이벤트에서 만들어진 정의(개인 인스턴스). 상금표·바운티·재진입 규칙이 이벤트 정의를 따른다 */
+  world?: { eventId: string; season: number };
+  bounty?: { share: number; mystery?: boolean };
+  reentryMax?: number;
 }
 
 export const TOURNAMENTS: TournamentDef[] = [
@@ -55,7 +61,26 @@ export const TOURNAMENTS: TournamentDef[] = [
   { id: 'mtt108', name: '위크엔드 MTT 108+', group: 'mtt', kind: 'mtt', entrants: 108, tableSize: 9, startBB: 75, bb: 100, speed: 'turbo', blindMode: 'adaptive', buyIn: 2500, fee: 250, lateRegUntilLevel: 4, lateRegPerRound: 1.2, aiReentry: true, reentry: true, recommended: 'advanced', desc: '12개 테이블로 시작. 버블이 길게 이어집니다.' },
   { id: 'mtt216', name: '메인 이벤트 MTT 216+', group: 'mtt', kind: 'mtt', entrants: 216, tableSize: 9, startBB: 100, bb: 100, speed: 'turbo', blindMode: 'adaptive', buyIn: 10000, fee: 1000, lateRegUntilLevel: 5, lateRegPerRound: 1.6, aiReentry: true, reentry: true, recommended: 'pro', desc: '24개 테이블. 가장 긴 여정, 가장 큰 상금.' },
 ];
-export const tournamentById = (id: string) => TOURNAMENTS.find((t) => t.id === id)!;
+export const PERSONAL_SEASON = 2035;
+/** 이벤트가 개인 인스턴스로 플레이 가능한가 (엔진이 규칙을 완전히 구현한 형식만). 아니면 이유를 돌려준다 */
+export function playableReason(ev: EventDef): string | null {
+  if (ev.kind === 'hu') return '헤즈업 토너먼트표(브래킷) 개인 인스턴스는 아직 구현되지 않았습니다 — 공식 AI 결과만 열람할 수 있습니다';
+  if (ev.kind === 'shootout') return '슛아웃(테이블 승자 진출) 개인 인스턴스는 아직 구현되지 않았습니다 — 공식 AI 결과만 열람할 수 있습니다';
+  return null;
+}
+export function worldDef(ev: EventDef, season = PERSONAL_SEASON): TournamentDef {
+  const field = Math.max(8, Math.round(ev.field * (SEASON_GROWTH[season] ?? 1)));
+  const lateLv = ev.lateRegLevels ?? 0;
+  const hpl = { slow: 15, normal: 10, turbo: 6, hyper: 3 }[ev.speed];
+  return {
+    id: `world:${ev.id}`, name: ev.name, group: 'mtt', kind: 'mtt', entrants: field, tableSize: ev.tableSize === 2 ? 9 : ev.tableSize, startBB: ev.stackBB, bb: ev.bb0, speed: ev.speed, blindMode: 'regular',
+    buyIn: ev.buyIn, fee: feeOf(ev.buyIn, ev.feePct), recommended: 'intermediate',
+    lateRegUntilLevel: lateLv || undefined, lateRegPerRound: lateLv ? (0.2 * field) / (lateLv * hpl) : undefined, aiReentry: !!ev.reentry, reentry: !!ev.reentry, reentryMax: ev.reentry?.max,
+    bounty: ev.pko, world: { eventId: ev.id, season },
+    desc: `${ev.note} · ${field.toLocaleString()}명 · ${ev.stackBB}BB 스타트${ev.pko ? ' · PKO' : ''}${ev.reentry ? ' · 재진입' : ''}`,
+  };
+}
+export const tournamentById = (id: string): TournamentDef => (id.startsWith('world:') ? worldDef(templateById(id.slice(6))) : TOURNAMENTS.find((t) => t.id === id)!);
 export const entryCost = (t: TournamentDef) => t.buyIn + t.fee;
 
 /** SNG 상금 비율: 2인 승자독식, 3~6인 65/35, 7~9인 60/30/10 */

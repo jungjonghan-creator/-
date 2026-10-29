@@ -11,7 +11,10 @@
     "test": "vitest run",
     "sim": "tsx scripts/simulate.ts",
     "stress": "tsx scripts/stress.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "serve": "tsx server/node.ts",
+    "build:world": "tsx scripts/buildWorld.ts",
+    "bench:world": "tsx scripts/worldBench.ts"
   },
   "dependencies": {
     "idb": "^8.0.4",

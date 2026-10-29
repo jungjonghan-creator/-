@@ -46,7 +46,7 @@ export interface BatchResult {
   violations: string[];
 }
 
-interface E { eid: string; pid: string; sk: SkillProfile; stack: number; bounty: number; n: number; level0: number }
+export interface E { eid: string; pid: string; sk: SkillProfile; stack: number; bounty: number; n: number; level0: number }
 interface Seat { e: E; hole: [Card, Card]; start: number; contrib: number; bet: number; folded: boolean; allIn: boolean }
 
 /** 내 뒤에 남은 플레이어 수(behind) → 오픈 퍼센타일 상한. BB=0, SB=1, BTN=2, CO=3 … UTG=8 */
@@ -115,10 +115,10 @@ function distribute(seats: Seat[], board: Card[], btn: number, scores: (number |
   return { won, killers };
 }
 
-interface TableCtx { rng: RNG; bb: number; sb: number; ante: number; pressure: number }
+export interface TableCtx { rng: RNG; bb: number; sb: number; ante: number; pressure: number }
 
 /** 한 테이블 한 핸드. 좌석 순서 = 배열 순서. 칩을 직접 변경하고 { busted } 를 반환 */
-function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks: number[]; kills: [bustee: number, killers: number[]][] } {
+export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks: number[]; kills: [bustee: number, killers: number[]][] } {
   const { rng, bb, sb, ante } = ctx;
   const n = table.length;
   // 덱: 필요한 만큼만 부분 셔플

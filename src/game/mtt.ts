@@ -6,6 +6,9 @@ import { icm, payoutStructure } from './icm';
 import { createGame, makePlayer, startHand } from '../engine/game';
 import { createRng, RNG } from '../engine/rng';
 import { GameState } from '../engine/types';
+import { fastTableHand, fromTuple, skillFromSetup, SkillTuple } from '../world/fastTable';
+import { prizeStructure } from '../world/prizes';
+import { templateById } from '../world/calendar';
 
 export interface MTTConfig {
   entrants: number;       // 참가자 수 (사람 포함)
@@ -20,6 +23,22 @@ export interface MTTConfig {
   lateRegPerRound?: number;
   /** 탈락한 AI 가 레이트 등록 시간 안에 재진입 */
   aiReentry?: boolean;
+  /** 대규모 필드: 내 테이블이 아닌 테이블은 배치 시뮬레이터로 진행 */
+  fast?: boolean;
+  /** PKO / 미스터리 바운티: 바이인의 share 가 바운티로 분리 */
+  bounty?: { share: number; mystery?: boolean };
+  /** 월드 이벤트(상금표·보장·새틀라이트가 이벤트 정의에서 나온다) */
+  world?: { eventId: string };
+}
+
+/** 이 대회의 상금표. 월드 이벤트는 이벤트 정의(보장 상금·입상률·PKO 분리), 일반 대회는 기본 구조. */
+export function payoutsFor(cfg: MTTConfig, total: number): { payouts: number[]; prizePool: number } {
+  if (cfg.world) {
+    const ev = templateById(cfg.world.eventId);
+    const ps = prizeStructure(ev, total, ev.satelliteFor ? templateById(ev.satelliteFor).buyIn : 0);
+    return { payouts: ps.payouts, prizePool: ps.prizePool };
+  }
+  return { payouts: payoutStructure(total, cfg.buyIn), prizePool: cfg.buyIn * total };
 }
 
 export interface MTTTable { id: number; game: GameState }
@@ -55,13 +74,18 @@ export interface MTTState {
   nextTableId: number;
   /** 탈락 기록 (최신이 마지막). 실제 온라인 토너먼트의 탈락 알림용 */
   elims: { id: string; name: string; place: number; round: number }[];
+  /** 월드 선수 실력(전 AI). 배치 테이블 시뮬레이션과 순위 표시가 쓴다 */
+  skills: Record<string, SkillTuple>;
+  /** PKO: 현재 바운티 / 현금으로 얻은 바운티(기본 id 기준, 재진입 엔트리 합산) */
+  bounty?: { unit: number; cur: Record<string, number>; cash: Record<string, number> };
   icmLog: { round: number; players: number; heroStack: number; chipShare: number; icmShare: number | null }[];
   log: string[];
 }
 
 const nextId = (m: MTTState) => m.nextTableId++;
 
-export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais' | 'blindMode'> & { blindMode?: 'regular' | 'adaptive'; mtt: MTTConfig; difficulty: Difficulty; profileId: string }): Session {
+export interface Opponent { id: string; name: string; profileId: string; difficulty: Difficulty; skill?: SkillTuple }
+export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais' | 'blindMode'> & { blindMode?: 'regular' | 'adaptive'; mtt: MTTConfig; difficulty: Difficulty; profileId: string; opponents?: Opponent[] }): Session {
   const cfg = base.mtt;
   const stack = base.startBB * base.bb;
   const rng = createRng(base.seed);
@@ -69,8 +93,17 @@ export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais'
   const names: Record<string, string> = { hero: base.humanName };
   const all: { id: string; name: string; isHuman: boolean }[] = [{ id: 'hero', name: base.humanName, isHuman: true }];
   // 앞쪽 14명은 고정 이름을 가진 로스터(경기 사이에 관찰 기록 유지), 나머지는 일반 봇
-  const roster = pickOpponents(Math.min(ROSTER.length, cfg.entrants - 1), base.seed);
-  for (let i = 1; i < cfg.entrants; i++) {
+  const roster = base.opponents ? [] : pickOpponents(Math.min(ROSTER.length, cfg.entrants - 1), base.seed);
+  const skills: Record<string, SkillTuple> = {};
+  if (base.opponents) {
+    if (base.opponents.length !== cfg.entrants - 1) throw new Error('상대 목록 길이가 참가자 수와 다릅니다');
+    for (const o of base.opponents) {
+      aiById[o.id] = { profileId: o.profileId, difficulty: o.difficulty };
+      names[o.id] = o.name; all.push({ id: o.id, name: o.name, isHuman: false });
+      if (o.skill) skills[o.id] = o.skill;
+    }
+  }
+  for (let i = 1; i < cfg.entrants && !base.opponents; i++) {
     const r = roster[i - 1];
     const id = r ? r.id : `ai${i - 1}`;
     const diff = Math.max(2, Math.min(5, base.difficulty + (rng.int(3) - 1))) as Difficulty;
@@ -89,11 +122,13 @@ export function newMTTSession(base: Omit<SessionConfig, 'seats' | 'mode' | 'ais'
     game: createGame({ ...lvl0, maxSeats: cfg.tableSize }, grp.map((p) => makePlayer(p.id, p.name, stack, p.isHuman, p.id === 'hero' ? undefined : aiById[p.id].profileId)), base.seed + id),
   }));
   const heroTable = tables.find((t) => t.game.players.some((p) => p.isHuman))!;
-  const payouts = payoutStructure(cfg.entrants, cfg.buyIn);
+  const pay0 = payoutsFor(cfg, cfg.entrants);
+  const payouts = pay0.payouts;
   const mtt: MTTState = {
-    config: cfg, tables, heroTable: heroTable.id, round: 0, level: 0, levelRound: 0, levelLen: nextLevelLength(base.blindMode ?? 'regular', base.speed, { avgBB: base.startBB, playersLeft: cfg.entrants, entrants: cfg.entrants, handsPlayed: 0 }), startStack: stack, prizePool: cfg.buyIn * cfg.entrants, payouts, places: {}, names,
+    config: cfg, tables, heroTable: heroTable.id, round: 0, level: 0, levelRound: 0, levelLen: nextLevelLength(base.blindMode ?? 'regular', base.speed, { avgBB: base.startBB, playersLeft: cfg.entrants, entrants: cfg.entrants, handsPlayed: 0 }), startStack: stack, prizePool: pay0.prizePool, payouts, skills, places: {}, names,
     remaining: cfg.entrants, entries: 1, totalEntries: cfg.entrants, bustSeq: [], registrationOpen: (cfg.lateRegUntilLevel ?? 0) > 0, lateJoined: 0, aiCounter: cfg.entrants - 1, heroOut: false, heroCanReenter: false, finished: false, heroPrize: 0, bubble: false, finalTable: false, nextTableId: nTables, elims: [], icmLog: [], log: [],
   };
+  if (cfg.bounty) { const unit = Math.round(cfg.buyIn * cfg.bounty.share); mtt.bounty = { unit, cur: {}, cash: {} }; for (const p of all) mtt.bounty.cur[p.id] = bountyDraw(unit, cfg.bounty.mystery, base.seed, p.id); }
   const config: SessionConfig = { blindMode: base.blindMode ?? 'regular', mode: 'mtt', seats: cfg.tableSize, startBB: base.startBB, bb: base.bb, speed: base.speed, humanName: base.humanName, ais: [], seed: base.seed };
   return {
     version: 1, config, game: heroTable.game, memory: {}, records: [], aiBySeat: {}, aiById, mtt, level: 0, levelHand: 0, startedAt: Date.now(), buyIns: stack * 1, aiLog: [],
@@ -147,22 +182,34 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
   const level = m.level;
   const busts: { id: string; start: number }[] = [];
 
-  // 1) 다른 테이블 1핸드 진행 (내 테이블은 이미 진행됨)
+  // 1) 다른 테이블 1핸드 진행 (내 테이블은 이미 진행됨). 대규모 필드는 배치 시뮬레이터 사용.
+  const killMap: Record<string, string[]> = {};
+  const blindsNow = blindStructure(sess.config.bb)[Math.min(level, LEVEL_COUNT - 1)];
+  const pressure = m.remaining > m.payouts.length && m.remaining <= m.payouts.length * 1.15 + 2 ? 1 : m.remaining <= m.payouts.length ? 0.35 : 0;
+  const skillOf = (id: string) => (m.skills[id] ? fromTuple(m.skills[id]) : skillFromSetup(sess.aiById?.[id]?.profileId ?? 'Balanced', sess.aiById?.[id]?.difficulty ?? 3));
   for (const tb of m.tables) {
     if (tb.id === hid && !autoHero) continue;
     if (tb.game.players.filter((p) => p.stack > 0).length < 2) continue;
     const g0 = structuredClone(tb.game);
     g0.street = 'complete';
     setBlinds(g0, 0, level, sess.config.bb);
-    const g = playOutTable({ ...sess, mtt: m }, g0, rng, scale);
-    tb.game = g;
+    if (m.config.fast && !(autoHero && tb.id === hid)) {
+      const r = fastTableHand(g0, blindsNow, rng, skillOf, pressure);
+      tb.game = r.game; Object.assign(killMap, r.kills);
+    } else {
+      const g = playOutTable({ ...sess, mtt: m }, g0, rng, scale);
+      tb.game = g;
+      Object.assign(killMap, killersOf(g));
+    }
   }
+  if (hid !== null && !autoHero) Object.assign(killMap, killersOf(m.tables.find((t) => t.id === hid)!.game));
   // 2) 탈락 수집 (stack 0). 시작 스택으로 동시 탈락 순위 결정
   for (const tb of m.tables) {
     tb.game.players.forEach((p, i) => { if (p.stack === 0 && p.id in m.names) busts.push({ id: p.id, start: tb.game.startStacks[i] ?? 0 }); });
   }
   busts.sort((a, b) => a.start - b.start); // 작은 스택 먼저 = 더 낮은 순위
   busts.forEach((b) => { m.bustSeq.push(b.id); });
+  if (m.bounty) for (const b of busts) transferBounty(m, b.id, killMap[b.id] ?? []);
   recomputePlaces(m);
   busts.forEach((b) => { m.elims.push({ id: b.id, name: m.names[b.id] ?? b.id, place: m.places[b.id], round: m.round + 1 }); });
   m.remaining -= busts.length;
@@ -196,14 +243,13 @@ export function mttAdvance(sess: Session, rng: RNG, scale = 0.35, autoHero = fal
     m.registrationOpen = false;
     m.log.push(`레이트 등록 마감 — 총 ${m.totalEntries}엔트리`);
   }
-  m.payouts = payoutStructure(m.totalEntries, m.config.buyIn);
-  m.prizePool = m.config.buyIn * m.totalEntries;
+  { const pp = payoutsFor(m.config, m.totalEntries); m.payouts = pp.payouts; m.prizePool = pp.prizePool; }
   recomputePlaces(m);
   if (bustIds.has('hero')) { const place = m.places['hero']; m.heroPrize = m.payouts[place - 1] ?? 0; }
   // 3) 종료 판정
   if (m.remaining <= 1) {
     const w = m.tables.flatMap((t) => t.game.players).find((p) => p.stack > 0);
-    if (w) { m.places[w.id] = 1; m.winner = w.id; m.registrationOpen = false; if (w.id === 'hero') { m.heroPrize = m.payouts[0]; m.heroOut = false; } }
+    if (w) { if (m.bounty) { const bo = m.bounty; bo.cash[baseId(w.id)] = (bo.cash[baseId(w.id)] ?? 0) + (bo.cur[w.id] ?? 0); bo.cur[w.id] = 0; } m.places[w.id] = 1; m.winner = w.id; m.registrationOpen = false; if (w.id === 'hero') { m.heroPrize = m.payouts[0]; m.heroOut = false; } }
     m.finished = true; m.heroCanReenter = false;
   } else rebalance(m, sess.config.speed);
 
@@ -251,6 +297,7 @@ function addLateEntrants(m: MTTState, n: number, rng: RNG, sess: Session): Recor
       m.tables.push({ id: m.nextTableId++, game: removePlayers(g0, new Set([dummy])) });
     }
     m.totalEntries++; m.remaining++; m.lateJoined++;
+    if (m.bounty) m.bounty.cur[id] = bountyDraw(m.bounty.unit, m.config.bounty?.mystery, m.aiCounter, id);
   }
   return out;
 }
@@ -318,7 +365,8 @@ export function mttReenter(sess: Session): Session {
   t.game = addPlayer(t.game, makePlayer('hero', m.names['hero'], m.startStack, true));
   m.heroTable = t.id; m.heroOut = false; m.heroCanReenter = false; m.entries++;
   m.remaining++; m.totalEntries++; m.heroPrize = 0;
-  m.payouts = payoutStructure(m.totalEntries, m.config.buyIn); m.prizePool = m.config.buyIn * m.totalEntries;
+  { const pp = payoutsFor(m.config, m.totalEntries); m.payouts = pp.payouts; m.prizePool = pp.prizePool; }
+  if (m.bounty) m.bounty.cur['hero'] = bountyDraw(m.bounty.unit, m.config.bounty?.mystery, sess.config.seed + m.entries * 7919, 'hero');
   recomputePlaces(m);
   return { ...sess, mtt: m, game: blankHand(t.game) };
 }
@@ -339,3 +387,38 @@ export function heroTableGame(sess: Session): GameState {
 }
 
 export { beginHand };
+
+// ───────── PKO / 미스터리 바운티 ─────────
+const baseId = (id: string) => id.replace(/#\d+$/, '');
+/** 엔트리 시작 바운티. 미스터리는 시드·id 로 결정되는 분포(평균 1배, 드물게 큰 값) — 보여 주기 전까지 알 수 없다. */
+export function bountyDraw(unit: number, mystery: boolean | undefined, seed: number, id: string): number {
+  if (!mystery) return unit;
+  let h = 2166136261 ^ seed; for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const u = ((h >>> 0) % 10000) / 10000;
+  const mult = u < 0.5 ? 0.25 : u < 0.8 ? 0.625 : u < 0.92 ? 1.25 : u < 0.98 ? 3.125 : u < 0.998 ? 12.5 : 62.5; // 평균 ≈ 1
+  return Math.max(1, Math.round(unit * mult));
+}
+/** 탈락자의 바운티: 절반은 현금으로 킬러(들)에게, 절반은 킬러의 바운티에 더해진다. 킬러가 둘 이상이면 균등 분배. */
+function transferBounty(m: MTTState, bustedId: string, killers: string[]) {
+  const bo = m.bounty!;
+  const val = bo.cur[bustedId] ?? 0; delete bo.cur[bustedId];
+  if (val <= 0 || !killers.length) return;
+  const half = Math.floor(val / 2), per = Math.floor(half / killers.length);
+  let rem = val;
+  for (const k of killers) { bo.cash[baseId(k)] = (bo.cash[baseId(k)] ?? 0) + per; bo.cur[k] = (bo.cur[k] ?? 0) + per; rem -= per * 2; }
+  bo.cash[baseId(killers[0])] = (bo.cash[baseId(killers[0])] ?? 0) + rem;
+}
+/** 엔진 테이블의 결과에서, 이번 핸드에 탈락한 좌석을 이긴 사람들(해당 좌석이 참여한 마지막 팟의 승자) */
+function killersOf(g: GameState): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  const res = g.result; if (!res) return out;
+  g.players.forEach((p, i) => {
+    if (p.stack !== 0) return;
+    const pots = res.pots.filter((pt) => pt.eligible.includes(i));
+    const last = pots[pots.length - 1];
+    if (last) out[p.id] = last.winners.filter((w) => w !== i).map((w) => g.players[w].id);
+  });
+  return out;
+}
+/** 히어로가 받은 현금 바운티 (재진입 엔트리 합산) */
+export const heroBountyCash = (m: MTTState): number => m.bounty?.cash['hero'] ?? 0;

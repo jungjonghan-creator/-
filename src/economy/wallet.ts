@@ -7,7 +7,7 @@ export const INITIAL_BALANCE = 30000;
 
 export type TxKind =
   | 'initial' | 'cash-buyin' | 'cash-topup' | 'cash-cashout'
-  | 'tourney-entry' | 'tourney-fee' | 'tourney-reentry' | 'tourney-prize' | 'freeroll-prize' | 'adjust' | 'daily-grant';
+  | 'tourney-entry' | 'tourney-fee' | 'tourney-reentry' | 'tourney-prize' | 'freeroll-prize' | 'adjust' | 'daily-grant' | 'bounty-prize';
 
 export interface Tx { id: string; ts: number; kind: TxKind; amount: number; ref: string; note: string; balanceAfter: number }
 
@@ -25,8 +25,11 @@ export interface Account {
   place?: number; fieldSize?: number;
 }
 
+export interface Ticket { id: string; eventId: string; season: number; value: number; sourceEntry: string; status: 'active' | 'used'; usedEntry?: string; createdAt: number }
 export interface Wallet {
   version: 1;
+  /** 새틀라이트 등으로 얻은 일회성 참가권 (서버 모드에서는 서버 값이 진실) */
+  tickets?: Ticket[];
   initial: number;
   balance: number;
   peak: number;
@@ -109,12 +112,13 @@ export function reenterTournament(w: Wallet, sid: string, t: TourneyCost, entryN
   return withAccount(n, { ...a, spent: a.spent + cost, entries: a.entries + 1 });
 }
 /** 상금 지급 (대회당 한 번). 상금이 0 이어도 대회는 종료 처리된다. */
-export function payPrize(w: Wallet, sid: string, amount: number, place: number, fieldSize: number, now = Date.now()): Wallet {
+export function payPrize(w: Wallet, sid: string, amount: number, place: number, fieldSize: number, now = Date.now(), bounty = 0): Wallet {
   const a = mustAccount(w, sid);
   if (a.status === 'closed') return w;
   let n = w;
   if (amount > 0) n = post(n, { id: `prize:${sid}`, ts: now, kind: a.kind === 'freeroll' ? 'freeroll-prize' : 'tourney-prize', amount, ref: sid, note: `${a.label} ${place}위 상금` });
-  return withAccount(n, { ...a, returned: a.returned + Math.max(0, amount), status: 'closed', closedAt: now, place, fieldSize });
+  if (bounty > 0) n = post(n, { id: `bounty:${sid}`, ts: now, kind: 'bounty-prize', amount: bounty, ref: sid, note: `${a.label} 바운티 획득` });
+  return withAccount(n, { ...a, returned: a.returned + Math.max(0, amount) + Math.max(0, bounty), status: 'closed', closedAt: now, place, fieldSize });
 }
 /** 연습게임: 통장과 무관하게 계정만 기록 */
 export function openPractice(w: Wallet, sid: string, label: string, now = Date.now()): Wallet {
@@ -211,4 +215,15 @@ export function dailyGrant(w: Wallet, now = Date.now()): { wallet: Wallet; grant
   const amount = Math.min(DAILY_GRANT, GRANT_CAP - holdings);
   if (amount <= 0) return { wallet: w, granted: 0, reason: `보유 자산이 ${GRANT_CAP.toLocaleString()} 이상이면 지급되지 않습니다` };
   return { wallet: post(w, { id: key, ts: now, kind: 'daily-grant', amount, ref: '', note: `정기 무료 크레딧 ${kstDate(now)}` }), granted: amount };
+}
+
+// ───────── 티켓 (새틀라이트) ─────────
+export function grantTicket(w: Wallet, t: Omit<Ticket, 'status' | 'createdAt'>, now = Date.now()): Wallet {
+  if ((w.tickets ?? []).some((x) => x.id === t.id || x.sourceEntry === t.sourceEntry)) return w; // 같은 새틀라이트 결과로 두 번 발행 불가
+  return { ...w, tickets: [...(w.tickets ?? []), { ...t, status: 'active', createdAt: now }] };
+}
+export function useTicketFor(w: Wallet, eventId: string, season: number, entrySid: string): { wallet: Wallet; ticketId: string | null } {
+  const t = (w.tickets ?? []).find((x) => x.status === 'active' && x.eventId === eventId && x.season === season);
+  if (!t) return { wallet: w, ticketId: null };
+  return { wallet: { ...w, tickets: (w.tickets ?? []).map((x) => (x.id === t.id ? { ...x, status: 'used' as const, usedEntry: entrySid } : x)) }, ticketId: t.id };
 }

@@ -241,6 +241,12 @@ async function logout(req: Request, env: Env) {
   return json({ ok: true }, 200, { 'set-cookie': sessionCookie('', 0, isSecure(req)) });
 }
 
+/** 서버 지갑 + 티켓 → 클라이언트가 쓰는 Wallet 형태 */
+async function wOut(env: Env, me: Account, w: W.Wallet): Promise<W.Wallet> {
+  const rows = (await env.DB.prepare('SELECT id, event_id, season, value, source_entry, status, used_entry, created_at FROM tickets WHERE account_id=?').bind(me.id).all<{ id: string; event_id: string; season: number; value: number; source_entry: string; status: 'active' | 'used'; used_entry: string | null; created_at: number }>()).results;
+  return { ...w, tickets: rows.map((t) => ({ id: t.id, eventId: t.event_id, season: t.season, value: t.value, sourceEntry: t.source_entry, status: t.status, usedEntry: t.used_entry ?? undefined, createdAt: t.created_at })) };
+}
+
 // ───────── 상태 ─────────
 async function meView(env: Env, me: Account) {
   return { id: me.id, username: me.username, displayName: me.display_name, nationality: me.nationality, publicProfile: !!me.public_profile, entityKey: `human:${me.id}` };
@@ -250,12 +256,12 @@ async function stateView(env: Env, me: Account, now: number) {
   const tickets = (await env.DB.prepare('SELECT id, event_id, season, value, status, created_at FROM tickets WHERE account_id=? AND status=?').bind(me.id, 'active').all()).results;
   const open = (await env.DB.prepare('SELECT sid, source, def_id, season, instance_id, seed, status FROM tournament_entries WHERE account_id=? AND status=?').bind(me.id, 'open').all()).results;
   const save = await env.DB.prepare('SELECT slot, version, bytes, updated_at FROM saves WHERE account_id=?').bind(me.id).all();
-  return { me: await meView(env, me), wallet: w?.wallet ?? null, walletErrors: w ? W.verifyWallet(w.wallet) : ['지갑 없음'], tickets, openEntries: open, saves: save.results, worldDay: worldDay(now), season: CURRENT_SEASON, serverTime: now };
+  return { me: await meView(env, me), wallet: w ? await wOut(env, me, w.wallet) : null, walletErrors: w ? W.verifyWallet(w.wallet) : ['지갑 없음'], tickets, openEntries: open, saves: save.results, worldDay: worldDay(now), season: CURRENT_SEASON, serverTime: now };
 }
 async function dailyHandler(env: Env, me: Account, now: number) {
   let granted = 0; let reason: string | undefined;
   const wallet = await mutateWallet(env.DB, me.id, (w) => { const r = W.dailyGrant(w, now); granted = r.granted; reason = r.reason; return r.wallet; });
-  return json({ ok: true, granted, reason, wallet });
+  return json({ ok: true, granted, reason, wallet: await wOut(env, me, wallet) });
 }
 
 // ───────── 캐시게임 ─────────
@@ -270,7 +276,7 @@ async function cashOpen(req: Request, env: Env, me: Account, now: number) {
   const wl = await loadWallet(env.DB, me.id);
   if (!wl!.wallet.accounts[sid]) await assertNoOpen(env, me);
   const wallet = await mutateWallet(env.DB, me.id, (w) => W.openCash(w, sid, t.name, buyIn, { min: t.minBuy, max: t.maxBuy }, now));
-  return json({ ok: true, wallet });
+  return json({ ok: true, wallet: await wOut(env, me, wallet) });
 }
 async function cashTopup(req: Request, env: Env, me: Account, now: number) {
   const b = await body(req);
@@ -279,7 +285,7 @@ async function cashTopup(req: Request, env: Env, me: Account, now: number) {
   if (!acct || acct.kind !== 'cash') throw new HttpError(404, '캐시 계정이 없습니다');
   const t = CASH_TABLES.find((x) => x.name === acct.label)!;
   const wallet = await mutateWallet(env.DB, me.id, (w) => W.cashTopUp(w, sid, opId, amount, { max: t.maxBuy, currentChips: chips }, now));
-  return json({ ok: true, wallet });
+  return json({ ok: true, wallet: await wOut(env, me, wallet) });
 }
 async function cashClose(req: Request, env: Env, me: Account, now: number) {
   const b = await body(req);
@@ -289,7 +295,7 @@ async function cashClose(req: Request, env: Env, me: Account, now: number) {
   // 합리성 상한: 테이블에 넣은 총액의 25배(캐시게임은 순위 점수와 무관, 자금 사고 방지용)
   if (chips > acct.spent * 25) throw new HttpError(400, '정산 칩 수가 허용 범위를 넘었습니다');
   const wallet = await mutateWallet(env.DB, me.id, (w) => W.closeCash(w, sid, chips, now));
-  return json({ ok: true, wallet });
+  return json({ ok: true, wallet: await wOut(env, me, wallet) });
 }
 
 // ───────── 토너먼트 ─────────
@@ -301,7 +307,7 @@ async function entryOpen(req: Request, env: Env, me: Account, now: number) {
   if (existing) { // 같은 sid 재요청: 같은 결과(멱등)
     if (existing.account_id !== me.id) throw new HttpError(403, '권한이 없습니다');
     const w0 = await loadWallet(env.DB, me.id);
-    return json({ ok: true, wallet: w0!.wallet, instanceId: existing.instance_id, seed: existing.seed, replay: true });
+    return json({ ok: true, wallet: await wOut(env, me, w0!.wallet), instanceId: existing.instance_id, seed: existing.seed, replay: true });
   }
   await assertNoOpen(env, me);
   const seed = crypto.getRandomValues(new Uint32Array(1))[0];
@@ -321,7 +327,7 @@ async function entryOpen(req: Request, env: Env, me: Account, now: number) {
       if (ticketId) stmts.push(env.DB.prepare(`UPDATE tickets SET status='used', used_entry=? WHERE id=? AND status='active' AND ${g.sql}`).bind(sid, ticketId, ...g.binds));
       return stmts;
     });
-  return json({ ok: true, wallet, instanceId, seed, cost, ranked: e.ranked, baseField: e.baseField });
+  return json({ ok: true, wallet: await wOut(env, me, wallet), instanceId, seed, cost, ranked: e.ranked, baseField: e.baseField });
 }
 async function entryReenter(req: Request, env: Env, me: Account, now: number) {
   const b = await body(req); const sid = str(b.sid, 'sid', 80);
@@ -334,25 +340,25 @@ async function entryReenter(req: Request, env: Env, me: Account, now: number) {
   const entryNo = ent.entries + 1;
   const wallet = await mutateWallet(env.DB, me.id, (w) => W.reenterTournament(w, sid, { id: `${e.source}:${e.defId}`, name: e.name, buyIn: e.buyIn, fee: e.fee }, entryNo, now),
     (g) => [env.DB.prepare(`UPDATE tournament_entries SET entries=?, cost=cost+? WHERE sid=? AND entries=? AND ${g.sql}`).bind(entryNo, e.buyIn + e.fee, sid, ent.entries, ...g.binds)]);
-  return json({ ok: true, wallet });
+  return json({ ok: true, wallet: await wOut(env, me, wallet) });
 }
 async function entryAbandon(req: Request, env: Env, me: Account, now: number) {
   const b = await body(req); const sid = str(b.sid, 'sid', 80);
   const wallet = await mutateWallet(env.DB, me.id, (w) => W.forfeit(w, sid, now),
     (g) => [env.DB.prepare(`UPDATE tournament_entries SET status='forfeit', settled_at=? WHERE sid=? AND account_id=? AND status='open' AND ${g.sql}`).bind(now, sid, me.id, ...g.binds)]);
-  return json({ ok: true, wallet });
+  return json({ ok: true, wallet: await wOut(env, me, wallet) });
 }
 
 async function entrySettle(req: Request, env: Env, me: Account, now: number) {
   const b = await body(req);
   const sid = str(b.sid, 'sid', 80);
   const place = int(b.place, 'place', 1, 100000); const field = int(b.totalEntries, 'totalEntries', 2, 100000);
-  const hands = int(b.hands ?? 0, 'hands', 0, 1e7); const digest = typeof b.digest === 'string' ? b.digest.slice(0, 128) : '';
+  const hands = int(b.hands ?? 0, 'hands', 0, 1e7); const bountyClaim = int(b.bounty ?? 0, 'bounty', 0, 1e12); const digest = typeof b.digest === 'string' ? b.digest.slice(0, 128) : '';
   const ent = await env.DB.prepare('SELECT * FROM tournament_entries WHERE sid=? AND account_id=?').bind(sid, me.id).first<{ sid: string; source: string; def_id: string; season: number | null; instance_id: string; status: string; entries: number; cost: number; world_day: number | null; place: number | null; prize: number | null; field: number | null }>();
   if (!ent) throw new HttpError(404, '등록된 대회가 없습니다');
   if (ent.status === 'settled') { // 멱등: 이미 정산됨 → 저장된 결과 그대로
     const w0 = await loadWallet(env.DB, me.id);
-    return json({ ok: true, replay: true, wallet: w0!.wallet, result: { place: ent.place, prize: ent.prize, field: ent.field } });
+    return json({ ok: true, replay: true, wallet: await wOut(env, me, w0!.wallet), result: { place: ent.place, prize: ent.prize, field: ent.field } });
   }
   if (ent.status !== 'open') throw new HttpError(409, '이미 종료된 대회입니다');
   const e = resolveEntry(ent.source, ent.def_id, ent.season ?? undefined);
@@ -362,6 +368,13 @@ async function entrySettle(req: Request, env: Env, me: Account, now: number) {
   if (hands < minHands && place === 1 && field > 8) throw new HttpError(400, '핸드 수가 너무 적습니다');
   const targetBuyIn = e.ev?.satelliteFor ? TEMPLATE.get(e.ev.satelliteFor)!.buyIn : 0;
   const prize = prizeOf(e, field, place, targetBuyIn);
+  let bounty = 0;
+  if (bountyClaim > 0) {
+    if (!e.ev?.pko) throw new HttpError(400, '바운티가 없는 대회입니다');
+    const unit = Math.round(e.ev.buyIn * e.ev.pko.share);
+    if (bountyClaim > unit * field * 1.5) throw new HttpError(400, '바운티 금액이 허용 범위를 넘었습니다');
+    bounty = bountyClaim;
+  }
   let issued = 0;
   const paid = paidOf(e, field);
   if (e.ev?.kind === 'satellite') issued = place <= ticketsFor(e.ev, field, targetBuyIn) ? 1 : 0;
@@ -369,21 +382,21 @@ async function entrySettle(req: Request, env: Env, me: Account, now: number) {
   const rid = `rr:${ent.instance_id}:${me.id}:${RULES_VERSION}`;
   const pts = ranked ? eventPoints(e.ev!, place, paid, field) : 0;
   const day = worldDay(now);
-  const wallet = await mutateWallet(env.DB, me.id, (w) => W.payPrize(w, sid, prize, place, field, now), (g) => {
+  const wallet = await mutateWallet(env.DB, me.id, (w) => W.payPrize(w, sid, prize, place, field, now, bounty), (g) => {
     const stmts: Stmt[] = [
       env.DB.prepare(`UPDATE tournament_entries SET status='settled', settled_at=?, place=?, field=?, prize=?, digest=? WHERE sid=? AND account_id=? AND status='open' AND ${g.sql}`).bind(now, place, field, prize, digest, sid, me.id, ...g.binds),
     ];
     if (ranked) {
-      stmts.push(env.DB.prepare(`INSERT OR IGNORE INTO ranked_submissions(instance_id, participant_id, rules_version, ranked_result_id, season, event_id, world_day, place, entries, field, paid, prize, cost, points, created_at) SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE ${g.sql}`).bind(ent.instance_id, `human:${me.id}`, RULES_VERSION, rid, ent.season ?? CURRENT_SEASON, e.defId, day, place, ent.entries, field, paid, prize, ent.cost, pts, now, ...g.binds));
+      stmts.push(env.DB.prepare(`INSERT OR IGNORE INTO ranked_submissions(instance_id, participant_id, rules_version, ranked_result_id, season, event_id, world_day, place, entries, field, paid, prize, cost, points, created_at) SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE ${g.sql}`).bind(ent.instance_id, `human:${me.id}`, RULES_VERSION, rid, ent.season ?? CURRENT_SEASON, e.defId, day, place, ent.entries, field, paid, prize + bounty, ent.cost, pts, now, ...g.binds));
       stmts.push(env.DB.prepare(`INSERT OR IGNORE INTO points_ledger(ranked_result_id, participant_id, season, event_id, points, created_at) SELECT ?,?,?,?,?,? WHERE ${g.sql}`).bind(rid, `human:${me.id}`, ent.season ?? CURRENT_SEASON, e.defId, pts, now, ...g.binds));
       stmts.push(env.DB.prepare(`INSERT INTO meta(key, value) VALUES ('rank_version','1') ON CONFLICT(key) DO UPDATE SET value=CAST(value AS INTEGER)+1`));
     }
     if (issued) stmts.push(env.DB.prepare(`INSERT OR IGNORE INTO tickets(id, account_id, event_id, season, value, source_entry, status, created_at) SELECT ?,?,?,?,?,?,?,? WHERE ${g.sql}`).bind(`tk:${sid}`, me.id, e.ev!.satelliteFor!, CURRENT_SEASON, targetBuyIn, sid, 'active', now, ...g.binds));
     return stmts;
   });
-  await audit(env, now, me.id, 'settle', `${sid} place=${place} prize=${prize}`);
+  await audit(env, now, me.id, 'settle', `${sid} place=${place} prize=${prize} bounty=${bounty}`);
   const after = await env.DB.prepare('SELECT status, place, prize, field FROM tournament_entries WHERE sid=?').bind(sid).first<{ status: string; place: number; prize: number; field: number }>();
-  return json({ ok: true, replay: false, wallet, result: { place: after?.place ?? place, prize: after?.prize ?? prize, field }, ranked, points: pts, ticket: issued ? { eventId: e.ev!.satelliteFor, value: targetBuyIn } : null });
+  return json({ ok: true, replay: false, wallet: await wOut(env, me, wallet), result: { place: after?.place ?? place, prize: after?.prize ?? prize, field }, ranked, points: pts, ticket: issued ? { eventId: e.ev!.satelliteFor, value: targetBuyIn } : null });
 }
 
 // ───────── 랭킹 ─────────

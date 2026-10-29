@@ -1,0 +1,15 @@
+# Cloudflare 배포 설정 (무료 플랜 기준). 자세한 절차: docs/DEPLOY_FREE.md
+name = "poker-arena"
+main = "server/worker.ts"
+compatibility_date = "2026-01-01"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "poker-arena"
+database_id = "REPLACE_WITH_D1_ID_AFTER_CREATE"
