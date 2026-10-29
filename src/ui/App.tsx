@@ -18,7 +18,8 @@ import { NewsScreen } from './NewsScreen';
 import { AccountScreen } from './AccountScreen';
 
 export function App() {
-  const { attachAccount, screen, session, ready } = useGame();
+  const { attachAccount, screen, session, ready, settings } = useGame();
+  useEffect(() => { document.documentElement.classList.toggle('big-text', !!settings.bigText); document.documentElement.classList.toggle('reduce-motion', !!settings.reduceMotion); }, [settings.bigText, settings.reduceMotion]);
   const { mode, user, check } = useAccount();
   useEffect(() => { void check(); }, [check]);
   useEffect(() => {

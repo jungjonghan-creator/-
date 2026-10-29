@@ -29,3 +29,7 @@ input[type=range] { accent-color: #facc15; }
   .card.w-8 { width: 1.5rem; height: 2.2rem; font-size: 11px; }
   header { padding-top: 2px !important; padding-bottom: 2px !important; }
 }
+
+/* 접근성 설정: 큰 글씨 / 애니메이션 줄이기 */
+html.big-text { font-size: 18px; }
+html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation: none !important; transition: none !important; }

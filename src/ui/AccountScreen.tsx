@@ -6,7 +6,7 @@ import { exportBackup, loadKV } from '../persist/db';
 import { legacyProfile } from '../analysis/legacy';
 
 export function AccountScreen() {
-  const { setScreen, online, attachAccount, archive, tourneys } = useGame();
+  const { setScreen, online, attachAccount, archive, tourneys, settings, setSettings } = useGame();
   const prof = legacyProfile(archive.competitive, tourneys.length);
   const { user, mode, logout, check } = useAccount();
   const [name, setName] = useState(user?.displayName ?? '');
@@ -40,6 +40,17 @@ export function AccountScreen() {
           <button className="btn !min-h-[38px] bg-emerald-700 text-sm" onClick={async () => { const r = await api('POST', '/api/profile', { displayName: name, nationality: nat, publicProfile: pub }); setMsg(r.ok ? '저장했습니다 (닉네임을 바꿔도 랭킹·기록은 고정 계정 ID로 유지됩니다)' : (r.data as { error: string }).error); await check(); }} data-testid="profile-save">저장</button>
         </section>
       )}
+      <section className="rounded-xl bg-slate-900 p-3 space-y-2" data-testid="settings-section">
+        <h2 className="font-bold text-sm">표시 · 진행 설정</h2>
+        <div className="flex gap-2" role="radiogroup" aria-label="진행 속도">
+          <button role="radio" aria-checked={settings.animMs > 0} className={`btn flex-1 !min-h-[40px] text-sm ${settings.animMs > 0 ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => setSettings({ animMs: 450 })} data-testid="speed-real">현실 진행</button>
+          <button role="radio" aria-checked={settings.animMs === 0} className={`btn flex-1 !min-h-[40px] text-sm ${settings.animMs === 0 ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => setSettings({ animMs: 0 })} data-testid="speed-fast">빠른 진행</button>
+        </div>
+        <div className="text-[11px] text-slate-500">빠른 진행은 AI 생각·연출 대기시간만 줄입니다. 카드·시드·결과·상금·참가자는 바뀌지 않습니다.</div>
+        <label className="flex gap-2 text-sm items-center"><input type="checkbox" checked={!!settings.bigText} onChange={(e) => setSettings({ bigText: e.target.checked })} data-testid="set-bigtext" /> 큰 글씨</label>
+        <label className="flex gap-2 text-sm items-center"><input type="checkbox" checked={!!settings.reduceMotion} onChange={(e) => setSettings({ reduceMotion: e.target.checked })} data-testid="set-reducemotion" /> 애니메이션 줄이기</label>
+        <label className="flex gap-2 text-sm items-center"><input type="checkbox" checked={settings.sound} onChange={(e) => setSettings({ sound: e.target.checked })} /> 소리</label>
+      </section>
       <section className="rounded-xl bg-slate-900 p-3 space-y-1" data-testid="profile-evidence">
         <h2 className="font-bold text-sm">내 플레이 성향 — 저장된 기록 기준</h2>
         <div className="text-xs text-slate-400">핸드 {prof.hands.toLocaleString()}개 · 대회 전적 {prof.tourneyRecords}개 · 일시 {prof.dateRange}</div>

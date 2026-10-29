@@ -24,8 +24,8 @@ export type Screen = 'menu' | 'table' | 'stats' | 'history' | 'trainer' | 'coach
 
 /** 마지막 정산 결과 (결과 화면은 서버/원장 확정 값만 표시) */
 export interface Settlement { sid: string; place: number; prize: number; bounty: number; field: number; ticket: { eventId: string; value: number } | null; confirmedBy: 'server' | 'local'; ranked: boolean; points?: number; at: number }
-export interface Settings { sound: boolean; animMs: number; revealAI: boolean; hints: boolean; autoCoach: boolean }
-const DEFAULT_SETTINGS: Settings = { sound: true, animMs: 450, revealAI: false, hints: false, autoCoach: true };
+export interface Settings { sound: boolean; animMs: number; revealAI: boolean; hints: boolean; autoCoach: boolean; bigText?: boolean; reduceMotion?: boolean }
+const DEFAULT_SETTINGS: Settings = { sound: true, animMs: 450, revealAI: false, hints: false, autoCoach: true, bigText: false, reduceMotion: false };
 
 export interface TourneyResult { tierId?: string; date: number; mode: string; entrants: number; place: number; prize: number; buyIn: number; entries: number }
 export type RecordGroup = 'competitive' | 'training';

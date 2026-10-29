@@ -11,19 +11,23 @@ export interface CashTable {
   id: string; name: string; sb: number; bb: number;
   /** 바이인 범위 (기본 40~100BB, 설정값) */
   minBuy: number; maxBuy: number;
-  seats: 6 | 2;
+  seats: number;
   recommended: LevelId;
   blurb: string;
 }
 export const BUYIN_RANGE_BB = { min: 40, max: 100 };
-const mkTable = (id: string, name: string, sb: number, bb: number, recommended: LevelId, blurb: string, seats: 6 | 2 = 6): CashTable =>
-  ({ id, name, sb, bb, minBuy: BUYIN_RANGE_BB.min * bb, maxBuy: BUYIN_RANGE_BB.max * bb, seats, recommended, blurb });
+const mkTable = (id: string, name: string, sb: number, bb: number, recommended: LevelId, blurb: string, seats = 6, range: { min: number; max: number } = BUYIN_RANGE_BB): CashTable =>
+  ({ id, name, sb, bb, minBuy: range.min * bb, maxBuy: range.max * bb, seats, recommended, blurb });
 
 export const CASH_TABLES: CashTable[] = [
   mkTable('c1', '초급 테이블', 5, 10, 'beginner', '작은 판돈으로 상대 성향을 익히는 곳'),
   mkTable('c2', '중급 테이블', 25, 50, 'intermediate', '포지션과 팟오즈가 승부를 가르는 곳'),
   mkTable('c3', '상급 테이블', 100, 200, 'advanced', '3벳·체크레이즈가 오가는 높은 판돈'),
   mkTable('c4', '프로 테이블', 500, 1000, 'pro', '실수가 곧 큰 손실. 최고 판돈'),
+  mkTable('c5', '9인 풀링 테이블 25/50', 25, 50, 'intermediate', '9명이 앉는 풀링 — 포지션 가치가 큽니다', 9),
+  mkTable('c6', '8인 딥스택 50/100', 50, 100, 'advanced', '바이인 100~300BB의 딥스택 캐시', 8, { min: 100, max: 300 }),
+  mkTable('c7', '4인 숏핸디드 5/10', 5, 10, 'beginner', '4명만 앉아 넓게 플레이하는 숏핸디드', 4),
+  mkTable('c8', '3인 하이 100/200', 100, 200, 'advanced', '3명 — 블라인드가 자주 돌아와 공격적인 판', 3),
 ];
 export const PRACTICE_TABLE: CashTable = { ...mkTable('practice', '무료 연습 테이블', 5, 10, 'beginner', '칩이 통장과 연결되지 않는 연습'), minBuy: 1000, maxBuy: 1000 };
 export const cashTableById = (id: string) => [...CASH_TABLES, PRACTICE_TABLE].find((t) => t.id === id)!;
