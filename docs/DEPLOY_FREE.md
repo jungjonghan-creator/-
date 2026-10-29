@@ -47,3 +47,9 @@ PBKDF2-SHA256 100,000회는 이 개발 환경(Node)에서 **약 54ms**였다. Wo
 ## 운영 한계 대응
 - 로그 무한 저장 없음: 핸드 기록은 브라우저(IndexedDB)에, 서버에는 지갑 원장·정산·점수·클라우드 저장 슬롯(계정당 1개, 덮어쓰기)만 저장.
 - 한도에 접근하면: 읽기 전용 대응(데이터 보존)이 필요하다 — 자동 전환은 **미구현**, 사용자가 대시보드의 사용량을 확인해야 한다.
+
+## Windows 메모
+- 설치: `winget install -e --id Cloudflare.cloudflared` (터널 `npm run share` 용). 배포(`npm run deploy:cf`)에는 cloudflared 가 필요 없다.
+- 스크립트는 Windows 에서 `npx`/`npm`(.cmd)을 shell 로 실행하도록 처리되어 있다.
+- **배포는 로그인한 PC 에서 실행해야 한다.** 클라우드 세션(Claude Code on the web)은 Cloudflare 호스트가 네트워크 정책에서 막혀 있고 `wrangler login` 의 브라우저 콜백도 받을 수 없어 배포할 수 없다(2026-10-29 확인: api.cloudflare.com → 프록시 403).
+- 배포 스크립트는 끝에 `/api/health` 와 랭킹 API 를 호출해 서버·D1 연결을 점검하지만 계정은 만들지 않는다.
