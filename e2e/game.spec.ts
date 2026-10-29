@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startGame, waitTurnOrEnd, playPassively, heroCards, boardCards, handOver, seedWallet, wipe, sitCash, joinTournament, foldThroughHand, num } from './helpers';
+import { startGame, waitTurnOrEnd, playPassively, heroCards, boardCards, handOver, seedWallet, wipe, enterLocal, sitCash, joinTournament, foldThroughHand, num } from './helpers';
 
 test('헤즈업: 생성 → 테이블 → 클릭 행동 → 핸드 종료 → 다음 핸드', async ({ page }) => {
   await startGame(page, { seats: 2, stack: 50 });
@@ -104,7 +104,7 @@ test('통계 화면과 핸드 기록/복기', async ({ page }) => {
 });
 
 test('푸시/폴드 훈련과 스팟 검증', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/'); await enterLocal(page);
   await page.getByTestId('nav-trainer').click();
   await page.getByTestId('pf-push').click();
   await expect(page.getByTestId('pf-result')).toBeVisible();
@@ -202,7 +202,6 @@ test('[경제] 홈에 통장 30,000 → 캐시 착석(바이인 차감) → 퇴�
   await page.getByTestId('nav-lobby').click();
   await page.getByTestId('cash-open-c2').click();
   await expect(page.getByTestId('cash-buy-c2')).toContainText('2,000'); // 최소 바이인 40BB
-  await page.getByTestId('cash-level-c2-intermediate').click();
   await page.getByTestId('cash-sit-c2').click();
   await expect(page.getByTestId('table')).toBeVisible();
   await page.getByTestId('speed').selectOption('0');

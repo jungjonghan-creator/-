@@ -58,6 +58,8 @@ export interface Session {
   tierId?: string;
   /** 직전 토너먼트 상태 스냅샷 (알림 차이 계산용) */
   tstat?: import('./tourney').TourneyStatus;
+  /** 서버가 발급한 개인 인스턴스 id (온라인 모드) */
+  instanceId?: string;
   level: number;
   levelHand: number;        // 현재 레벨에서 치른 핸드 수
   startedAt: number;

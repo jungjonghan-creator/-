@@ -4,7 +4,15 @@ export async function wipe(page: Page) {
   await page.goto('/');
   await page.evaluate(async () => { const r = indexedDB.deleteDatabase('poker-arena'); await new Promise((res) => { r.onsuccess = r.onerror = r.onblocked = () => res(null); }); });
   await page.reload();
-  await expect(page.getByTestId('home-balance')).toBeVisible();
+  await enterLocal(page);
+}
+
+/** 서버가 있는 환경에서는 로그인 화면이 먼저 나온다 — 로컬 모드로 계속 */
+export async function enterLocal(page: Page) {
+  const auth = page.getByTestId('auth-local'); const home = page.getByTestId('home-balance');
+  await expect(auth.or(home)).toBeVisible();
+  if (await auth.isVisible()) await auth.click();
+  await expect(home).toBeVisible();
 }
 
 /** 통장 잔액을 지정해 저장소를 초기화한다 (경제 시나리오 테스트용) */
@@ -17,6 +25,7 @@ export async function seedWallet(page: Page, balance: number) {
     db.close();
   }, balance);
   await page.reload();
+  await enterLocal(page);
   await expect(page.getByTestId('home-balance')).toHaveText(balance.toLocaleString());
 }
 
@@ -36,7 +45,6 @@ export async function startGame(page: Page, opts: { seats?: number; stack?: numb
 export async function sitCash(page: Page, tableId = 'c1', level = 'beginner') {
   await page.getByTestId('nav-lobby').click();
   await page.getByTestId(`cash-open-${tableId}`).click();
-  await page.getByTestId(`cash-level-${tableId}-${level}`).click();
   await page.getByTestId(`cash-sit-${tableId}`).click();
   await expect(page.getByTestId('table')).toBeVisible();
   await page.getByTestId('speed').selectOption('0');
@@ -45,7 +53,6 @@ export async function joinTournament(page: Page, id: string, level = 'beginner')
   await page.getByTestId('nav-lobby').click();
   await page.getByTestId('tab-tourney').click();
   await page.getByTestId(`tourney-open-${id}`).click();
-  await page.getByTestId(`tourney-level-${id}-${level}`).click();
   await page.getByTestId(`tourney-start-${id}`).click();
   await expect(page.getByTestId('table')).toBeVisible();
   await page.getByTestId('speed').selectOption('0');

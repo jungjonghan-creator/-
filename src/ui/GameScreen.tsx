@@ -4,6 +4,7 @@ import { StoryFeed } from './StoryFeed';
 import { TourneyHud } from './TourneyHud';
 import { tourneyStatus, ZONE_LABEL, STAGES } from '../game/tourney';
 import { RebuyPanel } from './RebuyPanel';
+import { SettlementPanel } from './SettlementPanel';
 import { currentBlinds, blindStructure, HANDS_PER_LEVEL, LEVEL_COUNT, sessionOver, Session } from '../game/session';
 import { ActionBar } from './ActionBar';
 import { ReviewPanel } from './Review';
@@ -121,6 +122,7 @@ export function GameScreen({ sess }: { sess: Session }) {
                 {' · '}{rec.result!.endedByFold ? '폴드로 종료' : '쇼다운'}
               </div>
             )}
+            {tourney && !(mtt?.heroOut && mtt.heroCanReenter) && <SettlementPanel sess={sess} />}
             {mtt?.heroOut && mtt.heroCanReenter && (
               <div className="p-3 rounded-lg bg-amber-900/50 space-y-2" data-testid="reenter-panel">
                 <div>탈락했습니다. 재진입하시겠습니까? (엔트리 {mtt.entries})</div>
@@ -157,7 +159,7 @@ export function GameScreen({ sess }: { sess: Session }) {
       {complete ? (
         <div className="p-2 space-y-2 border-t border-slate-700 bg-slate-950/90" data-testid="hand-end-bar">
           {over ? (
-            <div className="flex gap-2 items-center"><div className="text-sm text-slate-300 flex-1">경기가 종료되었습니다. 상금은 통장에 정산되었습니다.</div><button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button><button className="btn bg-emerald-600" onClick={() => leaveTable()} data-testid="btn-to-lobby">로비로</button></div>
+            <div className="flex gap-2 items-center"><div className="text-sm text-slate-300 flex-1">경기가 종료되었습니다. 위의 정산 결과(원장 확정)를 확인하세요.</div><button className="btn bg-slate-700" onClick={() => setReview(!review)} data-testid="btn-review">{review ? '복기 닫기' : '핸드 복기'}</button><button className="btn bg-emerald-600" onClick={() => leaveTable()} data-testid="btn-to-lobby">로비로</button></div>
           ) : mtt?.heroOut && mtt.heroCanReenter ? (
             <div className="text-sm text-amber-200">재진입 여부를 선택하세요.</div>
           ) : (

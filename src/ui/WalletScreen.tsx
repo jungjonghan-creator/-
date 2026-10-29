@@ -1,4 +1,4 @@
-import { atTable, summarize, TxKind } from '../economy/wallet';
+import { atTable, summarize, TxKind, verifyWallet } from '../economy/wallet';
 import { useGame } from '../store/useGame';
 
 const fmt = (n: number) => Math.round(n).toLocaleString();
@@ -10,6 +10,8 @@ const KIND: Record<TxKind, string> = {
 export function WalletScreen() {
   const { wallet, setScreen } = useGame();
   const s = summarize(wallet);
+  const errs = verifyWallet(wallet);
+  const online = useGame((g) => g.online);
   const accounts = Object.values(wallet.accounts).filter((a) => a.kind !== 'practice').sort((a, b) => b.openedAt - a.openedAt);
   const txs = [...wallet.txs].reverse().filter((t) => t.kind !== 'initial' || true).slice(0, 80);
   const card = (label: string, value: string, cls = '') => <div className="bg-slate-800 rounded-lg p-2"><div className="text-[11px] text-slate-400">{label}</div><div className={`text-lg font-bold ${cls}`}>{value}</div></div>;
@@ -35,15 +37,18 @@ export function WalletScreen() {
         })}
       </section>
       <section className="space-y-1" data-testid="ledger">
-        <h2 className="font-bold text-sm">입출금 내역 (원장)</h2>
+        <h2 className="font-bold text-sm">회계 감사 — 입출금 원장 (읽기 전용)</h2>
+        <div className={`text-xs rounded px-2 py-1 ${errs.length ? 'bg-rose-900/60' : 'bg-emerald-900/40'}`} data-testid="ledger-verify">{errs.length ? `원장 검산 실패: ${errs[0]} (경기 진행 중단)` : `원장 검산 통과 — 초기 ${fmt(wallet.initial)} + Σ거래 = 잔액 ${fmt(wallet.balance)} · 거래 ${wallet.txs.length}건 · 같은 거래 id 중복 없음`}</div>
+        {(wallet.tickets ?? []).length > 0 && <div className="text-xs bg-slate-800/70 rounded px-2 py-1" data-testid="tickets">티켓: {(wallet.tickets ?? []).map((t) => `${t.eventId} ${t.status === 'active' ? '(사용 가능)' : '(사용됨)'}`).join(', ')}</div>}
         {txs.map((t) => (
-          <div key={t.id} className="flex justify-between text-xs border-b border-slate-800 py-1" data-testid="ledger-row">
-            <span className="min-w-0"><span className="text-slate-400">{new Date(t.ts).toLocaleString()}</span> · {KIND[t.kind]} <span className="text-slate-500 truncate">{t.note}</span></span>
-            <span className="font-mono shrink-0 text-right"><span className={t.amount >= 0 ? 'text-emerald-300' : 'text-rose-300'}>{t.amount >= 0 ? '+' : ''}{fmt(t.amount)}</span> <span className="text-slate-500">→ {fmt(t.balanceAfter)}</span></span>
+          <div key={t.id} className="text-xs border-b border-slate-800 py-1" data-testid="ledger-row">
+            <div className="flex justify-between"><span className="min-w-0"><span className="text-slate-400">{new Date(t.ts).toLocaleString()}</span> · {KIND[t.kind]}</span>
+              <span className="font-mono shrink-0 text-right"><span className="text-slate-500">{fmt(t.balanceAfter - t.amount)} →</span> <span className={t.amount >= 0 ? 'text-emerald-300' : 'text-rose-300'}>{t.amount >= 0 ? '+' : ''}{fmt(t.amount)}</span> <span className="text-slate-300">→ {fmt(t.balanceAfter)}</span></span></div>
+            <div className="text-[10px] text-slate-500 truncate">{t.note} · 거래 id {t.id}{t.ref ? ` · 경기 ${t.ref.slice(0, 8)}` : ''}</div>
           </div>
         ))}
       </section>
-      <p className="text-[11px] text-slate-500 pb-6">모든 금액은 게임 내 가상 크레딧입니다. 현금·결제·환전과 연동되지 않습니다. 이 기기 브라우저에만 저장됩니다(통장 데이터 버전 {wallet.version}).</p>
+      <p className="text-[11px] text-slate-500 pb-6">모든 금액은 게임 내 가상 크레딧입니다. 현금·결제·환전과 연동되지 않습니다. {online ? '서버 원장이 진실의 원천이며 화면은 서버가 확정한 값만 표시합니다.' : '로컬 모드: 이 기기 브라우저에만 저장됩니다.'} (통장 데이터 버전 {wallet.version})</p>
     </div>
   );
 }

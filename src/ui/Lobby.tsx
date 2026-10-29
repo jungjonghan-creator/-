@@ -13,25 +13,16 @@ const fmt = (n: number) => Math.round(n).toLocaleString();
 const LEVEL_LABEL = Object.fromEntries(AI_LEVELS.map((l) => [l.id, l.label])) as Record<LevelId, string>;
 const EST_LEN: Record<string, string> = { free9: '35~60핸드', hu: '15~35핸드', sng9a: '40~70핸드', sng9b: '40~70핸드', sng9c: '40~70핸드', sng9d: '30~60핸드', mtt27: '약 35핸드', mtt54: '약 55핸드', mtt108: '약 100핸드', mtt216: '약 120핸드' };
 
-function LevelPicker({ value, onChange, recommended, testid }: { value: LevelId; onChange: (l: LevelId) => void; recommended: LevelId; testid: string }) {
-  return (
-    <div className="space-y-1">
-      <div className="text-[11px] text-slate-400">상대 AI 실력 (판돈과 별개로 선택) · 추천 조합: {LEVEL_LABEL[recommended]}</div>
-      <div className="flex gap-1 flex-wrap">
-        {AI_LEVELS.map((l) => (
-          <button key={l.id} className={`btn !min-h-[34px] !py-1 text-xs ${value === l.id ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => onChange(l.id)} data-testid={`${testid}-${l.id}`}>{l.label}{l.id === recommended ? ' ★' : ''}</button>
-        ))}
-      </div>
-      <div className="text-[11px] text-slate-500">{AI_LEVELS.find((l) => l.id === value)!.desc}</div>
-    </div>
-  );
+/** 난이도 버튼은 없다: 상대 실력은 판돈·참가자 구성에서 자연스럽게 정해지고, 같은 테이블에도 약한 상대와 강한 상대가 섞인다. */
+function FieldNote({ recommended }: { recommended: LevelId }) {
+  return <div className="text-[11px] text-slate-400" data-testid="field-note">상대 구성: 이 판돈대의 평균 실력은 「{LEVEL_LABEL[recommended]}」급이며, 같은 테이블에 약한 참가자와 강한 레귤러가 섞여 있습니다. (난이도 선택 없음)</div>;
 }
 
 function CashCard({ t }: { t: CashTable }) {
   const { wallet, startCash, walletErrors } = useGame();
   const [open, setOpen] = useState(false);
   const [buy, setBuy] = useState(t.minBuy);
-  const [level, setLevel] = useState<LevelId>(t.recommended);
+  const level: LevelId = t.recommended;
   const max = Math.min(t.maxBuy, wallet.balance);
   const canAfford = wallet.balance >= t.minBuy;
   const clamp = (v: number) => Math.max(t.minBuy, Math.min(max, Math.round(v / t.bb) * t.bb));
@@ -41,7 +32,7 @@ function CashCard({ t }: { t: CashTable }) {
         <div className="min-w-0 flex-1">
           <div className="font-bold">{t.name} <span className="text-slate-400 font-normal">SB {fmt(t.sb)} / BB {fmt(t.bb)}</span></div>
           <div className="text-xs text-slate-300">{t.blurb}</div>
-          <div className="text-[11px] text-slate-400 mt-1">바이인 {fmt(t.minBuy)}~{fmt(t.maxBuy)} (40~100BB) · {t.seats}인 테이블 · 블라인드 고정 · 추천 AI {LEVEL_LABEL[t.recommended]}</div>
+          <div className="text-[11px] text-slate-400 mt-1">바이인 {fmt(t.minBuy)}~{fmt(t.maxBuy)} (40~100BB) · {t.seats}인 테이블 · 블라인드 고정</div>
         </div>
         <span className="text-slate-400">{open ? '▲' : '▼'}</span>
       </button>
@@ -54,7 +45,7 @@ function CashCard({ t }: { t: CashTable }) {
                 <input type="range" className="w-full" min={t.minBuy} max={Math.max(t.minBuy, max)} step={t.bb} value={buy} onChange={(e) => setBuy(clamp(Number(e.target.value)))} aria-label="바이인" data-testid={`cash-slider-${t.id}`} />
                 <div className="flex gap-1">{[t.minBuy, Math.round((t.minBuy + t.maxBuy) / 2 / t.bb) * t.bb, t.maxBuy].map((v) => <button key={v} className="btn !min-h-[30px] !py-0.5 text-xs bg-slate-700" disabled={v > wallet.balance} onClick={() => setBuy(clamp(v))}>{(v / t.bb).toFixed(0)}BB</button>)}</div>
               </div>
-              <LevelPicker value={level} onChange={setLevel} recommended={t.recommended} testid={`cash-level-${t.id}`} />
+              <FieldNote recommended={level} />
               <button className="btn w-full bg-gradient-to-r from-emerald-700 to-emerald-600" disabled={!!walletErrors} onClick={() => startCash(t.id, buy, level)} data-testid={`cash-sit-${t.id}`}>착석 (통장 {fmt(wallet.balance)} → {fmt(wallet.balance - buy)})</button>
             </>
           )}
@@ -67,7 +58,7 @@ function CashCard({ t }: { t: CashTable }) {
 function TournamentCard({ d }: { d: TournamentDef }) {
   const { wallet, startTournament, walletErrors } = useGame();
   const [open, setOpen] = useState(false);
-  const [level, setLevel] = useState<LevelId>(d.recommended);
+  const level: LevelId = d.recommended;
   const [mode, setMode] = useState(d.blindMode);
   const [speed, setSpeed] = useState(d.speed);
   const cost = entryCost(d);
@@ -104,7 +95,7 @@ function TournamentCard({ d }: { d: TournamentDef }) {
             {mode === 'adaptive' && <ul className="list-disc pl-5 text-slate-400" data-testid={`adaptive-rules-${d.id}`}>{ADAPTIVE_RULES_TEXT.map((r, i) => <li key={i}>{r}</li>)}</ul>}
             <div className="text-slate-500">레벨 변경은 핸드가 완전히 끝난 뒤에만 적용됩니다. 정규: 레벨당 {speed === 'slow' ? 15 : speed === 'normal' ? 10 : 6}핸드. 앞 8레벨: {lv.map((l, i) => `${i + 1}) ${l.sb}/${l.bb}${l.ante ? `+${l.ante}` : ''}`).join(' · ')}</div>
           </div>
-          <LevelPicker value={level} onChange={setLevel} recommended={d.recommended} testid={`tourney-level-${d.id}`} />
+          <FieldNote recommended={level} />
           {poor && <div className="text-amber-200" data-testid={`tourney-poor-${d.id}`}>참가비 {fmt(cost)}가 필요합니다 (보유 {fmt(wallet.balance)}). 캐시게임이나 프리롤로 크레딧을 모아 보세요.</div>}
           <button className="btn w-full bg-gradient-to-r from-sky-700 to-indigo-600 disabled:from-slate-700 disabled:to-slate-700" disabled={poor || !!walletErrors} onClick={() => startTournament(d.id, level, { blindMode: mode, speed })} data-testid={`tourney-start-${d.id}`}>
             {cost === 0 ? '무료 참가' : `참가 (−${fmt(cost)})`}

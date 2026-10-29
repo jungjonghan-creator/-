@@ -14,6 +14,8 @@ export interface Launch { session: Session; wallet: W.Wallet }
 
 export const newSid = (): string => (globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `s${Date.now()}${Math.floor(Math.random() * 1e9)}`);
 const levelDiff = (id: LevelId) => levelDifficulty(id);
+/** 같은 테이블에도 실력 분포가 있다: 기준 난이도 ±1 (결정론적, 2~5) */
+const jitter = (d: number, seed: number, i: number): 2 | 3 | 4 | 5 => Math.max(2, Math.min(5, d + (createRng(seed * 31 + i * 977).int(3) - 1))) as 2 | 3 | 4 | 5;
 
 // ───────── 캐시게임 ─────────
 export function launchCash(wallet: W.Wallet, table: CashTable, buyIn: number, level: LevelId, memory: OppModel, seed: number, sid = newSid(), humanName = 'TETO', now = Date.now()): Launch {
@@ -23,7 +25,7 @@ export function launchCash(wallet: W.Wallet, table: CashTable, buyIn: number, le
   const d = levelDiff(level);
   const cfg: SessionConfig = {
     mode: 'cash', seats: table.seats, startBB: Math.max(1, Math.round(buyIn / table.bb)), bb: table.bb, buyInChips: buyIn, speed: 'normal', humanName, seed,
-    ais: opps.map((o) => ({ profileId: o.profileId, difficulty: d })), aiNames: opps.map((o) => o.name), aiIds: opps.map((o) => o.id),
+    ais: opps.map((o, i) => ({ profileId: o.profileId, difficulty: jitter(d, seed, i) })), aiNames: opps.map((o) => o.name), aiIds: opps.map((o) => o.id),
     cash: { tableId: table.id, label: table.name, min: table.minBuy, max: table.maxBuy },
   };
   let s = newSession(cfg);
@@ -79,14 +81,14 @@ export function launchTournament(wallet: W.Wallet, def: TournamentDef, level: Le
       mtt: {
         entrants: def.entrants, tableSize: def.tableSize as 6 | 9, buyIn: def.buyIn, reentry: !!def.reentry, reentryUntilLevel: ev?.reentry?.untilLevel ?? def.lateRegUntilLevel ?? 4, maxReentries: def.reentryMax ?? 2,
         lateRegUntilLevel: def.lateRegUntilLevel, lateRegPerRound: def.lateRegPerRound, aiReentry: def.aiReentry,
-        fast: def.entrants > 120, bounty: def.bounty, world: def.world ? { eventId: def.world.eventId } : undefined,
+        fast: def.entrants >= (def.world ? 40 : 100), bounty: def.bounty, world: def.world ? { eventId: def.world.eventId } : undefined,
       },
     });
   } else {
     const opps = pickOpponents(def.tableSize - 1, seed);
     s = newSession({
       mode: def.kind === 'hu' ? 'headsup-sng' : 'sng', seats: def.tableSize, startBB: def.startBB, bb: def.bb, speed, humanName, seed, blindMode,
-      ais: opps.map((o) => ({ profileId: o.profileId, difficulty: d })), aiNames: opps.map((o) => o.name), aiIds: opps.map((o) => o.id),
+      ais: opps.map((o, i) => ({ profileId: o.profileId, difficulty: jitter(d, seed, i) })), aiNames: opps.map((o) => o.name), aiIds: opps.map((o) => o.id),
     });
     s = { ...s, prize: { pool: prizePoolOf(def), payouts: sngPrizeTable(def), buyIn: def.buyIn, fee: def.fee, name: def.name } };
   }

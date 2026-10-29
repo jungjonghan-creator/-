@@ -154,6 +154,7 @@ export async function handle(req: Request, env: Env): Promise<Response> {
     if (key === 'POST /api/login') return await login(req, env, now);
     if (key === 'POST /api/logout') return await logout(req, env);
     if (key === 'GET /api/ranking') return await rankingHandler(req, env, now, url);
+    if (key === 'GET /api/news') return await newsHandler(env);
     if (key === 'GET /api/rules') return json({ version: RULES_VERSION, text: describeRules() });
     if (key === 'GET /api/world') return json({ day: worldDay(now), season: CURRENT_SEASON, anchorDay: WORLD_ANCHOR_DAY, snapshotEvents: SNAP.events.length, snapshotSha: 'see data/season.sha256', note: '사전 계산된 공식 AI 세계 스냅샷을 날짜에 맞춰 공개합니다 (실시간 연산 아님)' });
 
@@ -439,6 +440,12 @@ async function rankingMe(env: Env, me: Account, now: number, url: URL) {
   const kr = await view({ ...q, nationality: '대한민국' });
   const longTerm = await view({ ...q, scope: 'long' });
   return json({ key, world, kr, long: longTerm, rules: RULES_VERSION });
+}
+
+// ───────── 뉴스 (확정된 개인 인스턴스 결과만; 공식 AI 세계 기사와 분류가 다르다) ─────────
+async function newsHandler(env: Env) {
+  const rows = (await env.DB.prepare(`SELECT r.event_id, r.season, r.place, r.field, r.points, r.created_at, a.display_name, a.public_profile FROM ranked_submissions r JOIN accounts a ON r.participant_id = 'human:' || a.id WHERE a.deleted_at IS NULL ORDER BY r.created_at DESC LIMIT 20`).all<{ event_id: string; season: number; place: number; field: number; points: number; created_at: number; display_name: string; public_profile: number }>()).results;
+  return json({ items: rows.filter((r) => r.public_profile).map((r) => ({ kind: 'private-instance', name: r.display_name, eventId: r.event_id, eventName: TEMPLATE.get(r.event_id)?.name ?? r.event_id, season: r.season, place: r.place, field: r.field, points: r.points, at: r.created_at })) });
 }
 
 // ───────── 친구·가족 그룹 ─────────

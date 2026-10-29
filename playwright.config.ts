@@ -21,7 +21,11 @@ export default defineConfig({
   retries: 0,
   reporter: [['list']],
   use: { baseURL: 'http://localhost:4173', trace: 'off', launchOptions },
-  webServer: { command: 'npm run build && npx vite preview --port 4173', port: 4173, reuseExistingServer: true, timeout: 120000 },
+  webServer: [
+    { command: 'npm run build && npx vite preview --port 4173', port: 4173, reuseExistingServer: true, timeout: 120000 },
+    // 온라인 E2E 용 실제 서버(API + 정적 파일). 매 실행마다 새 DB.
+    { command: 'rm -f data/e2e.sqlite* && DB_PATH=data/e2e.sqlite PORT=8787 npx tsx server/node.ts', port: 8787, reuseExistingServer: true, timeout: 60000 },
+  ],
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], launchOptions } },
     { name: 'mobile', use: { ...devices['Pixel 5'], launchOptions } },
