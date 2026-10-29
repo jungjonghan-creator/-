@@ -1,5 +1,5 @@
 /**
- * 2035 월드 캐스트(대표 선수 90명 = 실존 레전드 24 + 가상 66, 그리고 기존 로스터 15). 90명은 상한이 아니다 — 서버 등록부는 무제한.
+ * 2035 월드 캐스트(대표 선수 138명 = 실존 레전드 72 + 가상 66, 그리고 기존 로스터 15). 138명은 상한이 아니다 — 서버 등록부는 무제한.
  *
  * 중요: 아래 SKILL 숫자는 전부 "게임 시뮬레이션 파라미터(설계 가설)"이다.
  * 실존 선수의 실제 통계·실력 평가가 아니며, 공개된 경력/스타일 단서에서 합리적으로 유도한 아키타입을 수치화한 것이다.
@@ -45,6 +45,10 @@ export interface WorldPlayer {
   statsVerified: false;
   rightsConfirmed: false;
   derivedOrFictional: 'derived_from_public_record' | 'fictional' | 'game_roster';
+  /** 검색용 별칭(예: 코몽, Koreanmonkey) */
+  aliases: string[];
+  /** 작고·은퇴 등으로 현역이 아닌 인물: 2035 타임캡슐에서 명예 초청·시뮬레이션 레전드로만 등장 */
+  historical: boolean;
   /** 신예/고참 */
   tier: 'legend' | 'veteran' | 'rising' | 'regular';
 }
@@ -59,7 +63,7 @@ interface SeedPlayer {
   id: string; name: string; country: string; type: 'real_legacy' | 'fictional_2035';
   game_only_skill_vector: { preflop: number; postflop: number; icm: number; heads_up: number; exploit: number; risk_control: number; adaptation: number; consistency: number };
   featured_region?: string; home_city?: string; primary_format?: string; story?: string;
-  verified_background_summary?: string; evidence_sources: string[];
+  verified_background_summary?: string; evidence_sources: string[]; aliases?: string[]; historical_legend_not_current_active?: boolean;
   game_archetype_hypothesis: { strength?: string; potential_counterplay?: string };
 }
 
@@ -116,7 +120,7 @@ function fromSeed(p: SeedPlayer): WorldPlayer {
     homeCity: real ? (p.featured_region ?? '') : homeCityOf(p), kind: p.type, skill, archetype: p.game_archetype_hypothesis.strength ?? '', profileId: (st as { profile: string }).profile, difficulty: difficultyOf(skill),
     cashVsMtt: st.cashMtt, venuePreference: st.venues, bountyStyle: st.bounty, strength: p.game_archetype_hypothesis.strength ?? '', counterplay: p.game_archetype_hypothesis.potential_counterplay ?? '',
     background: real ? (p.verified_background_summary ?? '') : (p.story ?? ''), evidenceLevel: real ? 'reported_style' : 'design_hypothesis', evidenceSources: p.evidence_sources ?? [],
-    statsVerified: false, rightsConfirmed: false, derivedOrFictional: real ? 'derived_from_public_record' : 'fictional', tier: real ? 'legend' : avg >= 72 ? 'veteran' : avg >= 60 ? 'rising' : 'regular',
+    statsVerified: false, rightsConfirmed: false, derivedOrFictional: real ? 'derived_from_public_record' : 'fictional', aliases: p.aliases ?? [], historical: !!p.historical_legend_not_current_active, tier: real ? 'legend' : avg >= 72 ? 'veteran' : avg >= 60 ? 'rising' : 'regular',
   };
 }
 
@@ -136,7 +140,7 @@ function fromRoster(): WorldPlayer[] {
     return {
       id: r.id, name: r.name, nationality: '대한민국', region: 'KR' as Region, homeCity: '부산', kind: 'roster' as const, skill, archetype: r.bio, profileId: r.profileId, difficulty: difficultyOf(skill),
       cashVsMtt: 50, venuePreference: ['Korea Club League'], bountyStyle: '보통', strength: r.bio, counterplay: '', background: `기존 POKER ARENA 고정 로스터 (${r.bio})`, evidenceLevel: 'design_hypothesis' as const,
-      evidenceSources: [], statsVerified: false as const, rightsConfirmed: false as const, derivedOrFictional: 'game_roster' as const, tier: 'regular' as const,
+      evidenceSources: [], statsVerified: false as const, rightsConfirmed: false as const, derivedOrFictional: 'game_roster' as const, aliases: [] as string[], historical: false, tier: 'regular' as const,
     };
   });
 }

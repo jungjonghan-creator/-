@@ -78,7 +78,9 @@ export function buildField(def: EventDef, season: number, rng: RNG, st: Standing
   const idxOf = new Map(ALL_RANKED.map((r, i) => [r.id, i] as const));
   const chosen: Roster[] = [];
   if (def.invite === 'legends') {
-    for (const r of ALL_RANKED) if (r.named?.kind === 'real_legacy') chosen.push(r);
+    // 레전드 72명 전원을 한 대회에 몰지 않는다: 명성(실력 평균)에 비례한 시즌별 초청 30명
+    const legs = ALL_RANKED.filter((r) => r.named?.kind === 'real_legacy');
+    for (const r of weightedSample(rng, legs, legs.map((r) => Math.exp((avgSkill(r.skill) - 60) / 12)), Math.min(30, legs.length))) chosen.push(r);
   }
   if (def.invite) {
     const pool = ALL_RANKED.filter((r) => !chosen.includes(r));

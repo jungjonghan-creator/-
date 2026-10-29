@@ -58,7 +58,7 @@ export function Menu() {
         <button className="btn bg-gradient-to-r from-emerald-700 to-emerald-600 !min-h-[64px] text-left" onClick={() => setScreen('lobby')} data-testid="nav-lobby">캐시게임 · 토너먼트<div className="text-xs font-normal opacity-80">상시 로비</div></button>
         <button className="btn bg-gradient-to-r from-amber-700 to-amber-600 !min-h-[64px] text-left" onClick={() => setScreen('ranking')} data-testid="nav-ranking">랭킹<div className="text-xs font-normal opacity-80">국내·세계 통합</div></button>
         <button className="btn bg-gradient-to-r from-indigo-700 to-indigo-600 !min-h-[64px] text-left" onClick={() => setScreen('coach')} data-testid="nav-coach">분석실<div className="text-xs font-normal opacity-80">내 플레이 분석</div></button>
-        <button className="btn bg-gradient-to-r from-fuchsia-800 to-fuchsia-700 !min-h-[64px] text-left" onClick={() => setScreen('dex')} data-testid="nav-dex">선수 도감<div className="text-xs font-normal opacity-80">레전드 24 · 신예 66+</div></button>
+        <button className="btn bg-gradient-to-r from-fuchsia-800 to-fuchsia-700 !min-h-[64px] text-left" onClick={() => setScreen('dex')} data-testid="nav-dex">선수 도감<div className="text-xs font-normal opacity-80">레전드 72 · 신예 66+</div></button>
         <button className="btn bg-slate-800 !min-h-[52px] text-left" onClick={() => setScreen('news')} data-testid="nav-news">월드 뉴스</button>
         <button className="btn bg-slate-800 !min-h-[52px] text-left" onClick={() => setScreen('wallet')} data-testid="nav-wallet2">내 지갑 · 기록</button>
       </div>

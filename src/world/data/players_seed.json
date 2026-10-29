@@ -1,9 +1,9 @@
 {
-  "title": "POKER ARENA 5.0 — World Poker Universe 2035 | 90 featured AI players",
+  "title": "POKER ARENA 5.0 — 2035 world roster (72 verified named real people / 66 fictional AI / unlimited generated NPC+users)",
   "created_on": "2026-10-29",
-  "purpose": "AI 캐릭터 seed용, 실제 선수의 출처 있는 배경과 추정 전략을 분리",
-  "real_player_notice": "실존 선수 24명의 일부 공개 이력은 evidence_sources로 참고. 게임 아키타입과 0~100 실력 수치는 전적으로 시뮬레이션용 설정이며 검증 통계 아님. 선수의 공식 제휴·참여를 암시하지 않는다. 외부 공개 전 권리 검토.",
-  "fictional_notice": "2035년 창작 선수 66명은 허구. 동명이인과 무관하며 국가·도시·전적·성향·수치는 모두 창작 설정.",
+  "purpose": "기존 v2 ID 및 캐릭터/가상 선수 90명을 보존하면서 실존 선수 48명을 추가한 증분 시드. 실제 사용자 계정과 독립된 공용 AI 명단.",
+  "real_player_notice": "실존 인물 72명: 공개 근거는 개인별 evidence_sources 참조. 공개 경력 외 외모/성격/전략/실력 수치/2035 성적은 공식 자료로 간주하지 말 것. 사적 지인 공유 외 공개/상용 사용 전 권리 검토.",
+  "fictional_notice": "가상 신예 66명은 모두 허구. 2035 타임캡슐은 과거 기록을 유지하는 판타지 설정이며 은퇴/작고 인물은 현역 실존 인물로 표시하지 않는다.",
   "players": [
     {
       "id": "legend_elky",
@@ -373,6 +373,2034 @@
         "consistency": 69
       },
       "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_patrik_antonius",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Patrik Antonius",
+      "country": "핀란드",
+      "featured_region": "마카오·국제 하이 스테이크/캐시",
+      "verified_background_summary": "2005년 EPT 바덴 우승, 고액 캐시게임과 헤즈업 경기로 알려진 선수",
+      "game_archetype_hypothesis": {
+        "strength": "딥스택 멀티스트리트 팟 컨트롤",
+        "potential_counterplay": "얕은 스택 버블의 결정",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/patrik-antonius/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 85,
+        "postflop": 70,
+        "icm": 72,
+        "heads_up": 58,
+        "exploit": 50,
+        "risk_control": 85,
+        "adaptation": 87,
+        "consistency": 93
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_stephen_chidwick",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Stephen Chidwick",
+      "country": "영국",
+      "featured_region": "글로벌 하이롤러/WSOP",
+      "verified_background_summary": "WSOP 선수 프로필에 다수의 파이널 테이블과 브레이슬릿 기록이 있는 영국 선수",
+      "game_archetype_hypothesis": {
+        "strength": "하이롤러 MTT의 ICM 판단",
+        "potential_counterplay": "예측 가능한 작은 베팅 빈도",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/players/333717564/stephen-chidwick/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 43,
+        "postflop": 86,
+        "icm": 59,
+        "heads_up": 82,
+        "exploit": 62,
+        "risk_control": 67,
+        "adaptation": 65,
+        "consistency": 79
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_kristen_foxen",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Kristen Foxen",
+      "country": "미국",
+      "featured_region": "WSOP/국제 토너먼트",
+      "verified_background_summary": "WSOP 공식 프로필에 다수의 브레이슬릿과 파이널 테이블 경력이 있는 선수",
+      "game_archetype_hypothesis": {
+        "strength": "토너먼트 포지션 압박",
+        "potential_counterplay": "상대의 반복적 체크레이즈",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/players/651425636/kristen-foxen/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 75,
+        "postflop": 92,
+        "icm": 81,
+        "heads_up": 61,
+        "exploit": 94,
+        "risk_control": 69,
+        "adaptation": 67,
+        "consistency": 91
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_addamo",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Michael Addamo",
+      "country": "호주",
+      "featured_region": "하이롤러/WSOP/온라인",
+      "verified_background_summary": "WSOP 브레이슬릿 4회 및 하이롤러 이벤트 우승 경력으로 알려진 호주 선수",
+      "game_archetype_hypothesis": {
+        "strength": "넓은 베팅 사이징과 압박",
+        "potential_counterplay": "베팅 크기 과잉에 대한 적응",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/michael-addamo/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 72,
+        "postflop": 91,
+        "icm": 50,
+        "heads_up": 81,
+        "exploit": 82,
+        "risk_control": 61,
+        "adaptation": 87,
+        "consistency": 55
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_david_peters",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "David Peters",
+      "country": "미국",
+      "featured_region": "WSOP/하이롤러 MTT",
+      "verified_background_summary": "WSOP 브레이슬릿 경력과 고액 토너먼트 성적으로 알려진 미국 선수",
+      "game_archetype_hypothesis": {
+        "strength": "고위험 토너먼트의 위험 관리",
+        "potential_counterplay": "블라인드 압박에 대한 적응",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/david-peters/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 78,
+        "postflop": 77,
+        "icm": 72,
+        "heads_up": 72,
+        "exploit": 86,
+        "risk_control": 74,
+        "adaptation": 67,
+        "consistency": 90
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_isaac_haxton",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Isaac Haxton",
+      "country": "미국",
+      "featured_region": "글로벌 하이롤러/헤즈업",
+      "verified_background_summary": "슈퍼 하이롤러와 트리톤 시리즈 참가·우승 경력으로 알려진 미국 선수",
+      "game_archetype_hypothesis": {
+        "strength": "레인지 구성과 딥스택 익스플로잇",
+        "potential_counterplay": "상대의 극단적 느린 플레이",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/isaac-haxton/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 98,
+        "postflop": 68,
+        "icm": 83,
+        "heads_up": 80,
+        "exploit": 98,
+        "risk_control": 98,
+        "adaptation": 98,
+        "consistency": 90
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_maria_ho",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Maria Ho",
+      "country": "미국",
+      "featured_region": "WSOP/국제 MTT",
+      "verified_background_summary": "미국 프로 포커 선수이자 중계 해설가, WSOP 파이널 테이블 기록",
+      "game_archetype_hypothesis": {
+        "strength": "상대 유형 분류·탄탄한 밸류 라인",
+        "potential_counterplay": "짧은 스택의 리스크 확대",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/maria-ho/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 80,
+        "postflop": 98,
+        "icm": 98,
+        "heads_up": 76,
+        "exploit": 65,
+        "risk_control": 98,
+        "adaptation": 65,
+        "consistency": 96
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_moneymaker",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Chris Moneymaker",
+      "country": "미국",
+      "featured_region": "WSOP/메인 이벤트",
+      "verified_background_summary": "2003년 WSOP 메인 이벤트 우승과 포커 대중화에 큰 영향을 준 선수",
+      "game_archetype_hypothesis": {
+        "strength": "메인 이벤트 적응력과 미드스택 생존",
+        "potential_counterplay": "과도하게 타이트한 버블 행동",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/chris-moneymaker/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 65,
+        "postflop": 55,
+        "icm": 85,
+        "heads_up": 57,
+        "exploit": 59,
+        "risk_control": 70,
+        "adaptation": 94,
+        "consistency": 84
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_xuan_liu",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Xuan Liu",
+      "country": "캐나다",
+      "featured_region": "EPT/PCA/아시아 국제 대회",
+      "verified_background_summary": "PCA 2012년 4위와 EPT Sanremo 2011년 3위의 공개 경력",
+      "game_archetype_hypothesis": {
+        "strength": "글로벌 MTT 변동성 관리",
+        "potential_counterplay": "과감한 빅스택 체크레이즈",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/xuan-liu/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 86,
+        "postflop": 55,
+        "icm": 96,
+        "heads_up": 61,
+        "exploit": 67,
+        "risk_control": 83,
+        "adaptation": 72,
+        "consistency": 58
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_vanessa_selbst",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Vanessa Selbst",
+      "country": "미국",
+      "featured_region": "WSOP/레전드 챌린지",
+      "verified_background_summary": "3회 WSOP 브레이슬릿 보유, 2018년 프로 포커 은퇴 발표",
+      "game_archetype_hypothesis": {
+        "strength": "활발한 포스트플랍 공격 설계",
+        "potential_counterplay": "상대가 읽은 높은 배럴 빈도",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/vanessa-selbst/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 87,
+        "postflop": 76,
+        "icm": 67,
+        "heads_up": 53,
+        "exploit": 66,
+        "risk_control": 64,
+        "adaptation": 61,
+        "consistency": 77
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_erik_seidel",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Erik Seidel",
+      "country": "미국",
+      "featured_region": "WSOP/레전드 시리즈",
+      "verified_background_summary": "WSOP 브레이슬릿 10회와 1988년 WSOP 메인 이벤트 준우승 이력",
+      "game_archetype_hypothesis": {
+        "strength": "오랜 라이브 대회 경험 기반 인내",
+        "potential_counterplay": "빠른 터보 리스크 전환",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/players/782178483/erik-seidel/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 85,
+        "postflop": 88,
+        "icm": 82,
+        "heads_up": 93,
+        "exploit": 98,
+        "risk_control": 98,
+        "adaptation": 90,
+        "consistency": 98
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_jennifer_harman",
+      "type": "real_legacy",
+      "world_version": "2035_time_capsule_2026_prime",
+      "name": "Jennifer Harman",
+      "country": "미국",
+      "featured_region": "하이 스테이크 캐시/WSOP",
+      "verified_background_summary": "WSOP 브레이슬릿 2회, 2015년 포커 명예의 전당 입성",
+      "game_archetype_hypothesis": {
+        "strength": "멀티웨이 캐시게임 밸류 추출",
+        "potential_counterplay": "상대의 과감한 리버 오버벳",
+        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/jennifer-harman/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "game_only_skill_vector": {
+        "preflop": 72,
+        "postflop": 76,
+        "icm": 98,
+        "heads_up": 84,
+        "exploit": 60,
+        "risk_control": 94,
+        "adaptation": 88,
+        "consistency": 79
+      },
+      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
+    },
+    {
+      "id": "legend_sung_joo_hyun",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Sung Joo Hyun (현성주)",
+      "aliases": [
+        "코몽",
+        "Koreanmonkey",
+        "Arte"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/WSOP/온라인",
+      "verified_background_summary": "2020년 WSOP 온라인 브레이슬릿 우승; 코몽(Koreanmonkey)으로 알려짐",
+      "game_archetype_hypothesis": {
+        "style_id": "balanced_mtt",
+        "style_label": "토너먼트 균형형",
+        "strength": "버블 압박과 밸류 중심 변주",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.kaypoker.com/off-the-felt-%ED%95%9C%EA%B5%AD-%ED%83%91-%ED%81%B4%EB%9E%98%EC%8A%A4-%EC%BD%94%EB%AA%BD-%ED%98%84%EC%84%B1%EC%A3%BC/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 86,
+        "postflop": 64,
+        "icm": 73,
+        "heads_up": 79,
+        "exploit": 79,
+        "risk_control": 72,
+        "adaptation": 57,
+        "consistency": 69
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_calvin_lee",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Calvin Lee (캘빈 리)",
+      "aliases": [
+        "캘빈리",
+        "Calvin Lee"
+      ],
+      "country": "대한민국",
+      "featured_region": "마카오/WSOP/하이롤러",
+      "verified_background_summary": "2016년 WSOP $3,000 6-Max 노리밋 홀덤 우승; 마카오 고액 캐시게임 경력 소개",
+      "game_archetype_hypothesis": {
+        "style_id": "deepstack_pressure",
+        "style_label": "딥스택 압박형",
+        "strength": "큰 팟과 멀티 스트리트 사이징 실험",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/calvin-lee-makes-huge-comeback-in-3k-nlhe-wins-marathon-match/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 64,
+        "postflop": 72,
+        "icm": 57,
+        "heads_up": 59,
+        "exploit": 60,
+        "risk_control": 50,
+        "adaptation": 64,
+        "consistency": 64
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_kevin_song",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Kevin Song",
+      "aliases": [
+        "케빈 송"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/WSOP",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "heads_up_specialist",
+        "style_label": "헤즈업 조정형",
+        "strength": "상대에 따른 레인지 변화",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 50,
+        "postflop": 78,
+        "icm": 63,
+        "heads_up": 57,
+        "exploit": 56,
+        "risk_control": 72,
+        "adaptation": 54,
+        "consistency": 69
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_chang_hwan_lee",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Chang Hwan Lee (이창환)",
+      "aliases": [
+        "이창환"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/WSOP/아시아",
+      "verified_background_summary": "2026년 Hendon Mob 한국 누적 상금 명단 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "patient_value",
+        "style_label": "신중한 밸류형",
+        "strength": "상대의 과도한 블러프 포착",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/player.php?a=r&n=1378535"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 70,
+        "postflop": 57,
+        "icm": 76,
+        "heads_up": 86,
+        "exploit": 63,
+        "risk_control": 67,
+        "adaptation": 76,
+        "consistency": 53
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_edward_pak",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Edward Pak",
+      "aliases": [
+        "에드워드 박"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "high_roller_adaptive",
+        "style_label": "하이롤러 적응형",
+        "strength": "공격 빈도와 포지션별 균형",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 83,
+        "postflop": 58,
+        "icm": 68,
+        "heads_up": 53,
+        "exploit": 60,
+        "risk_control": 58,
+        "adaptation": 72,
+        "consistency": 81
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_steve_yea",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Steve Yea",
+      "aliases": [
+        "스티브 예아"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "creative_3bet",
+        "style_label": "3벳 압박형",
+        "strength": "프리플랍 적극성의 조절",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 57,
+        "postflop": 68,
+        "icm": 71,
+        "heads_up": 73,
+        "exploit": 50,
+        "risk_control": 57,
+        "adaptation": 71,
+        "consistency": 69
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_ryan_yu",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Ryan Yu",
+      "aliases": [
+        "라이언 유"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "shortstack_icm",
+        "style_label": "숏스택 ICM형",
+        "strength": "푸시/폴드와 버블 대응",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 60,
+        "postflop": 53,
+        "icm": 61,
+        "heads_up": 61,
+        "exploit": 79,
+        "risk_control": 63,
+        "adaptation": 63,
+        "consistency": 79
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_daewoong_song",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Daewoong Song",
+      "aliases": [
+        "송대웅"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "mixed_game_transfer",
+        "style_label": "복합 전략형",
+        "strength": "다양한 베팅 사이즈와 라인 구성",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 55,
+        "postflop": 79,
+        "icm": 66,
+        "heads_up": 56,
+        "exploit": 79,
+        "risk_control": 60,
+        "adaptation": 85,
+        "consistency": 86
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_sj_kim",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "SJ Kim",
+      "aliases": [],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "balanced_mtt",
+        "style_label": "토너먼트 균형형",
+        "strength": "버블 압박과 밸류 중심 변주",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 81,
+        "postflop": 76,
+        "icm": 89,
+        "heads_up": 88,
+        "exploit": 54,
+        "risk_control": 54,
+        "adaptation": 64,
+        "consistency": 71
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_yohwan_lim",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Yohwan Lim (임요환)",
+      "aliases": [
+        "임요환",
+        "BoxeR"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/아시아/토너먼트",
+      "verified_background_summary": "전직 프로게이머이자 한국 포커 선수; Hendon Mob 한국 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "deepstack_pressure",
+        "style_label": "딥스택 압박형",
+        "strength": "큰 팟과 멀티 스트리트 사이징 실험",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 77,
+        "postflop": 71,
+        "icm": 90,
+        "heads_up": 82,
+        "exploit": 72,
+        "risk_control": 64,
+        "adaptation": 83,
+        "consistency": 57
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_hyunsup_kim",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Hyunsup Kim",
+      "aliases": [
+        "김현섭"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "heads_up_specialist",
+        "style_label": "헤즈업 조정형",
+        "strength": "상대에 따른 레인지 변화",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 56,
+        "postflop": 57,
+        "icm": 67,
+        "heads_up": 80,
+        "exploit": 56,
+        "risk_control": 86,
+        "adaptation": 81,
+        "consistency": 76
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_nam_kim",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Nam Kim",
+      "aliases": [],
+      "country": "대한민국",
+      "featured_region": "한국/국제 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "patient_value",
+        "style_label": "신중한 밸류형",
+        "strength": "상대의 과도한 블러프 포착",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 67,
+        "postflop": 53,
+        "icm": 65,
+        "heads_up": 82,
+        "exploit": 50,
+        "risk_control": 71,
+        "adaptation": 52,
+        "consistency": 81
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_moonho_seo",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Moonho Seo",
+      "aliases": [
+        "서문호"
+      ],
+      "country": "대한민국",
+      "featured_region": "한국/아시아 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "high_roller_adaptive",
+        "style_label": "하이롤러 적응형",
+        "strength": "공격 빈도와 포지션별 균형",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 73,
+        "postflop": 69,
+        "icm": 70,
+        "heads_up": 57,
+        "exploit": 91,
+        "risk_control": 58,
+        "adaptation": 57,
+        "consistency": 80
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_sang_gu_kim",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Sang Gu Kim",
+      "aliases": [],
+      "country": "대한민국",
+      "featured_region": "한국/아시아 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "creative_3bet",
+        "style_label": "3벳 압박형",
+        "strength": "프리플랍 적극성의 조절",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 85,
+        "postflop": 89,
+        "icm": 90,
+        "heads_up": 75,
+        "exploit": 69,
+        "risk_control": 64,
+        "adaptation": 91,
+        "consistency": 75
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_jinhoon_lee",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Jinhoon Lee",
+      "aliases": [],
+      "country": "대한민국",
+      "featured_region": "한국/아시아 MTT",
+      "verified_background_summary": "Hendon Mob 한국 누적 라이브 상금 순위에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "shortstack_icm",
+        "style_label": "숏스택 ICM형",
+        "strength": "푸시/폴드와 버블 대응",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://pokerdb.thehendonmob.com/ranking/238/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 84,
+        "postflop": 70,
+        "icm": 74,
+        "heads_up": 58,
+        "exploit": 54,
+        "risk_control": 83,
+        "adaptation": 57,
+        "consistency": 50
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_doyle_brunson",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Doyle Brunson",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "미국/포커 역사",
+      "verified_background_summary": "WSOP 메인 이벤트 1975·1976년 우승; 포커 명예의 전당 인물",
+      "game_archetype_hypothesis": {
+        "style_id": "mixed_game_transfer",
+        "style_label": "복합 전략형",
+        "strength": "다양한 베팅 사이즈와 라인 구성",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": true,
+      "game_only_skill_vector": {
+        "preflop": 75,
+        "postflop": 81,
+        "icm": 76,
+        "heads_up": 50,
+        "exploit": 53,
+        "risk_control": 87,
+        "adaptation": 67,
+        "consistency": 57
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_johnny_chan",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Johnny Chan",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WSOP/라스베이거스",
+      "verified_background_summary": "WSOP 메인 이벤트 1987·1988년 우승; 명예의 전당",
+      "game_archetype_hypothesis": {
+        "style_id": "balanced_mtt",
+        "style_label": "토너먼트 균형형",
+        "strength": "버블 압박과 밸류 중심 변주",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 82,
+        "postflop": 75,
+        "icm": 61,
+        "heads_up": 66,
+        "exploit": 58,
+        "risk_control": 62,
+        "adaptation": 88,
+        "consistency": 86
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_scotty_nguyen",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Scotty Nguyen",
+      "aliases": [
+        "The Prince of Poker"
+      ],
+      "country": "미국",
+      "featured_region": "WSOP/메인 이벤트",
+      "verified_background_summary": "1998년 WSOP 메인 이벤트 우승; 명예의 전당",
+      "game_archetype_hypothesis": {
+        "style_id": "deepstack_pressure",
+        "style_label": "딥스택 압박형",
+        "strength": "큰 팟과 멀티 스트리트 사이징 실험",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/scotty-nguyen/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 81,
+        "postflop": 55,
+        "icm": 61,
+        "heads_up": 57,
+        "exploit": 60,
+        "risk_control": 63,
+        "adaptation": 90,
+        "consistency": 67
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_antonio_esfandiari",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Antonio Esfandiari",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WSOP/슈퍼 하이롤러",
+      "verified_background_summary": "2012년 WSOP Big One for One Drop 우승",
+      "game_archetype_hypothesis": {
+        "style_id": "heads_up_specialist",
+        "style_label": "헤즈업 조정형",
+        "strength": "상대에 따른 레인지 변화",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/meet-the-2012-wsop-october-nine/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 79,
+        "postflop": 89,
+        "icm": 74,
+        "heads_up": 83,
+        "exploit": 53,
+        "risk_control": 71,
+        "adaptation": 82,
+        "consistency": 61
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_fedor_holz",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Fedor Holz",
+      "aliases": [
+        "CrownUpGuy"
+      ],
+      "country": "독일",
+      "featured_region": "온라인/하이롤러/WSOP",
+      "verified_background_summary": "WSOP 브레이슬릿 우승 경력이 있는 독일 포커 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "patient_value",
+        "style_label": "신중한 밸류형",
+        "strength": "상대의 과도한 블러프 포착",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/fedor-holz/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 67,
+        "postflop": 72,
+        "icm": 73,
+        "heads_up": 77,
+        "exploit": 60,
+        "risk_control": 73,
+        "adaptation": 67,
+        "consistency": 51
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_justin_bonomo",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Justin Bonomo",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "슈퍼 하이롤러",
+      "verified_background_summary": "PokerNews 역대 라이브 상금 상위권에 이름을 올린 국제 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "high_roller_adaptive",
+        "style_label": "하이롤러 적응형",
+        "strength": "공격 빈도와 포지션별 균형",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 70,
+        "postflop": 84,
+        "icm": 82,
+        "heads_up": 56,
+        "exploit": 51,
+        "risk_control": 69,
+        "adaptation": 69,
+        "consistency": 76
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_bryn_kenney",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Bryn Kenney",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "슈퍼 하이롤러",
+      "verified_background_summary": "PokerNews 역대 라이브 상금 상위권에 이름을 올린 국제 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "creative_3bet",
+        "style_label": "3벳 압박형",
+        "strength": "프리플랍 적극성의 조절",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 65,
+        "postflop": 57,
+        "icm": 57,
+        "heads_up": 90,
+        "exploit": 65,
+        "risk_control": 59,
+        "adaptation": 81,
+        "consistency": 55
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_nick_petrangelo",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Nick Petrangelo",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "하이롤러/WSOP",
+      "verified_background_summary": "WSOP 브레이슬릿 우승 및 하이롤러 대회 경력",
+      "game_archetype_hypothesis": {
+        "style_id": "shortstack_icm",
+        "style_label": "숏스택 ICM형",
+        "strength": "푸시/폴드와 버블 대응",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/nick-petrangelo/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 70,
+        "postflop": 70,
+        "icm": 73,
+        "heads_up": 82,
+        "exploit": 90,
+        "risk_control": 77,
+        "adaptation": 61,
+        "consistency": 81
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_alex_foxen",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Alex Foxen",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "하이롤러/MTT",
+      "verified_background_summary": "2026년 10월 PokerNews GPI 상위 랭커",
+      "game_archetype_hypothesis": {
+        "style_id": "mixed_game_transfer",
+        "style_label": "복합 전략형",
+        "strength": "다양한 베팅 사이즈와 라인 구성",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 55,
+        "postflop": 82,
+        "icm": 67,
+        "heads_up": 71,
+        "exploit": 74,
+        "risk_control": 66,
+        "adaptation": 65,
+        "consistency": 54
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_artur_martirosian",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Artur Martirosian",
+      "aliases": [],
+      "country": "러시아",
+      "featured_region": "하이롤러/MTT",
+      "verified_background_summary": "2026년 10월 PokerNews GPI 상위 랭커",
+      "game_archetype_hypothesis": {
+        "style_id": "balanced_mtt",
+        "style_label": "토너먼트 균형형",
+        "strength": "버블 압박과 밸류 중심 변주",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 90,
+        "postflop": 64,
+        "icm": 52,
+        "heads_up": 76,
+        "exploit": 54,
+        "risk_control": 73,
+        "adaptation": 52,
+        "consistency": 84
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_mikita_badziakouski",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Mikita Badziakouski",
+      "aliases": [],
+      "country": "벨라루스",
+      "featured_region": "슈퍼 하이롤러",
+      "verified_background_summary": "PokerNews 역대 라이브 상금 상위권에 이름을 올린 국제 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "deepstack_pressure",
+        "style_label": "딥스택 압박형",
+        "strength": "큰 팟과 멀티 스트리트 사이징 실험",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 53,
+        "postflop": 70,
+        "icm": 59,
+        "heads_up": 59,
+        "exploit": 76,
+        "risk_control": 88,
+        "adaptation": 86,
+        "consistency": 86
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_viktor_blom",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Viktor Blom",
+      "aliases": [
+        "Isildur1"
+      ],
+      "country": "스웨덴",
+      "featured_region": "온라인/하이 스테이크",
+      "verified_background_summary": "PokerNews가 유명 온라인 포커 선수로 소개",
+      "game_archetype_hypothesis": {
+        "style_id": "heads_up_specialist",
+        "style_label": "헤즈업 조정형",
+        "strength": "상대에 따른 레인지 변화",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 60,
+        "postflop": 78,
+        "icm": 67,
+        "heads_up": 62,
+        "exploit": 65,
+        "risk_control": 75,
+        "adaptation": 54,
+        "consistency": 55
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_phil_galfond",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Phil Galfond",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "온라인/헤즈업",
+      "verified_background_summary": "고액 헤즈업 팟리밋 오마하(PLO) Galfond Challenge의 주인공; 게임에서는 NLHE용 전략을 별도로 창작",
+      "game_archetype_hypothesis": {
+        "style_id": "patient_value",
+        "style_label": "신중한 밸류형",
+        "strength": "상대의 과도한 블러프 포착",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/galfond-challenge"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 85,
+        "postflop": 55,
+        "icm": 64,
+        "heads_up": 76,
+        "exploit": 62,
+        "risk_control": 61,
+        "adaptation": 83,
+        "consistency": 63
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_doug_polk",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Doug Polk",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "헤즈업/온라인",
+      "verified_background_summary": "2020~2021년 다니엘 네그라누와 25,000핸드 헤즈업 NLHE 대결을 진행한 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "high_roller_adaptive",
+        "style_label": "하이롤러 적응형",
+        "strength": "공격 빈도와 포지션별 균형",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/news/2021/02/doug-polk-finishes-up-against-daniel-negreanu-38619.htm"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 60,
+        "postflop": 69,
+        "icm": 79,
+        "heads_up": 56,
+        "exploit": 76,
+        "risk_control": 54,
+        "adaptation": 60,
+        "consistency": 90
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_shaun_deeb",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Shaun Deeb",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WSOP/MTT",
+      "verified_background_summary": "2026년 WSOP 기록에서 이름을 확인할 수 있는 다종목 포커 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "creative_3bet",
+        "style_label": "3벳 압박형",
+        "strength": "프리플랍 적극성의 조절",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/news/2026/06/world-series-of-poker-high-roller-stud-event-history-51456.htm"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 75,
+        "postflop": 79,
+        "icm": 74,
+        "heads_up": 73,
+        "exploit": 62,
+        "risk_control": 89,
+        "adaptation": 73,
+        "consistency": 60
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_brian_rast",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Brian Rast",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WSOP/혼합 게임",
+      "verified_background_summary": "WSOP Poker Players Championship 우승 경력",
+      "game_archetype_hypothesis": {
+        "style_id": "shortstack_icm",
+        "style_label": "숏스택 ICM형",
+        "strength": "푸시/폴드와 버블 대응",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/news/2015/06/stats-and-facts-50k-21997.htm"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 61,
+        "postflop": 58,
+        "icm": 53,
+        "heads_up": 50,
+        "exploit": 90,
+        "risk_control": 75,
+        "adaptation": 71,
+        "consistency": 75
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_benny_glaser",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Benny Glaser",
+      "aliases": [],
+      "country": "영국",
+      "featured_region": "WSOP/혼합 게임",
+      "verified_background_summary": "PokerNews의 2026년 WSOP 혼합 게임 선수 명단에 등장",
+      "game_archetype_hypothesis": {
+        "style_id": "mixed_game_transfer",
+        "style_label": "복합 전략형",
+        "strength": "다양한 베팅 사이즈와 라인 구성",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/news/2026/05/best-wsop-mixed-game-players-myplayers-feed-51271.htm"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 69,
+        "postflop": 72,
+        "icm": 59,
+        "heads_up": 75,
+        "exploit": 71,
+        "risk_control": 78,
+        "adaptation": 74,
+        "consistency": 82
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_scott_seiver",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Scott Seiver",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WSOP/혼합 게임",
+      "verified_background_summary": "WSOP 브레이슬릿과 WPT 타이틀 우승 경력",
+      "game_archetype_hypothesis": {
+        "style_id": "balanced_mtt",
+        "style_label": "토너먼트 균형형",
+        "strength": "버블 압박과 밸류 중심 변주",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/scott-seiver/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 89,
+        "postflop": 83,
+        "icm": 53,
+        "heads_up": 67,
+        "exploit": 68,
+        "risk_control": 89,
+        "adaptation": 74,
+        "consistency": 75
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_liv_boeree",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Liv Boeree",
+      "aliases": [],
+      "country": "영국",
+      "featured_region": "EPT/글로벌 MTT",
+      "verified_background_summary": "PokerNews 여성 포커 선수 목록에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "deepstack_pressure",
+        "style_label": "딥스택 압박형",
+        "strength": "큰 팟과 멀티 스트리트 사이징 실험",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 61,
+        "postflop": 62,
+        "icm": 70,
+        "heads_up": 79,
+        "exploit": 87,
+        "risk_control": 87,
+        "adaptation": 74,
+        "consistency": 83
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_dan_smith",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Dan Smith",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "하이롤러",
+      "verified_background_summary": "PokerNews 역대 라이브 상금 상위권에 이름을 올린 국제 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "heads_up_specialist",
+        "style_label": "헤즈업 조정형",
+        "strength": "상대에 따른 레인지 변화",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 54,
+        "postflop": 79,
+        "icm": 88,
+        "heads_up": 81,
+        "exploit": 57,
+        "risk_control": 77,
+        "adaptation": 51,
+        "consistency": 58
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_nick_schulman",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Nick Schulman",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WSOP/혼합 게임",
+      "verified_background_summary": "2025년 포커 명예의 전당 선정 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "patient_value",
+        "style_label": "신중한 밸류형",
+        "strength": "상대의 과도한 블러프 포착",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/news/2025/07/world-champion-mizrachi-inducted-into-poker-hall-of-fame-49218.htm"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 61,
+        "postflop": 88,
+        "icm": 87,
+        "heads_up": 84,
+        "exploit": 80,
+        "risk_control": 51,
+        "adaptation": 74,
+        "consistency": 52
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_michael_mizrachi",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Michael Mizrachi",
+      "aliases": [
+        "The Grinder"
+      ],
+      "country": "미국",
+      "featured_region": "WSOP/메인 이벤트",
+      "verified_background_summary": "2025년 WSOP 메인 이벤트 우승 및 포커 명예의 전당 입성",
+      "game_archetype_hypothesis": {
+        "style_id": "high_roller_adaptive",
+        "style_label": "하이롤러 적응형",
+        "strength": "공격 빈도와 포지션별 균형",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/news/2025/07/world-champion-mizrachi-inducted-into-poker-hall-of-fame-49218.htm"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 56,
+        "postflop": 83,
+        "icm": 90,
+        "heads_up": 59,
+        "exploit": 55,
+        "risk_control": 53,
+        "adaptation": 64,
+        "consistency": 91
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_carlos_mortensen",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Carlos Mortensen",
+      "aliases": [],
+      "country": "스페인",
+      "featured_region": "WPT/WSOP",
+      "verified_background_summary": "2001년 WSOP 메인 이벤트 우승; 포커 명예의 전당",
+      "game_archetype_hypothesis": {
+        "style_id": "creative_3bet",
+        "style_label": "3벳 압박형",
+        "strength": "프리플랍 적극성의 조절",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 69,
+        "postflop": 88,
+        "icm": 75,
+        "heads_up": 59,
+        "exploit": 87,
+        "risk_control": 70,
+        "adaptation": 87,
+        "consistency": 89
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_gus_hansen",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Gus Hansen",
+      "aliases": [],
+      "country": "덴마크",
+      "featured_region": "WPT/하이 스테이크",
+      "verified_background_summary": "WPT 공식 선수 페이지에 3개 타이틀 기록이 있는 덴마크 포커 선수",
+      "game_archetype_hypothesis": {
+        "style_id": "shortstack_icm",
+        "style_label": "숏스택 ICM형",
+        "strength": "푸시/폴드와 버블 대응",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://cms.worldpokertour.com/player/gus-hansen/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 76,
+        "postflop": 60,
+        "icm": 53,
+        "heads_up": 89,
+        "exploit": 63,
+        "risk_control": 82,
+        "adaptation": 76,
+        "consistency": 84
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_punnat_punsri",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Punnat Punsri",
+      "aliases": [],
+      "country": "태국",
+      "featured_region": "아시아/하이롤러",
+      "verified_background_summary": "2026년 10월 PokerNews GPI 상위 랭커",
+      "game_archetype_hypothesis": {
+        "style_id": "mixed_game_transfer",
+        "style_label": "복합 전략형",
+        "strength": "다양한 베팅 사이즈와 라인 구성",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 74,
+        "postflop": 65,
+        "icm": 84,
+        "heads_up": 72,
+        "exploit": 83,
+        "risk_control": 86,
+        "adaptation": 67,
+        "consistency": 86
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_ren_lin",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Ren Lin",
+      "aliases": [
+        "Tony Lin"
+      ],
+      "country": "중국",
+      "featured_region": "아시아/하이롤러",
+      "verified_background_summary": "2026년 10월 PokerNews GPI 상위 랭커",
+      "game_archetype_hypothesis": {
+        "style_id": "balanced_mtt",
+        "style_label": "토너먼트 균형형",
+        "strength": "버블 압박과 밸류 중심 변주",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 86,
+        "postflop": 57,
+        "icm": 84,
+        "heads_up": 50,
+        "exploit": 74,
+        "risk_control": 67,
+        "adaptation": 76,
+        "consistency": 68
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_daniel_dvoress",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Daniel Dvoress",
+      "aliases": [],
+      "country": "캐나다",
+      "featured_region": "하이롤러",
+      "verified_background_summary": "2026년 10월 PokerNews GPI 상위 랭커",
+      "game_archetype_hypothesis": {
+        "style_id": "deepstack_pressure",
+        "style_label": "딥스택 압박형",
+        "strength": "큰 팟과 멀티 스트리트 사이징 실험",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 88,
+        "postflop": 57,
+        "icm": 64,
+        "heads_up": 64,
+        "exploit": 69,
+        "risk_control": 68,
+        "adaptation": 51,
+        "consistency": 70
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_jesse_lonis",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Jesse Lonis",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "하이롤러/MTT",
+      "verified_background_summary": "2026년 10월 PokerNews GPI 상위 랭커",
+      "game_archetype_hypothesis": {
+        "style_id": "heads_up_specialist",
+        "style_label": "헤즈업 조정형",
+        "strength": "상대에 따른 레인지 변화",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 59,
+        "postflop": 88,
+        "icm": 53,
+        "heads_up": 63,
+        "exploit": 82,
+        "risk_control": 86,
+        "adaptation": 82,
+        "consistency": 55
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_joe_hachem",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Joe Hachem",
+      "aliases": [],
+      "country": "호주",
+      "featured_region": "WSOP/메인 이벤트",
+      "verified_background_summary": "2005년 WSOP 메인 이벤트 우승",
+      "game_archetype_hypothesis": {
+        "style_id": "patient_value",
+        "style_label": "신중한 밸류형",
+        "strength": "상대의 과도한 블러프 포착",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 51,
+        "postflop": 70,
+        "icm": 65,
+        "heads_up": 79,
+        "exploit": 71,
+        "risk_control": 68,
+        "adaptation": 57,
+        "consistency": 76
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_john_juanda",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "John Juanda",
+      "aliases": [],
+      "country": "인도네시아",
+      "featured_region": "WSOP/아시아",
+      "verified_background_summary": "2015년 포커 명예의 전당 헌액",
+      "game_archetype_hypothesis": {
+        "style_id": "high_roller_adaptive",
+        "style_label": "하이롤러 적응형",
+        "strength": "공격 빈도와 포지션별 균형",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/poker-hall-of-fame-announces-class-of-2019/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 51,
+        "postflop": 66,
+        "icm": 69,
+        "heads_up": 53,
+        "exploit": 67,
+        "risk_control": 89,
+        "adaptation": 77,
+        "consistency": 84
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_jonathan_duhamel",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Jonathan Duhamel",
+      "aliases": [],
+      "country": "캐나다",
+      "featured_region": "WSOP/메인 이벤트",
+      "verified_background_summary": "2010년 WSOP 메인 이벤트 우승",
+      "game_archetype_hypothesis": {
+        "style_id": "creative_3bet",
+        "style_label": "3벳 압박형",
+        "strength": "프리플랍 적극성의 조절",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 90,
+        "postflop": 68,
+        "icm": 80,
+        "heads_up": 69,
+        "exploit": 71,
+        "risk_control": 60,
+        "adaptation": 54,
+        "consistency": 62
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_mike_sexton",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Mike Sexton",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "WPT/포커 역사",
+      "verified_background_summary": "2009년 포커 명예의 전당 헌액",
+      "game_archetype_hypothesis": {
+        "style_id": "shortstack_icm",
+        "style_label": "숏스택 ICM형",
+        "strength": "푸시/폴드와 버블 대응",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.wsop.com/news/poker-hall-of-fame-announces-class-of-2019/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": true,
+      "game_only_skill_vector": {
+        "preflop": 91,
+        "postflop": 78,
+        "icm": 91,
+        "heads_up": 59,
+        "exploit": 58,
+        "risk_control": 81,
+        "adaptation": 90,
+        "consistency": 75
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
+    },
+    {
+      "id": "legend_vanessa_rousso",
+      "type": "real_legacy",
+      "world_version": "2035_legend_time_capsule_2026_prime",
+      "name": "Vanessa Rousso",
+      "aliases": [],
+      "country": "미국",
+      "featured_region": "글로벌 MTT/여성 선수",
+      "verified_background_summary": "PokerNews 여성 포커 선수 목록에 등재",
+      "game_archetype_hypothesis": {
+        "style_id": "mixed_game_transfer",
+        "style_label": "복합 전략형",
+        "strength": "다양한 베팅 사이즈와 라인 구성",
+        "potential_counterplay": "게임 밸런싱에 따른 상황별 대응을 연구하도록 설계; 선수 본인의 실제 약점이라는 뜻이 아님",
+        "disclaimer": "실존 선수의 실제 VPIP/베팅 빈도/전략을 단정하지 않음. 게임용 가상 전략 모델임."
+      },
+      "evidence_sources": [
+        "https://www.pokernews.com/poker-players/"
+      ],
+      "stats_are_verified": false,
+      "official_appearance_rights_confirmed": false,
+      "historical_legend_not_current_active": false,
+      "game_only_skill_vector": {
+        "preflop": 83,
+        "postflop": 82,
+        "icm": 75,
+        "heads_up": 66,
+        "exploit": 67,
+        "risk_control": 74,
+        "adaptation": 90,
+        "consistency": 70
+      },
+      "game_only_stats_notice": "0~100은 가상 게임 밸런스값이며 실제 평가/성적/능력이 아님."
     },
     {
       "id": "future_seo_harim",
@@ -1211,366 +3239,6 @@
         "risk_control": 62,
         "adaptation": 73,
         "consistency": 81
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_patrik_antonius",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Patrik Antonius",
-      "country": "핀란드",
-      "featured_region": "마카오·국제 하이 스테이크/캐시",
-      "verified_background_summary": "2005년 EPT 바덴 우승, 고액 캐시게임과 헤즈업 경기로 알려진 선수",
-      "game_archetype_hypothesis": {
-        "strength": "딥스택 멀티스트리트 팟 컨트롤",
-        "potential_counterplay": "얕은 스택 버블의 결정",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/patrik-antonius/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 85,
-        "postflop": 70,
-        "icm": 72,
-        "heads_up": 58,
-        "exploit": 50,
-        "risk_control": 85,
-        "adaptation": 87,
-        "consistency": 93
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_stephen_chidwick",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Stephen Chidwick",
-      "country": "영국",
-      "featured_region": "글로벌 하이롤러/WSOP",
-      "verified_background_summary": "WSOP 선수 프로필에 다수의 파이널 테이블과 브레이슬릿 기록이 있는 영국 선수",
-      "game_archetype_hypothesis": {
-        "strength": "하이롤러 MTT의 ICM 판단",
-        "potential_counterplay": "예측 가능한 작은 베팅 빈도",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.wsop.com/players/333717564/stephen-chidwick/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 43,
-        "postflop": 86,
-        "icm": 59,
-        "heads_up": 82,
-        "exploit": 62,
-        "risk_control": 67,
-        "adaptation": 65,
-        "consistency": 79
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_kristen_foxen",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Kristen Foxen",
-      "country": "미국",
-      "featured_region": "WSOP/국제 토너먼트",
-      "verified_background_summary": "WSOP 공식 프로필에 다수의 브레이슬릿과 파이널 테이블 경력이 있는 선수",
-      "game_archetype_hypothesis": {
-        "strength": "토너먼트 포지션 압박",
-        "potential_counterplay": "상대의 반복적 체크레이즈",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.wsop.com/players/651425636/kristen-foxen/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 75,
-        "postflop": 92,
-        "icm": 81,
-        "heads_up": 61,
-        "exploit": 94,
-        "risk_control": 69,
-        "adaptation": 67,
-        "consistency": 91
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_addamo",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Michael Addamo",
-      "country": "호주",
-      "featured_region": "하이롤러/WSOP/온라인",
-      "verified_background_summary": "WSOP 브레이슬릿 4회 및 하이롤러 이벤트 우승 경력으로 알려진 호주 선수",
-      "game_archetype_hypothesis": {
-        "strength": "넓은 베팅 사이징과 압박",
-        "potential_counterplay": "베팅 크기 과잉에 대한 적응",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/michael-addamo/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 72,
-        "postflop": 91,
-        "icm": 50,
-        "heads_up": 81,
-        "exploit": 82,
-        "risk_control": 61,
-        "adaptation": 87,
-        "consistency": 55
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_david_peters",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "David Peters",
-      "country": "미국",
-      "featured_region": "WSOP/하이롤러 MTT",
-      "verified_background_summary": "WSOP 브레이슬릿 경력과 고액 토너먼트 성적으로 알려진 미국 선수",
-      "game_archetype_hypothesis": {
-        "strength": "고위험 토너먼트의 위험 관리",
-        "potential_counterplay": "블라인드 압박에 대한 적응",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/david-peters/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 78,
-        "postflop": 77,
-        "icm": 72,
-        "heads_up": 72,
-        "exploit": 86,
-        "risk_control": 74,
-        "adaptation": 67,
-        "consistency": 90
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_isaac_haxton",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Isaac Haxton",
-      "country": "미국",
-      "featured_region": "글로벌 하이롤러/헤즈업",
-      "verified_background_summary": "슈퍼 하이롤러와 트리톤 시리즈 참가·우승 경력으로 알려진 미국 선수",
-      "game_archetype_hypothesis": {
-        "strength": "레인지 구성과 딥스택 익스플로잇",
-        "potential_counterplay": "상대의 극단적 느린 플레이",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/isaac-haxton/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 98,
-        "postflop": 68,
-        "icm": 83,
-        "heads_up": 80,
-        "exploit": 98,
-        "risk_control": 98,
-        "adaptation": 98,
-        "consistency": 90
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_maria_ho",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Maria Ho",
-      "country": "미국",
-      "featured_region": "WSOP/국제 MTT",
-      "verified_background_summary": "미국 프로 포커 선수이자 중계 해설가, WSOP 파이널 테이블 기록",
-      "game_archetype_hypothesis": {
-        "strength": "상대 유형 분류·탄탄한 밸류 라인",
-        "potential_counterplay": "짧은 스택의 리스크 확대",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/maria-ho/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 80,
-        "postflop": 98,
-        "icm": 98,
-        "heads_up": 76,
-        "exploit": 65,
-        "risk_control": 98,
-        "adaptation": 65,
-        "consistency": 96
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_moneymaker",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Chris Moneymaker",
-      "country": "미국",
-      "featured_region": "WSOP/메인 이벤트",
-      "verified_background_summary": "2003년 WSOP 메인 이벤트 우승과 포커 대중화에 큰 영향을 준 선수",
-      "game_archetype_hypothesis": {
-        "strength": "메인 이벤트 적응력과 미드스택 생존",
-        "potential_counterplay": "과도하게 타이트한 버블 행동",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/chris-moneymaker/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 65,
-        "postflop": 55,
-        "icm": 85,
-        "heads_up": 57,
-        "exploit": 59,
-        "risk_control": 70,
-        "adaptation": 94,
-        "consistency": 84
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_xuan_liu",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Xuan Liu",
-      "country": "캐나다",
-      "featured_region": "EPT/PCA/아시아 국제 대회",
-      "verified_background_summary": "PCA 2012년 4위와 EPT Sanremo 2011년 3위의 공개 경력",
-      "game_archetype_hypothesis": {
-        "strength": "글로벌 MTT 변동성 관리",
-        "potential_counterplay": "과감한 빅스택 체크레이즈",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/xuan-liu/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 86,
-        "postflop": 55,
-        "icm": 96,
-        "heads_up": 61,
-        "exploit": 67,
-        "risk_control": 83,
-        "adaptation": 72,
-        "consistency": 58
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_vanessa_selbst",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Vanessa Selbst",
-      "country": "미국",
-      "featured_region": "WSOP/레전드 챌린지",
-      "verified_background_summary": "3회 WSOP 브레이슬릿 보유, 2018년 프로 포커 은퇴 발표",
-      "game_archetype_hypothesis": {
-        "strength": "활발한 포스트플랍 공격 설계",
-        "potential_counterplay": "상대가 읽은 높은 배럴 빈도",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/vanessa-selbst/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 87,
-        "postflop": 76,
-        "icm": 67,
-        "heads_up": 53,
-        "exploit": 66,
-        "risk_control": 64,
-        "adaptation": 61,
-        "consistency": 77
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_erik_seidel",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Erik Seidel",
-      "country": "미국",
-      "featured_region": "WSOP/레전드 시리즈",
-      "verified_background_summary": "WSOP 브레이슬릿 10회와 1988년 WSOP 메인 이벤트 준우승 이력",
-      "game_archetype_hypothesis": {
-        "strength": "오랜 라이브 대회 경험 기반 인내",
-        "potential_counterplay": "빠른 터보 리스크 전환",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.wsop.com/players/782178483/erik-seidel/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 85,
-        "postflop": 88,
-        "icm": 82,
-        "heads_up": 93,
-        "exploit": 98,
-        "risk_control": 98,
-        "adaptation": 90,
-        "consistency": 98
-      },
-      "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
-    },
-    {
-      "id": "legend_jennifer_harman",
-      "type": "real_legacy",
-      "world_version": "2035_time_capsule_2026_prime",
-      "name": "Jennifer Harman",
-      "country": "미국",
-      "featured_region": "하이 스테이크 캐시/WSOP",
-      "verified_background_summary": "WSOP 브레이슬릿 2회, 2015년 포커 명예의 전당 입성",
-      "game_archetype_hypothesis": {
-        "strength": "멀티웨이 캐시게임 밸류 추출",
-        "potential_counterplay": "상대의 과감한 리버 오버벳",
-        "disclaimer": "전적으로 게임 개발용 전략적 해석. 실존 선수의 실제 베팅 빈도, 정확한 실력, 성격 및 약점을 확인한 자료가 아님."
-      },
-      "evidence_sources": [
-        "https://www.pokernews.com/poker-players/jennifer-harman/"
-      ],
-      "stats_are_verified": false,
-      "official_appearance_rights_confirmed": false,
-      "game_only_skill_vector": {
-        "preflop": 72,
-        "postflop": 76,
-        "icm": 98,
-        "heads_up": 84,
-        "exploit": 60,
-        "risk_control": 94,
-        "adaptation": 88,
-        "consistency": 79
       },
       "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
     },
@@ -2583,6 +4251,6 @@
       "game_only_stats_notice": "0~100 수치는 게임 밸런스용 가상 설계값이며 실존 인물의 실제 능력·평가·검증 통계가 아님."
     }
   ],
-  "version": "2.0",
-  "ranking_scope_notice": "90명은 주요 캐릭터 seed일 뿐 랭킹 상한이 아니다. 서버의 모든 사람 계정과 생성된 AI 풀을 동적 통합 선수 등록부에 추가한다. 등재 인원은 무제한으로 확장 가능한 조회·페이지네이션 구조를 갖춘다."
+  "version": "v3_72_real_66_fictional",
+  "ranking_scope_notice": "대표 AI 시드 138명은 상한이 아니다. 동적 AI와 모든 가입자는 별도 고유 ID의 참가자이고, 공식 랭킹(공유 AI canon/실제 사용자 포인트)과 각 사용자 개인 독립 경기 결과를 정합성 있게 분리."
 }

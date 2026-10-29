@@ -35,7 +35,7 @@ src/economy (지갑)  src/world (월드·상금·랭킹 규칙)  ← 서버와 �
 
 ## 데이터 모델 (서버, `server/schema.ts`)
 `accounts` · `sessions` · `login_attempts` · `wallets`/`wallet_txs`(PK `(account_id, tx_id)`)/`wallet_accounts` · `tournament_entries`(UNIQUE `instance_id`) · `tickets`(UNIQUE `source_entry`) · `ranked_submissions`(PK `(instance_id, participant_id, rules_version)`, UNIQUE `ranked_result_id`) · `points_ledger` · `global_roster`(`human:`/`ai:` 네임스페이스) · `friend_groups`/`friend_group_members` · `saves`/`save_chunks`(클라우드 이어하기, CAS) · `audit` · `meta`.
-AI 선수 등록부(1,605명)는 코드/스냅샷에서 결정론적으로 생성되며 서버 `global_roster`에는 **사람 계정만** 저장한다(합쳐서 조회).
+AI 선수 등록부(1,653명)는 코드/스냅샷에서 결정론적으로 생성되며 서버 `global_roster`에는 **사람 계정만** 저장한다(합쳐서 조회).
 
 ## 기술 결정 기록
 1. 서버 프레임워크 없음: 표준 `Request/Response` 핸들러 하나 → Workers/Node/테스트 모두 동일 코드.

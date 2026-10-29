@@ -123,7 +123,7 @@ export function RankingScreen() {
       {err && <div className="p-2 rounded bg-rose-900/60 text-sm" role="alert">{err}</div>}
       {data && (
         <>
-          <div className="text-[11px] text-slate-400" data-testid="rank-meta">등록 선수 {fmt(data.registered)}명 (실제 사용자 {fmt(data.humans)} · AI {fmt(data.ais)}) · 점수 적립 {fmt(data.rankedCount)}명 · 월드 {data.worldDay}일차 · 규칙 {data.rules} · 90명은 대표 선수일 뿐 상한이 아닙니다</div>
+          <div className="text-[11px] text-slate-400" data-testid="rank-meta">등록 선수 {fmt(data.registered)}명 (실제 사용자 {fmt(data.humans)} · AI {fmt(data.ais)}) · 점수 적립 {fmt(data.rankedCount)}명 · 월드 {data.worldDay}일차 · 규칙 {data.rules} · 138명은 대표 선수일 뿐 상한이 아닙니다</div>
           <ol className="space-y-1" data-testid="rank-list">{data.rows.map((r) => { const el = <Row key={r.key} r={r} me={r.key === myKey} prevRank={prev} />; prev = r.rank; return el; })}</ol>
           {!data.rows.length && <div className="text-sm text-slate-400">조건에 맞는 선수가 없습니다.</div>}
           <div className="flex items-center justify-between">

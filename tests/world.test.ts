@@ -17,15 +17,24 @@ import { createRng } from '../src/engine/rng';
 const SNAP = snapJson as unknown as WorldSnapshot;
 
 describe('선수 시드 v2', () => {
-  it('실존 레전드 24 + 가상 66 = 대표 90명, 중복 id 없음, 통계 미검증·권리 미확인 표기', () => {
-    expect(LEGENDS.length).toBe(24); expect(FUTURE.length).toBe(66);
+  it('실존 레전드 72 + 가상 66 = 대표 138명, 중복 id 없음, 통계 미검증·권리 미확인 표기', () => {
+    expect(LEGENDS.length).toBe(72); expect(FUTURE.length).toBe(66);
     expect(new Set(NAMED.map((p) => p.id)).size).toBe(NAMED.length);
     for (const p of [...LEGENDS, ...FUTURE]) { expect(p.statsVerified).toBe(false); expect(p.rightsConfirmed).toBe(false); }
     for (const p of LEGENDS) expect(p.evidenceSources.length).toBeGreaterThan(0);
     expect(FUTURE.every((p) => p.derivedOrFictional === 'fictional')).toBe(true);
     const nats = new Set(FUTURE.map((p) => p.nationality)); expect(nats.size).toBeGreaterThan(15);
   });
-  it('AI 등록부는 1,000명 이상 (90명은 상한이 아니다)', () => { expect(ALL_RANKED.length).toBeGreaterThanOrEqual(1500); expect(aiEntities().size).toBe(ALL_RANKED.length); });
+  it('시드 v3: 코몽·캘빈 리 포함, v2의 90명 id 보존, 작고 인물은 historical 표기, 별칭 보유', () => {
+    const names = LEGENDS.map((p) => p.name);
+    expect(names.some((n) => n.includes('현성주'))).toBe(true); expect(names.some((n) => n.includes('캘빈 리'))).toBe(true);
+    expect(LEGENDS.find((p) => p.name.includes('현성주'))!.aliases).toContain('코몽');
+    for (const id of ['legend_elky', 'legend_durrrr', 'legend_erik_seidel']) expect(NAMED.some((p) => p.id === id)).toBe(true);
+    expect(LEGENDS.filter((p) => p.historical).map((p) => p.name).sort()).toEqual(['Doyle Brunson', 'Mike Sexton']);
+    expect(LEGENDS.filter((p) => p.nationality === "대한민국").length).toBeGreaterThanOrEqual(15);
+    expect(new Set(LEGENDS.map((p) => p.name)).size).toBe(72);
+  });
+  it('AI 등록부는 1,000명 이상 (138명은 상한이 아니다)', () => { expect(ALL_RANKED.length).toBeGreaterThanOrEqual(1500); expect(aiEntities().size).toBe(ALL_RANKED.length); });
 });
 
 describe('공식 AI 세계 스냅샷', () => {

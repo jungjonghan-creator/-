@@ -1,15 +1,15 @@
 # 선수 근거 문서 (PLAYERS_EVIDENCE)
 
-> POKER ARENA 5.0 — World Poker Universe 2035 | 90 featured AI players (2026-10-29)
-> 실존 선수 24명의 일부 공개 이력은 evidence_sources로 참고. 게임 아키타입과 0~100 실력 수치는 전적으로 시뮬레이션용 설정이며 검증 통계 아님. 선수의 공식 제휴·참여를 암시하지 않는다. 외부 공개 전 권리 검토.
-> 2035년 창작 선수 66명은 허구. 동명이인과 무관하며 국가·도시·전적·성향·수치는 모두 창작 설정.
+> POKER ARENA 5.0 — 2035 world roster (72 verified named real people / 66 fictional AI / unlimited generated NPC+users) (2026-10-29)
+> 실존 인물 72명: 공개 근거는 개인별 evidence_sources 참조. 공개 경력 외 외모/성격/전략/실력 수치/2035 성적은 공식 자료로 간주하지 말 것. 사적 지인 공유 외 공개/상용 사용 전 권리 검토.
+> 가상 신예 66명은 모두 허구. 2035 타임캡슐은 과거 기록을 유지하는 판타지 설정이며 은퇴/작고 인물은 현역 실존 인물로 표시하지 않는다.
 
-- 이 문서의 표는 `scripts/genDocs.ts`가 `POKER_ARENA_5_2035_Player_Seed_v2_90.json`에서 생성한다. 선수 조사는 GPT 데이터팩으로 종료했고 재조사하지 않았다.
+- 이 문서의 표는 `scripts/genDocs.ts`가 `POKER_ARENA_5_2035_Player_Seed_v3_138.json`에서 생성한다. 선수 조사는 GPT 데이터팩으로 종료했고 재조사하지 않았다.
 - `evidence_level`: confirmed_result(공개 대회 결과) / public_interview / reported_style / design_hypothesis(창작).
 - **0~100 실력 수치(preflop/postflop/ICM/HU/exploit/risk/adaptation/consistency)는 게임 밸런스용 시뮬레이션 파라미터**이며 실존 인물의 실제 능력·평가·검증 통계가 아니다. `stats_are_verified=false`, `official_appearance_rights_confirmed=false`.
 - 실존 선수는 **2026 전성기 타임캡슐** 버전으로 출전하는 허구 설정이며 선수 본인의 허락·후원·참여를 의미하지 않는다. 사진·로고·영상·기사 원문을 사용하지 않고 이니셜만 표시한다. ID가 분리되어 있어 권리 문제 시 가명 데이터팩으로 교체할 수 있다.
 
-## 실존 레전드 AI (24명)
+## 실존 레전드 AI (72명)
 | ID | 이름 | 국적 | 근거 수준 | AI 프로필 | 강점(가설) | 공개 근거 URL |
 | --- | --- | --- | --- | --- | --- | --- |
 | `legend_elky` | Bertrand "ElkY" Grospellier | 프랑스 | reported_style | AdaptivePro | 토너먼트 적응·복수 포맷 경험 | https://www.pokernews.com/poker-players/bertrand-grospellier/<br>https://www.worldpokertour.com/player/elky-grospellier/ |
@@ -36,6 +36,54 @@
 | `legend_vanessa_selbst` | Vanessa Selbst | 미국 | reported_style | LAG | 활발한 포스트플랍 공격 설계 | https://www.pokernews.com/poker-players/vanessa-selbst/ |
 | `legend_erik_seidel` | Erik Seidel | 미국 | reported_style | TAG | 오랜 라이브 대회 경험 기반 인내 | https://www.wsop.com/players/782178483/erik-seidel/ |
 | `legend_jennifer_harman` | Jennifer Harman | 미국 | reported_style | Trapper | 멀티웨이 캐시게임 밸류 추출 | https://www.pokernews.com/poker-players/jennifer-harman/ |
+| `legend_sung_joo_hyun` | Sung Joo Hyun (현성주) | 대한민국 | reported_style | Nit | 버블 압박과 밸류 중심 변주 | https://www.kaypoker.com/off-the-felt-%ED%95%9C%EA%B5%AD-%ED%83%91-%ED%81%B4%EB%9E%98%EC%8A%A4-%EC%BD%94%EB%AA%BD-%ED%98%84%EC%84%B1%EC%A3%BC/ |
+| `legend_calvin_lee` | Calvin Lee (캘빈 리) | 대한민국 | reported_style | Balanced | 큰 팟과 멀티 스트리트 사이징 실험 | https://www.wsop.com/news/calvin-lee-makes-huge-comeback-in-3k-nlhe-wins-marathon-match/ |
+| `legend_kevin_song` | Kevin Song | 대한민국 | reported_style | Balanced | 상대에 따른 레인지 변화 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_chang_hwan_lee` | Chang Hwan Lee (이창환) | 대한민국 | reported_style | TAG | 상대의 과도한 블러프 포착 | https://pokerdb.thehendonmob.com/player.php?a=r&n=1378535 |
+| `legend_edward_pak` | Edward Pak | 대한민국 | reported_style | TAG | 공격 빈도와 포지션별 균형 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_steve_yea` | Steve Yea | 대한민국 | reported_style | TAG | 프리플랍 적극성의 조절 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_ryan_yu` | Ryan Yu | 대한민국 | reported_style | Nit | 푸시/폴드와 버블 대응 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_daewoong_song` | Daewoong Song | 대한민국 | reported_style | Balanced | 다양한 베팅 사이즈와 라인 구성 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_sj_kim` | SJ Kim | 대한민국 | reported_style | Nit | 버블 압박과 밸류 중심 변주 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_yohwan_lim` | Yohwan Lim (임요환) | 대한민국 | reported_style | Balanced | 큰 팟과 멀티 스트리트 사이징 실험 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_hyunsup_kim` | Hyunsup Kim | 대한민국 | reported_style | Rock | 상대에 따른 레인지 변화 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_nam_kim` | Nam Kim | 대한민국 | reported_style | TAG | 상대의 과도한 블러프 포착 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_moonho_seo` | Moonho Seo | 대한민국 | reported_style | TAG | 공격 빈도와 포지션별 균형 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_sang_gu_kim` | Sang Gu Kim | 대한민국 | reported_style | TAG | 프리플랍 적극성의 조절 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_jinhoon_lee` | Jinhoon Lee | 대한민국 | reported_style | Nit | 푸시/폴드와 버블 대응 | https://pokerdb.thehendonmob.com/ranking/238/ |
+| `legend_doyle_brunson` | Doyle Brunson | 미국 | reported_style | TAG | 다양한 베팅 사이즈와 라인 구성 | https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/ |
+| `legend_johnny_chan` | Johnny Chan | 미국 | reported_style | Nit | 버블 압박과 밸류 중심 변주 | https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/ |
+| `legend_scotty_nguyen` | Scotty Nguyen | 미국 | reported_style | Balanced | 큰 팟과 멀티 스트리트 사이징 실험 | https://www.pokernews.com/poker-players/scotty-nguyen/ |
+| `legend_antonio_esfandiari` | Antonio Esfandiari | 미국 | reported_style | Balanced | 상대에 따른 레인지 변화 | https://www.wsop.com/news/meet-the-2012-wsop-october-nine/ |
+| `legend_fedor_holz` | Fedor Holz | 독일 | reported_style | TAG | 상대의 과도한 블러프 포착 | https://www.pokernews.com/poker-players/fedor-holz/ |
+| `legend_justin_bonomo` | Justin Bonomo | 미국 | reported_style | TAG | 공격 빈도와 포지션별 균형 | https://www.pokernews.com/poker-players/ |
+| `legend_bryn_kenney` | Bryn Kenney | 미국 | reported_style | TAG | 프리플랍 적극성의 조절 | https://www.pokernews.com/poker-players/ |
+| `legend_nick_petrangelo` | Nick Petrangelo | 미국 | reported_style | Nit | 푸시/폴드와 버블 대응 | https://www.pokernews.com/poker-players/nick-petrangelo/ |
+| `legend_alex_foxen` | Alex Foxen | 미국 | reported_style | Balanced | 다양한 베팅 사이즈와 라인 구성 | https://www.pokernews.com/poker-players/ |
+| `legend_artur_martirosian` | Artur Martirosian | 러시아 | reported_style | Nit | 버블 압박과 밸류 중심 변주 | https://www.pokernews.com/poker-players/ |
+| `legend_mikita_badziakouski` | Mikita Badziakouski | 벨라루스 | reported_style | Rock | 큰 팟과 멀티 스트리트 사이징 실험 | https://www.pokernews.com/poker-players/ |
+| `legend_viktor_blom` | Viktor Blom | 스웨덴 | reported_style | Balanced | 상대에 따른 레인지 변화 | https://www.pokernews.com/poker-players/ |
+| `legend_phil_galfond` | Phil Galfond | 미국 | reported_style | TAG | 상대의 과도한 블러프 포착 | https://www.pokernews.com/galfond-challenge |
+| `legend_doug_polk` | Doug Polk | 미국 | reported_style | TAG | 공격 빈도와 포지션별 균형 | https://www.pokernews.com/news/2021/02/doug-polk-finishes-up-against-daniel-negreanu-38619.htm |
+| `legend_shaun_deeb` | Shaun Deeb | 미국 | reported_style | Balanced | 프리플랍 적극성의 조절 | https://www.pokernews.com/news/2026/06/world-series-of-poker-high-roller-stud-event-history-51456.htm |
+| `legend_brian_rast` | Brian Rast | 미국 | reported_style | Nit | 푸시/폴드와 버블 대응 | https://www.pokernews.com/news/2015/06/stats-and-facts-50k-21997.htm |
+| `legend_benny_glaser` | Benny Glaser | 영국 | reported_style | Balanced | 다양한 베팅 사이즈와 라인 구성 | https://www.pokernews.com/news/2026/05/best-wsop-mixed-game-players-myplayers-feed-51271.htm |
+| `legend_scott_seiver` | Scott Seiver | 미국 | reported_style | Nit | 버블 압박과 밸류 중심 변주 | https://www.pokernews.com/poker-players/scott-seiver/ |
+| `legend_liv_boeree` | Liv Boeree | 영국 | reported_style | Rock | 큰 팟과 멀티 스트리트 사이징 실험 | https://www.pokernews.com/poker-players/ |
+| `legend_dan_smith` | Dan Smith | 미국 | reported_style | Balanced | 상대에 따른 레인지 변화 | https://www.pokernews.com/poker-players/ |
+| `legend_nick_schulman` | Nick Schulman | 미국 | reported_style | TAG | 상대의 과도한 블러프 포착 | https://www.pokernews.com/news/2025/07/world-champion-mizrachi-inducted-into-poker-hall-of-fame-49218.htm |
+| `legend_michael_mizrachi` | Michael Mizrachi | 미국 | reported_style | TAG | 공격 빈도와 포지션별 균형 | https://www.pokernews.com/news/2025/07/world-champion-mizrachi-inducted-into-poker-hall-of-fame-49218.htm |
+| `legend_carlos_mortensen` | Carlos Mortensen | 스페인 | reported_style | TAG | 프리플랍 적극성의 조절 | https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/ |
+| `legend_gus_hansen` | Gus Hansen | 덴마크 | reported_style | Nit | 푸시/폴드와 버블 대응 | https://cms.worldpokertour.com/player/gus-hansen/ |
+| `legend_punnat_punsri` | Punnat Punsri | 태국 | reported_style | TAG | 다양한 베팅 사이즈와 라인 구성 | https://www.pokernews.com/poker-players/ |
+| `legend_ren_lin` | Ren Lin | 중국 | reported_style | Nit | 버블 압박과 밸류 중심 변주 | https://www.pokernews.com/poker-players/ |
+| `legend_daniel_dvoress` | Daniel Dvoress | 캐나다 | reported_style | Balanced | 큰 팟과 멀티 스트리트 사이징 실험 | https://www.pokernews.com/poker-players/ |
+| `legend_jesse_lonis` | Jesse Lonis | 미국 | reported_style | TAG | 상대에 따른 레인지 변화 | https://www.pokernews.com/poker-players/ |
+| `legend_joe_hachem` | Joe Hachem | 호주 | reported_style | TAG | 상대의 과도한 블러프 포착 | https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/ |
+| `legend_john_juanda` | John Juanda | 인도네시아 | reported_style | Balanced | 공격 빈도와 포지션별 균형 | https://www.wsop.com/news/poker-hall-of-fame-announces-class-of-2019/ |
+| `legend_jonathan_duhamel` | Jonathan Duhamel | 캐나다 | reported_style | TAG | 프리플랍 적극성의 조절 | https://www.wsop.com/news/greg-merson-wins-2012-world-poker-championship/ |
+| `legend_mike_sexton` | Mike Sexton | 미국 | reported_style | Nit | 푸시/폴드와 버블 대응 | https://www.wsop.com/news/poker-hall-of-fame-announces-class-of-2019/ |
+| `legend_vanessa_rousso` | Vanessa Rousso | 미국 | reported_style | Balanced | 다양한 베팅 사이즈와 라인 구성 | https://www.pokernews.com/poker-players/ |
 
 ## 2035 가상 신예 (66명, 전부 창작)
 | ID | 이름 | 국적 | 거점 | 주 무대 | 강점 | 약점/대응 |
@@ -124,4 +172,4 @@
 - `r-dr` 닥터 한 — 포지션과 레인지로 수술하듯 이긴다.
 - `r-ian` 이안 — 균형 잡힌 숙련 레귤러.
 
-대표 선수 90명은 **상한이 아니다.** 월드에는 이 외에 결정론적으로 생성된 레귤러 1,500명이 더 등록되어 있고(등록부 합계 1,605명) 서버는 실제 가입자를 같은 등록부에 무제한으로 추가한다.
+대표 선수 138명은 **상한이 아니다.** 월드에는 이 외에 결정론적으로 생성된 레귤러 1,500명이 더 등록되어 있고(등록부 합계 1,653명) 서버는 실제 가입자를 같은 등록부에 무제한으로 추가한다.

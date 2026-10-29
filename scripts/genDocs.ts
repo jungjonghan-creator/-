@@ -11,7 +11,7 @@ let pe = `# 선수 근거 문서 (PLAYERS_EVIDENCE)
 > ${SEED_META.realNotice}
 > ${SEED_META.fictionalNotice}
 
-- 이 문서의 표는 \`scripts/genDocs.ts\`가 \`POKER_ARENA_5_2035_Player_Seed_v2_90.json\`에서 생성한다. 선수 조사는 GPT 데이터팩으로 종료했고 재조사하지 않았다.
+- 이 문서의 표는 \`scripts/genDocs.ts\`가 \`POKER_ARENA_5_2035_Player_Seed_v3_138.json\`에서 생성한다. 선수 조사는 GPT 데이터팩으로 종료했고 재조사하지 않았다.
 - \`evidence_level\`: confirmed_result(공개 대회 결과) / public_interview / reported_style / design_hypothesis(창작).
 - **0~100 실력 수치(preflop/postflop/ICM/HU/exploit/risk/adaptation/consistency)는 게임 밸런스용 시뮬레이션 파라미터**이며 실존 인물의 실제 능력·평가·검증 통계가 아니다. \`stats_are_verified=false\`, \`official_appearance_rights_confirmed=false\`.
 - 실존 선수는 **2026 전성기 타임캡슐** 버전으로 출전하는 허구 설정이며 선수 본인의 허락·후원·참여를 의미하지 않는다. 사진·로고·영상·기사 원문을 사용하지 않고 이니셜만 표시한다. ID가 분리되어 있어 권리 문제 시 가명 데이터팩으로 교체할 수 있다.
@@ -29,7 +29,7 @@ ${FUTURE.map((p) => row(`\`${p.id}\``, p.name, p.nationality, p.homeCity, p.arch
 ## 고정 로스터 (기존 POKER ARENA, ${ROSTER_PLAYERS.length}명)
 ${ROSTER_PLAYERS.map((p) => `- \`${p.id}\` ${p.name} — ${p.archetype}`).join('\n')}
 
-대표 선수 ${LEGENDS.length + FUTURE.length}명은 **상한이 아니다.** 월드에는 이 외에 결정론적으로 생성된 레귤러 1,500명이 더 등록되어 있고(등록부 합계 1,605명) 서버는 실제 가입자를 같은 등록부에 무제한으로 추가한다.
+대표 선수 ${LEGENDS.length + FUTURE.length}명은 **상한이 아니다.** 월드에는 이 외에 결정론적으로 생성된 레귤러 1,500명이 더 등록되어 있고(등록부 합계 1,653명) 서버는 실제 가입자를 같은 등록부에 무제한으로 추가한다.
 `;
 writeFileSync('docs/PLAYERS_EVIDENCE.md', pe);
 

@@ -32,7 +32,7 @@ function Detail({ p, snap }: { p: WorldPlayer; snap: WorldSnapshot | null }) {
     <div className="space-y-2 text-xs" data-testid={`dex-detail-${p.id}`}>
       <div className="text-slate-300">{p.background}</div>
       <div>강점: <b>{p.strength}</b> · 약점/대응: <b>{p.counterplay || '—'}</b></div>
-      <div className="text-amber-200/90">{p.kind === 'real_legacy' ? '플레이 성향: 공개 기록 기반의 게임적 해석입니다. 실제 선수의 검증된 빈도·성격·실력이 아니며, 선수 본인의 허락·후원·참여를 의미하지 않습니다.' : p.kind === 'fictional_2035' ? '2035 가상 인물입니다. 이름·전적·성향은 모두 창작이며 동명이인과 무관합니다.' : '기존 POKER ARENA의 고정 상대입니다.'}</div>
+      <div className="text-amber-200/90">{p.kind === 'real_legacy' ? `${p.historical ? '2035 타임캡슐의 명예 초청·시뮬레이션 레전드입니다(현역 실존 인물로 표시하지 않음). ' : ''}${p.aliases.length ? `별칭: ${p.aliases.join(', ')}. ` : ''}플레이 성향: 공개 기록 기반의 게임적 해석입니다. 실제 선수의 검증된 빈도·성격·실력이 아니며, 선수 본인의 허락·후원·참여를 의미하지 않습니다.` : p.kind === 'fictional_2035' ? '2035 가상 인물입니다. 이름·전적·성향은 모두 창작이며 동명이인과 무관합니다.' : '기존 POKER ARENA의 고정 상대입니다.'}</div>
       <div>
         <div className="text-slate-400 mb-1">실력 분해 변수 — <b>게임 시뮬레이션 파라미터(0~100)</b>이며 공식 통계가 아닙니다</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">{BARS.map(([k, l]) => <div key={k} className="flex items-center gap-2"><span className="w-20 text-slate-400">{l}</span><div className="flex-1 h-2 bg-slate-800 rounded"><div className="h-2 rounded bg-sky-500" style={{ width: `${p.skill[k]}%` }} /></div><span className="w-7 text-right font-mono">{p.skill[k]}</span></div>)}</div>
@@ -53,7 +53,7 @@ export function DexScreen() {
   const [sel, setSel] = useState<string | null>(null);
   const [snap, setSnap] = useState<WorldSnapshot | null>(null);
   useEffect(() => { void loadSnapshot().then(setSnap); }, []);
-  const list = NAMED.filter((p) => (tab === 'all' || p.kind === tab) && (!region || p.region === region) && (!q || `${p.name} ${p.nationality} ${p.homeCity}`.toLowerCase().includes(q.toLowerCase())));
+  const list = NAMED.filter((p) => (tab === 'all' || p.kind === tab) && (!region || p.region === region) && (!q || `${p.name} ${p.aliases.join(' ')} ${p.nationality} ${p.homeCity}`.toLowerCase().includes(q.toLowerCase())));
   const counts = { real: NAMED.filter((p) => p.kind === 'real_legacy').length, fut: NAMED.filter((p) => p.kind === 'fictional_2035').length };
   return (
     <div className="max-w-2xl mx-auto p-3 space-y-3 overflow-y-auto h-full safe-pad" data-testid="dex">
