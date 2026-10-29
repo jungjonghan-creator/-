@@ -4,7 +4,7 @@ import { useGame } from '../store/useGame';
 const fmt = (n: number) => Math.round(n).toLocaleString();
 const KIND: Record<TxKind, string> = {
   initial: '초기 지급', 'cash-buyin': '캐시 바이인', 'cash-topup': '캐시 추가 바이인', 'cash-cashout': '캐시 정산', 'tourney-entry': '토너먼트 참가비', 'tourney-fee': '토너먼트 수수료',
-  'tourney-reentry': '토너먼트 재진입', 'tourney-prize': '토너먼트 상금', 'freeroll-prize': '프리롤 상금', adjust: '조정/환불',
+  'tourney-reentry': '토너먼트 재진입', 'tourney-prize': '토너먼트 상금', 'freeroll-prize': '프리롤 상금', adjust: '조정/환불', 'daily-grant': '정기 무료 크레딧',
 };
 
 export function WalletScreen() {

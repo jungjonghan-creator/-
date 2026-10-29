@@ -133,7 +133,7 @@ export const useGame = create<Store>((set, get) => {
       set({ busy: false, skip: false });
       const s = get().session;
       if (s && handOver(s)) direct();
-      if (s && handOver(s) && sessionOver(s)) get().finalizeTourney();
+      if (s && handOver(s) && (sessionOver(s) || tournamentResult(s))) get().finalizeTourney();
       if (s && handOver(s) && get().settings.sound) {
         const hero = s.game.players.findIndex((p) => p.isHuman);
         (s.game.result?.net[hero] ?? 0) > 0 ? sfx.win() : sfx.lose();
@@ -179,6 +179,12 @@ export const useGame = create<Store>((set, get) => {
         // 저장된 세션과 연결되지 않은 열린 계정은 몰수 처리
         const rec = r.status === 'corrupt' ? wallet : reconcile(wallet, saved);
         wallet = rec;
+        // 종료 직전 앱이 꺼져 정산되지 못한 대회(탈락/우승 확정 + 계정 열림)는 여기서 한 번 정산한다
+        if (saved?.sid && tournamentResult(saved) && wallet.accounts[saved.sid]?.status === 'open') {
+          set({ wallet, session: saved });
+          get().finalizeTourney();
+          wallet = get().wallet; saved = get().session; set({ session: null });
+        }
         // 이미 끝난 경기가 남아 있으면 정리(상금은 이미 정산됨)
         if (saved && sessionOver(saved) && (!saved.sid || wallet.accounts[saved.sid]?.status !== 'open')) {
           const ar2 = { ...get().archive }; if (saved.records.length) { const g = groupOf(saved); ar2[g] = [...ar2[g], ...saved.records]; }
@@ -272,7 +278,7 @@ export const useGame = create<Store>((set, get) => {
     simToEnd() {
       const s = get().session; if (!s?.mtt || s.mtt.finished) return;
       set({ busy: true });
-      void mttSimToEndAsync(s, randomSeed()).then((n) => { commit(n); set({ busy: false }); }).catch((e) => set({ notice: (e as Error).message, busy: false }));
+      void mttSimToEndAsync(s, randomSeed()).then((n) => { commit(n); set({ busy: false }); get().finalizeTourney(); }).catch((e) => set({ notice: (e as Error).message, busy: false }));
     },
     declineReentry() {
       const s = get().session; if (!s?.mtt) return;
@@ -281,8 +287,8 @@ export const useGame = create<Store>((set, get) => {
     },
     finalizeTourney() {
       const s = get().session;
-      if (!s || !sessionOver(s)) return;
-      const r = tournamentResult(s);
+      if (!s) return;
+      const r = tournamentResult(s); // 탈락(ITM 포함)·우승 확정 즉시 — 대회 종료를 기다리지 않는다
       if (!r) return;
       // 상금 정산 (같은 대회는 한 번만 — 통장이 멱등성을 보장)
       const wallet = settleTournament(get().wallet, s);

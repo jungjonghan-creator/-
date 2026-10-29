@@ -7,7 +7,7 @@ export const INITIAL_BALANCE = 30000;
 
 export type TxKind =
   | 'initial' | 'cash-buyin' | 'cash-topup' | 'cash-cashout'
-  | 'tourney-entry' | 'tourney-fee' | 'tourney-reentry' | 'tourney-prize' | 'freeroll-prize' | 'adjust';
+  | 'tourney-entry' | 'tourney-fee' | 'tourney-reentry' | 'tourney-prize' | 'freeroll-prize' | 'adjust' | 'daily-grant';
 
 export interface Tx { id: string; ts: number; kind: TxKind; amount: number; ref: string; note: string; balanceAfter: number }
 
@@ -89,8 +89,9 @@ export function closeCash(w: Wallet, sid: string, chips: number, now = Date.now(
 
 // ───────── 토너먼트 ─────────
 export interface TourneyCost { id: string; name: string; buyIn: number; fee: number }
-export function enterTournament(w: Wallet, sid: string, t: TourneyCost, kind: 'tournament' | 'freeroll' = 'tournament', now = Date.now()): Wallet {
+export function enterTournament(w: Wallet, sid: string, t: TourneyCost, kind: 'tournament' | 'freeroll' = 'tournament', now = Date.now(), ticket = false): Wallet {
   if (w.accounts[sid]) return w; // 중복 등록 방지
+  if (ticket) return withAccount(w, { id: sid, kind, label: `${t.name} (티켓 입장)`, tierId: t.id, spent: 0, returned: 0, entries: 1, status: 'open', openedAt: now });
   const cost = t.buyIn + t.fee;
   if (w.balance < cost) throw new InsufficientFunds(`참가비가 부족합니다 (필요 ${cost.toLocaleString()}, 보유 ${w.balance.toLocaleString()})`);
   let n = w;
@@ -151,7 +152,8 @@ export function summarize(w: Wallet): WalletSummary {
   const cashNet = cash.reduce((t, a) => t + a.returned - a.spent, 0);
   const cost = tour.reduce((t, a) => t + a.spent, 0);
   const prizes = tour.reduce((t, a) => t + a.returned, 0);
-  const total = w.balance + atTable(w) - w.initial;
+  const grants = w.txs.filter((t) => t.kind === 'daily-grant').reduce((a, t) => a + t.amount, 0);
+  const total = w.balance + atTable(w) - w.initial - grants; // 무료 지급분은 손익에서 제외
   return {
     balance: w.balance, atTable: atTable(w), peak: w.peak, cashNet, cashSessions: cash.length,
     tourneyEntries: tour.reduce((t, a) => t + a.entries, 0), tourneyCost: cost, tourneyPrizes: prizes, tourneyNet: prizes - cost, roi: cost ? (prizes - cost) / cost : null,
@@ -195,4 +197,18 @@ export function refundOpen(w: Wallet, sid: string, now = Date.now()): Wallet {
   let n = w;
   if (refund > 0 && a.kind !== 'practice') n = post(n, { id: `refund:${sid}`, ts: now, kind: 'adjust', amount: refund, ref: sid, note: `${a.label} 저장 데이터 손상으로 환불` });
   return withAccount(n, { ...a, returned: a.returned + (a.kind !== 'practice' ? refund : 0), status: 'closed', closedAt: now });
+}
+
+// ───────── 정기 무료 크레딧 ─────────
+/** 하루 한 번(KST 달력일), 보유 자산(통장+테이블)이 상한 미만일 때만, 상한까지 채워 최대 DAILY_GRANT. 무료 발행분이며 상금 풀 원천이 아니다. */
+export const DAILY_GRANT = 3000;
+export const GRANT_CAP = 30000;
+export const kstDate = (ms: number) => new Date(ms + 9 * 3600_000).toISOString().slice(0, 10);
+export function dailyGrant(w: Wallet, now = Date.now()): { wallet: Wallet; granted: number; reason?: string } {
+  const key = `daily:${kstDate(now)}`;
+  if (has(w, key)) return { wallet: w, granted: 0, reason: '오늘은 이미 받았습니다' };
+  const holdings = w.balance + atTable(w);
+  const amount = Math.min(DAILY_GRANT, GRANT_CAP - holdings);
+  if (amount <= 0) return { wallet: w, granted: 0, reason: `보유 자산이 ${GRANT_CAP.toLocaleString()} 이상이면 지급되지 않습니다` };
+  return { wallet: post(w, { id: key, ts: now, kind: 'daily-grant', amount, ref: '', note: `정기 무료 크레딧 ${kstDate(now)}` }), granted: amount };
 }

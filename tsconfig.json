@@ -5,5 +5,5 @@
     "noUncheckedIndexedAccess": false, "skipLibCheck": true, "noEmit": true,
     "isolatedModules": true, "types": ["vite/client","node"]
   },
-  "include": ["src","tests","scripts"]
+  "include": ["src","tests","scripts","server"]
 }

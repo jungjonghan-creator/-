@@ -95,8 +95,10 @@ export function tournamentResult(session: Session): { place: number; prize: numb
     const place = m.places['hero'] ?? (m.winner === 'hero' ? 1 : m.totalEntries);
     return { place, prize: m.payouts[place - 1] ?? 0, field: m.totalEntries };
   }
-  if (!hero || !session.game.gameOver) return null;
+  if (!hero) return null;
   const alive = !hero.busted && hero.stack > 0;
+  // 탈락 순위는 탈락 순간에 확정된다 (대회 전체가 끝나길 기다리지 않는다 → ITM 탈락 즉시 상금)
+  if (!(session.game.gameOver || (hero.busted && hero.finishPlace !== undefined))) return null;
   const place = alive ? 1 : hero.finishPlace ?? session.game.players.length;
   const payouts = session.prize?.payouts ?? [];
   return { place, prize: payouts[place - 1] ?? 0, field: session.game.players.length };
