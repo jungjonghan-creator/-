@@ -140,6 +140,91 @@ describe('[서버] 지갑/정산', () => {
   });
 });
 
+describe('[서버] 정산 회귀 (명세 3.4)', () => {
+  it('2인·6인·9인 SNG 우승 직후 상금이 한 번만, 재진입/새로고침/재시도에도 불변', async () => {
+    const c = await signup('sng3');
+    const cases: [string, number, number, number][] = [['hu', 2, 1, 500], ['sng6', 6, 1, 1950], ['sng9b', 9, 1, 5400]]; // [def, 인원, 순위, 상금]
+    let bal = 30000;
+    for (const [def, n, place, prize] of cases) {
+      const s = sid(); const cost = def === 'hu' ? 275 : def === 'sng6' ? 550 : 1100;
+      await c.post('/api/entry', { sid: s, source: 'catalog', defId: def }); bal -= cost;
+      for (let i = 0; i < 4; i++) expect((await c.post('/api/entry/settle', { sid: s, place, totalEntries: n, hands: 30 })).body.result.prize).toBe(prize);
+      bal += prize;
+      expect((await c.get('/api/state')).body.wallet.balance).toBe(bal);
+    }
+    expect(verifyWallet((await c.get('/api/state')).body.wallet)).toEqual([]);
+  });
+  it('1,000명 MTT: 입상 마지막 순위는 즉시 상금, 버블 직전(입상 밖)은 0, 파이널 테이블 상금 점프', async () => {
+    const c = await signup('big1');
+    const s1 = sid(), s2 = sid();
+    await c.post('/api/entry', { sid: s1, source: 'world', defId: 'seoul-main' });
+    const ps = (await import('../src/world/prizes')).prizeStructure(((await import('../src/world/calendar')).templateById('seoul-main')), 1000);
+    const itm = await c.post('/api/entry/settle', { sid: s1, place: ps.paid, totalEntries: 1000, hands: 80 });
+    expect(itm.body.result.prize).toBe(ps.payouts[ps.paid - 1]); expect(itm.body.result.prize).toBeGreaterThan(0);
+    await c.post('/api/entry', { sid: s2, source: 'world', defId: 'seoul-main' });
+    expect((await c.post('/api/entry/settle', { sid: s2, place: ps.paid + 1, totalEntries: 1000, hands: 80 })).body.result.prize).toBe(0);
+    expect(ps.payouts[8] - ps.payouts[9]).toBeGreaterThanOrEqual(0); // 비증가
+    expect(ps.payouts[0]).toBeGreaterThan(ps.payouts[9] * 2);        // FT 구간 상금 점프
+  });
+  it('재진입은 참가비를 한 번만 더 차감하고 한도를 넘으면 거부, 상금표는 엔트리 수로 재계산', async () => {
+    const c = await signup('re1'); const s = sid();
+    await c.post('/api/entry', { sid: s, source: 'world', defId: 'seoul-main' });     // 1,100
+    const r1 = await c.post('/api/entry/reenter', { sid: s }); expect(r1.status).toBe(200);
+    expect((await c.get('/api/state')).body.wallet.balance).toBe(30000 - 2200);
+    expect((await c.post('/api/entry/reenter', { sid: s })).status).toBe(409);          // max 1
+    const st = await c.post('/api/entry/settle', { sid: s, place: 10, totalEntries: 500, hands: 90 });
+    expect(st.body.result.prize).toBeGreaterThan(0);
+    expect(verifyWallet(st.body.wallet)).toEqual([]);
+  });
+  it('PKO: 기본 상금과 바운티가 별도 거래로 한 번씩, 풀 상한 초과 바운티는 거부', async () => {
+    const c = await signup('pko1'); const s = sid();
+    await c.post('/api/entry', { sid: s, source: 'world', defId: 'seoul-pko' });
+    expect((await c.post('/api/entry/settle', { sid: s, place: 40, totalEntries: 300, hands: 60, bounty: 250 * 300 * 5 })).status).toBe(400);
+    const r = await c.post('/api/entry/settle', { sid: s, place: 40, totalEntries: 300, hands: 60, bounty: 900 });
+    expect(r.status).toBe(200);
+    for (let i = 0; i < 3; i++) await c.post('/api/entry/settle', { sid: s, place: 40, totalEntries: 300, hands: 60, bounty: 900 });
+    const txs = (await c.get('/api/state')).body.wallet.txs;
+    expect(txs.filter((t: any) => t.kind === 'bounty-prize').length).toBe(1);
+    expect(txs.find((t: any) => t.kind === 'bounty-prize').amount).toBe(900);
+    expect(txs.filter((t: any) => t.kind === 'tourney-prize').length).toBeLessThanOrEqual(1);
+  });
+  it('새틀라이트 복수 통과자: 각 계정에 티켓이 한 번씩', async () => {
+    const A = await signup('sat1'), B = await signup('sat2'), C = await signup('sat3');
+    const places: [Client, number][] = [[A, 1], [B, 2], [C, 40]];
+    for (const [u, place] of places) { const s = sid(); await u.post('/api/entry', { sid: s, source: 'world', defId: 'vss-sat1' }); for (let i = 0; i < 2; i++) await u.post('/api/entry/settle', { sid: s, place, totalEntries: 110, hands: 60 }); }
+    expect((await A.get('/api/state')).body.tickets.length).toBe(1);
+    expect((await B.get('/api/state')).body.tickets.length).toBe(1);
+    expect((await C.get('/api/state')).body.tickets.length).toBe(0);
+  });
+  it('2탭 동시: 같은 sid 입장 중복 차감 없음, 서로 다른 sid 두 번째는 거부', async () => {
+    const c = await signup('tab1'); const s = sid();
+    const rs = await Promise.all([1, 2, 3, 4].map(() => c.post('/api/entry', { sid: s, source: 'catalog', defId: 'sng9b' })));
+    expect(rs.every((r) => r.status === 200)).toBe(true);
+    expect((await c.get('/api/state')).body.wallet.balance).toBe(30000 - 1100);
+    const two = await Promise.all([c.post('/api/entry', { sid: sid(), source: 'catalog', defId: 'sng9b' }), c.post('/api/entry', { sid: sid(), source: 'catalog', defId: 'sng9b' })]);
+    expect(two.every((r) => r.status === 409)).toBe(true);
+    expect((await c.get('/api/state')).body.wallet.balance).toBe(30000 - 1100);
+  });
+  it('DB 장애(배치 도중 실패)·응답 분실: 상태는 그대로이고 재시도하면 한 번만 반영', async () => {
+    const c = await signup('crash1'); const s = sid();
+    await c.post('/api/entry', { sid: s, source: 'catalog', defId: 'sng9b' });
+    const real = env.DB.batch.bind(env.DB);
+    let fail = true;
+    (env.DB as any).batch = async (stmts: any[]) => { if (fail && stmts.length > 2) { fail = false; throw new Error('simulated disk failure'); } return real(stmts); };
+    const bad = await c.post('/api/entry/settle', { sid: s, place: 1, totalEntries: 9, hands: 30 });
+    expect(bad.status).toBe(500);
+    (env.DB as any).batch = real;
+    const st1 = await c.get('/api/state');
+    expect(st1.body.wallet.balance).toBe(30000 - 1100);                // 반영되지 않음(롤백)
+    expect(st1.body.openEntries.length).toBe(1);
+    const ok = await c.post('/api/entry/settle', { sid: s, place: 1, totalEntries: 9, hands: 30 }); // 재시도
+    expect(ok.status).toBe(200);
+    const again = await c.post('/api/entry/settle', { sid: s, place: 1, totalEntries: 9, hands: 30 }); // 응답 분실 후 재전송
+    expect(again.body.result.prize).toBe(5400);
+    expect((await c.get('/api/state')).body.wallet.balance).toBe(30000 - 1100 + 5400);
+  });
+});
+
 describe('[서버] 통합 랭킹 · 가족 3계정 (RANKING_MODEL_v2 자동 테스트 1~8)', () => {
   const play = async (c: Client, eventId: string, place: number, field: number) => {
     const s = sid();

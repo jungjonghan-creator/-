@@ -51,6 +51,10 @@ interface Seat { e: E; hole: [Card, Card]; start: number; contrib: number; bet: 
 
 /** 내 뒤에 남은 플레이어 수(behind) → 오픈 퍼센타일 상한. BB=0, SB=1, BTN=2, CO=3 … UTG=8 */
 const OPEN_BY_BEHIND = [0.5, 0.38, 0.45, 0.33, 0.25, 0.2, 0.17, 0.15, 0.14];
+/** 헤드업/3인 이하 팟에서는 헤즈업 실력이 섞인다 */
+const pskill = (sk: SkillProfile, active: number) => (active <= 2 ? 0.5 * sk.postflop + 0.5 * sk.headsup : sk.postflop);
+/** 꾸준함이 높을수록 판단의 흔들림(노이즈)이 작다 */
+const cons = (sk: SkillProfile) => 1.5 - sk.consistency / 100;
 const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const noise = (rng: RNG, sd: number) => (rng.next() + rng.next() + rng.next() - 1.5) * 2 * sd;
 
@@ -152,7 +156,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
     const sk = s.e.sk;
     const key = handKey(s.hole[0], s.hole[1]);
     const pct = PREFLOP_PCT[key] ?? 0.5;
-    const perceived = clamp(pct * Math.exp(noise(rng, (1 - sk.preflop / 100) * 0.45)), 0, 1);
+    const perceived = clamp(pct * Math.exp(noise(rng, (1 - sk.preflop / 100) * 0.45 * cons(sk))), 0, 1);
     const loose = 0.6 + (sk.risk / 100) * 0.9 + (sk.aggression / 100) * 0.1;
     const m = (s.e.stack + s.bet) / bb;
     const behind = n - 1 - order.indexOf(i);
@@ -191,6 +195,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
   if (live() > 1) {
     for (let st = 0; st < 3; st++) {
       if (st === 0) { draw(); board.push(draw(), draw(), draw()); } else { draw(); board.push(draw()); }
+      const nAct = contenders().length;
       const canAct = contenders().filter((i) => !seats[i].allIn);
       if (canAct.length < 2) continue;
       for (const s of seats) s.bet = 0;
@@ -201,7 +206,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
       const strengths = new Map<number, number>();
       for (const i of contenders()) {
         const sk = seats[i].e.sk;
-        strengths.set(i, clamp(strengthOf(seats[i].hole, board) + noise(rng, (1 - sk.postflop / 100) * 0.3) + (1 - sk.postflop / 100) * 0.28)); // 실력이 낮을수록 부정확 + 낙관 편향
+        { const ps = pskill(sk, nAct); strengths.set(i, clamp(strengthOf(seats[i].hole, board) + noise(rng, (1 - ps / 100) * 0.3 * cons(sk)) + (1 - ps / 100) * 0.28)); } // 실력이 낮을수록 부정확 + 낙관 편향
       }
       // 한 스트리트 = 선공 베팅/체크 → 응답(콜/폴드/레이즈 1회)
       let responders: number[] = [];
@@ -213,7 +218,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
           let leak = 0, cnt = 0; for (const j of ord) { if (j === i || seats[j].folded || seats[j].allIn) continue; leak += 0.5 - seats[j].e.sk.postflop / 100; cnt++; }
           const oppLeak = cnt ? clamp(leak / cnt, -0.3, 0.5) : 0;
           const ex = sk.exploit / 100;
-          const valueBet = str > 0.66 - sk.postflop / 400 - sk.aggression / 400 - Math.max(0, oppLeak) * ex * 0.35;
+          const valueBet = str > 0.66 - pskill(sk, nAct) / 400 - sk.aggression / 400 - Math.max(0, oppLeak) * ex * 0.35;
           const bluff = str < 0.3 && rng.next() < (sk.aggression / 100) * 0.28 * (0.6 + ex * 0.4) * (1 - oppLeak * 1.6 * ex);
           if (valueBet || bluff || (str > 0.45 && rng.next() < 0.25 + sk.aggression / 300)) {
             const frac = valueBet ? ((str > 0.85 ? 0.75 : 0.55) + sk.aggression / 400) * (1 + Math.max(0, oppLeak) * 1.3 * ex) : 0.5;
@@ -231,7 +236,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
           const str = strengths.get(i)!; const sk = s.e.sk;
           const odds = need / (pot + need);
           const raiseIt = str > 0.88 && rng.next() < 0.18 + sk.aggression / 400 && s.e.stack > need * 2.5;
-          const callIt = str > odds + 0.12 + (sk.postflop / 100 - 0.5) * 0.9 - (sk.risk / 100) * 0.1 + ctx.pressure * 0.12 * (sk.icm / 100);
+          const callIt = str > odds + 0.12 + (pskill(sk, nAct) / 100 - 0.5) * 0.9 - (sk.risk / 100) * 0.1 + ctx.pressure * 0.12 * (sk.icm / 100);
           if (raiseIt) { const a = Math.min(need * 3, s.e.stack); s.e.stack -= a; s.contrib += a; s.bet += a; pot += a; if (s.e.stack === 0) s.allIn = true; /* 간이: 상대는 호출/폴드 단순 처리 */
             const raiseTo = s.bet;
             for (const j of ord) { if (j === i) continue; const t = seats[j]; if (t.folded || t.allIn) continue; const nd = Math.min(raiseTo - t.bet, t.e.stack); if (nd <= 0) continue; const ts = strengths.get(j)!; if (ts > nd / (pot + nd) + 0.25 || t.e.sk.risk > 70 && ts > 0.45) { t.e.stack -= nd; t.contrib += nd; t.bet += nd; pot += nd; if (t.e.stack === 0) t.allIn = true; } else t.folded = true; }

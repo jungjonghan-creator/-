@@ -58,6 +58,7 @@ export interface TournamentDef {
 export const TOURNAMENTS: TournamentDef[] = [
   { id: 'free9', name: '프리롤 싯앤고 9', group: 'free', kind: 'sng', entrants: 9, tableSize: 9, startBB: 30, bb: 100, speed: 'turbo', blindMode: 'regular', buyIn: 0, fee: 0, guarantee: 300, recommended: 'beginner', desc: '무료 참가. 가상 상금 300 (1위 180 · 2위 90 · 3위 30). 파산했을 때 다시 일어서는 경로.' },
   { id: 'hu', name: '헤즈업 싯앤고', group: 'sng', kind: 'hu', entrants: 2, tableSize: 2, startBB: 30, bb: 100, speed: 'turbo', blindMode: 'regular', buyIn: 250, fee: 25, recommended: 'intermediate', desc: '1:1 승자독식. 블라인드가 빨라 스택이 금세 짧아집니다.' },
+  { id: 'sng6', name: '6인 싯앤고', group: 'sng', kind: 'sng', entrants: 6, tableSize: 6, startBB: 50, bb: 100, speed: 'normal', blindMode: 'regular', buyIn: 500, fee: 50, recommended: 'intermediate', desc: '6명, 2위까지 입상 (65/35).' },
   { id: 'sng9a', name: '초급 싯앤고 9', group: 'sng', kind: 'sng', entrants: 9, tableSize: 9, startBB: 50, bb: 100, speed: 'normal', blindMode: 'regular', buyIn: 100, fee: 0, recommended: 'beginner', desc: '9명, 3위까지 입상 (60/30/10).' },
   { id: 'sng9b', name: '중급 싯앤고 9', group: 'sng', kind: 'sng', entrants: 9, tableSize: 9, startBB: 50, bb: 100, speed: 'normal', blindMode: 'regular', buyIn: 1000, fee: 100, recommended: 'intermediate', desc: '참가비 1,000 + 수수료 100. 우승 5,400.' },
   { id: 'sng9c', name: '상급 싯앤고 9', group: 'sng', kind: 'sng', entrants: 9, tableSize: 9, startBB: 50, bb: 100, speed: 'normal', blindMode: 'adaptive', buyIn: 5000, fee: 500, recommended: 'advanced', desc: '참가비 5,000 + 수수료 500. 우승 27,000. 상황 적응형 블라인드.' },
