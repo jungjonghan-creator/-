@@ -24,7 +24,7 @@ function LineChart({ a, b }: { a: number[]; b: number[] }) {
   );
 }
 
-export function CoachScreen() {
+export function CoachScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const { recordsFor, session, setScreen } = useGame();
   const records = recordsFor('competitive');
   const [report, setReport] = useState<DeepReport | null>(null);
@@ -49,10 +49,10 @@ export function CoachScreen() {
   useEffect(() => { if (records.length >= 8) start(); return () => { run.current++; }; }, []); // eslint-disable-line
 
   return (
-    <div className="max-w-2xl mx-auto p-3 space-y-3 overflow-y-auto h-full safe-pad" data-testid="coach">
+    <div className={`max-w-2xl mx-auto p-3 space-y-3 ${embedded ? '' : 'overflow-y-auto h-full safe-pad'}`} data-testid="coach">
       <div className="flex items-center gap-2">
-        <button className="btn !min-h-[36px] bg-slate-700" onClick={() => setScreen(session ? 'table' : 'menu')} data-testid="coach-back">← 뒤로</button>
-        <h1 className="text-xl font-bold">분석실</h1>
+        {!embedded && <button className="btn !min-h-[36px] bg-slate-700" onClick={() => setScreen(session ? 'table' : 'menu')} data-testid="coach-back">← 뒤로</button>}
+        <h1 className="text-xl font-bold">{embedded ? '종합 리포트' : '분석실'}</h1>
         <button className="btn !min-h-[36px] ml-auto bg-slate-700 text-sm" onClick={start} disabled={running || records.length < 8} data-testid="coach-rerun">다시 분석</button>
       </div>
       {records.length < 8 && <div className="p-3 rounded-lg bg-slate-800 text-sm" data-testid="coach-empty">분석에는 최소 8핸드가 필요합니다. 현재 {records.length}핸드 — 조금 더 플레이한 뒤 돌아오세요.</div>}

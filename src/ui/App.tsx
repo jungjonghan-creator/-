@@ -6,7 +6,7 @@ import { Menu } from './Menu';
 import { StatsScreen } from './StatsScreen';
 import { HistoryScreen } from './HistoryScreen';
 import { TrainerScreen } from './Trainer';
-import { CoachScreen } from './CoachScreen';
+import { LabScreen } from './LabScreen';
 import { WalletScreen } from './WalletScreen';
 import { PracticeSetup } from './PracticeSetup';
 import { Lobby } from './Lobby';
@@ -35,7 +35,7 @@ export function App() {
       {screen === 'stats' && <StatsScreen />}
       {screen === 'history' && <HistoryScreen />}
       {screen === 'trainer' && <TrainerScreen />}
-      {screen === 'coach' && <CoachScreen />}
+      {screen === 'coach' && <LabScreen />}
       {screen === 'wallet' && <WalletScreen />}
       {screen === 'practice' && <PracticeSetup />}
       {screen === 'lobby' && <Lobby />}

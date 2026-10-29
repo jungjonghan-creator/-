@@ -59,10 +59,8 @@ export function HistoryScreen() {
     const g = branch ?? replayRecord(sel, step);
     const heroSeat = sel.startStacks.find((s) => s.id === 'hero')?.seat ?? 0;
     const ps = pseudoSession(session, g);
-    // 리플레이에서는 모든 홀카드를 공개 (복기 전용)
+    // 정보 누설 금지: 리플레이도 당시 공개된 카드(내 카드 + 쇼다운 공개분)만 보여 준다
     const bsess = { ...ps };
-    const revealAll = true;
-    void revealAll;
     const heroTurn = g.toAct === heroSeat && legalActions(g);
     const branchAct = (a: Parameters<typeof applyAction>[1]) => {
       let ng = applyAction(g, a);
@@ -79,14 +77,15 @@ export function HistoryScreen() {
     return (
       <div className="max-w-3xl mx-auto p-2 space-y-2 overflow-y-auto h-full safe-pad" data-testid="replay">
         <div className="flex items-center gap-2"><button className="btn !min-h-[36px] bg-slate-700" onClick={() => { setSel(null); setBranch(null); }} data-testid="replay-back">← 목록</button><b>핸드 #{sel.handNo} 리플레이</b><button className="ml-auto btn !min-h-[36px] bg-slate-700" onClick={() => toggleFav(sel)} data-testid="btn-fav">{favs.includes(favKey(sel)) ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기'}</button></div>
-        <div className="relative"><TableView sess={bsess} revealAll /></div>
+        <div className="relative"><TableView sess={bsess} /></div>
+        <div className="text-[11px] text-slate-500" data-testid="replay-info-note">공개되지 않았던 상대 카드는 복기에서도 「알 수 없음」으로 가립니다. 쇼다운에서 공개된 카드만 보입니다.</div>
         <div className="flex items-center gap-2">
           <button className="btn !min-h-[36px] bg-slate-700" onClick={() => { setBranch(null); setStep(Math.max(0, step - 1)); }} data-testid="replay-prev">◀</button>
           <input type="range" min={0} max={total} value={step} className="flex-1" onChange={(e) => { setBranch(null); setStep(Number(e.target.value)); }} aria-label="진행" />
           <button className="btn !min-h-[36px] bg-slate-700" onClick={() => { setBranch(null); setStep(Math.min(total, step + 1)); }} data-testid="replay-next">▶</button>
           <span className="text-xs w-14 text-right">{step}/{total}</span>
         </div>
-        {branch && <div className="p-2 rounded bg-indigo-900/60 text-xs" data-testid="branch-note">분석 브랜치 (원본 기록은 변경되지 않음){branch.street === 'complete' ? ` — 결과: 내 손익 ${(branch.result?.net[heroSeat] ?? 0)}` : ''} <button className="underline ml-2" onClick={() => setBranch(null)}>원본으로</button></div>}
+        {branch && <div className="p-2 rounded bg-indigo-900/60 text-xs" data-testid="branch-note">분석 브랜치 (원본 기록은 변경되지 않음 · 남은 카드는 실제 덱 순서를 그대로 쓰므로 결과론에 주의){branch.street === 'complete' ? ` — 결과: 내 손익 ${(branch.result?.net[heroSeat] ?? 0)}` : ''} <button className="underline ml-2" onClick={() => setBranch(null)}>원본으로</button></div>}
         {la && (
           <div className="flex gap-2 flex-wrap items-center" data-testid="branch-actions">
             <span className="text-xs text-slate-300">다른 행동 실험:</span>

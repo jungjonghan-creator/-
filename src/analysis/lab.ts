@@ -179,3 +179,39 @@ export function verdictOfTraining(a: TrainingAttempt): string {
   const d = a.post - a.pre;
   return d >= TRAINING_RULES.improvementThreshold ? `문제 정답률 +${Math.round(d * 100)}%p (기준 +${TRAINING_RULES.improvementThreshold * 100}%p 달성). 단, 실력 향상은 실전 변화로 다시 확인합니다` : d <= -0.1 ? `정답률 ${Math.round(d * 100)}%p 하락 — 표본 변동 가능성, 다시 시도하세요` : '뚜렷한 변화 없음 (기준 미달)';
 }
+
+// ───────────────────────── 실제 플레이 핸드에서 훈련 문제 추출 ─────────────────────────
+import { replayRecord } from '../engine/replay';
+import { legalActions } from '../engine/game';
+import type { HandRecord } from '../engine/types';
+import { positionLabels } from '../ai/observation';
+
+/**
+ * 내가 실제로 "베팅에 직면했던" 결정 시점을 문제로 만든다. 그 시점에 알 수 있었던 정보(내 카드, 보드, 팟, 콜 금액, 스택)만 담고
+ * 내가 실제로 한 행동·이후 카드·결과는 문제에 포함하지 않는다(정보 누설 방지).
+ */
+export function realSpotsFrom(records: HandRecord[], heroId = 'hero', max = 60): TrainQuestion[] {
+  const out: TrainQuestion[] = [];
+  for (let r = records.length - 1; r >= 0 && out.length < max; r--) {
+    const rec = records[r];
+    const seat = rec.startStacks.find((s) => s.id === heroId)?.seat;
+    if (seat === undefined || !rec.holes[seat]) continue;
+    rec.actions.forEach((a, idx) => {
+      if (a.seat !== seat || out.length >= max) return;
+      const g = replayRecord(rec, idx);
+      if (g.board.length < 3 || g.toAct !== seat) return;
+      const la = legalActions(g);
+      if (!la || !la.canCall || la.callAmount <= 0) return;
+      const pot = g.players.reduce((s, p) => s + p.invested, 0);
+      const bb = rec.config.bb;
+      const frac = la.callAmount / Math.max(1, pot - la.callAmount);
+      const hero = g.players[seat];
+      out.push({
+        id: `real:${rec.seed}:${rec.handNo}:${idx}`, leak: 'real', source: 'real-spot', title: `내 실제 핸드 #${rec.handNo} · ${g.street === 'flop' ? '플랍' : g.street === 'turn' ? '턴' : '리버'} · 상대 베팅 팟의 ${Math.round(Math.min(frac, 3) * 100)}%`,
+        hole: rec.holes[seat] as [Card, Card], board: [...g.board], pot: Math.round(pot), toCall: la.callAmount, stackBB: Math.round((hero.stack + hero.bet) / bb), pos: positionLabels(replayRecord(rec, 0))[seat] ?? '?',
+        villainPct: Math.max(0.1, Math.min(0.5, 0.5 - 0.22 * Math.min(frac, 1.5))), oppAction: `벳 ${la.callAmount}`,
+      });
+    });
+  }
+  return out;
+}
