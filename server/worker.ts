@@ -2,11 +2,11 @@
 import { handle } from './api';
 import type { Db } from './db';
 
-interface Env { DB: Db; ASSETS: { fetch(req: Request): Promise<Response> } }
+interface Env { DB: Db; ASSETS: { fetch(req: Request): Promise<Response> }; PBKDF2_ITERATIONS?: string }
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
-    if (url.pathname.startsWith('/api/')) return handle(req, { DB: env.DB });
+    if (url.pathname.startsWith('/api/')) return handle(req, { DB: env.DB, iterations: env.PBKDF2_ITERATIONS ? Number(env.PBKDF2_ITERATIONS) : undefined });
     return env.ASSETS.fetch(req);
   },
 };

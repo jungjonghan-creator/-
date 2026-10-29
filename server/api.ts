@@ -19,7 +19,7 @@ import { SCHEMA } from './schema';
 import { PBKDF2_ITERATIONS, hashPassword, randomB64, randomId, safeEqual, sha256Hex } from './crypto';
 import { createWallet, loadWallet, mutateWallet, RecoveryRequired } from './walletStore';
 
-export interface Env { DB: Db; /** 테스트용 시간 주입 */ now?: () => number }
+export interface Env { DB: Db; /** 테스트용 시간 주입 */ now?: () => number; /** 새 계정의 PBKDF2 반복 횟수(기본 100,000 = Workers 상한). 계정마다 저장되므로 나중에 올려도 기존 계정은 그대로 동작 */ iterations?: number }
 
 const SNAP = snapshotJson as unknown as WorldSnapshot;
 const SESSION_DAYS = 30;
@@ -202,10 +202,11 @@ async function register(req: Request, env: Env, now: number) {
   if (exists) throw new HttpError(409, '이미 사용 중인 아이디입니다', 'username_taken');
   const id = randomId();
   const salt = randomB64(16);
-  const hash = await hashPassword(password, salt);
+  const iters = env.iterations ?? PBKDF2_ITERATIONS;
+  const hash = await hashPassword(password, salt, iters);
   try {
     await env.DB.batch([
-      env.DB.prepare('INSERT INTO accounts(id, username, display_name, password_hash, salt, iterations, nationality, public_profile, created_at) VALUES (?,?,?,?,?,?,?,?,?)').bind(id, username, displayName, hash, salt, PBKDF2_ITERATIONS, nationality, pub, now),
+      env.DB.prepare('INSERT INTO accounts(id, username, display_name, password_hash, salt, iterations, nationality, public_profile, created_at) VALUES (?,?,?,?,?,?,?,?,?)').bind(id, username, displayName, hash, salt, iters, nationality, pub, now),
       env.DB.prepare('INSERT INTO global_roster(entity_key, kind, stable_id, display_name, nationality, created_at) VALUES (?,?,?,?,?,?)').bind(`human:${id}`, 'human', id, displayName, nationality, now),
     ]);
   } catch { throw new HttpError(409, '이미 사용 중인 아이디입니다', 'username_taken'); }

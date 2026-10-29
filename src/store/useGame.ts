@@ -125,6 +125,8 @@ export const useGame = create<Store>((set, get) => {
     } catch { return null; /* 오프라인이면 다음 기회에 */ }
   };
   const save = (session: Session | null | undefined, wallet: W.Wallet = get().wallet, kv?: Record<string, unknown>) => {
+    // 안전 모드: 원장 합계와 잔액이 어긋나면 새 경기를 막고 알린다 (조용히 재계산하지 않는다)
+    if (!get().walletErrors) { const errs = W.verifyWallet(wallet); if (errs.length) set({ walletErrors: errs, notice: `원장 불일치(RECONCILIATION_REQUIRED): ${errs[0]}` }); }
     void saveAll({ session, wallet, kv }).catch(() => set({ notice: '저장 실패 (저장소 접근 불가)' }));
     scheduleCloud();
   };

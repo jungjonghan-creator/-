@@ -3,9 +3,11 @@ import { useGame } from '../store/useGame';
 import { useAccount } from '../store/useAccount';
 import { api } from '../net/api';
 import { exportBackup, loadKV } from '../persist/db';
+import { legacyProfile } from '../analysis/legacy';
 
 export function AccountScreen() {
-  const { setScreen, online, attachAccount } = useGame();
+  const { setScreen, online, attachAccount, archive, tourneys } = useGame();
+  const prof = legacyProfile(archive.competitive, tourneys.length);
   const { user, mode, logout, check } = useAccount();
   const [name, setName] = useState(user?.displayName ?? '');
   const [nat, setNat] = useState(user?.nationality ?? '대한민국');
@@ -38,6 +40,12 @@ export function AccountScreen() {
           <button className="btn !min-h-[38px] bg-emerald-700 text-sm" onClick={async () => { const r = await api('POST', '/api/profile', { displayName: name, nationality: nat, publicProfile: pub }); setMsg(r.ok ? '저장했습니다 (닉네임을 바꿔도 랭킹·기록은 고정 계정 ID로 유지됩니다)' : (r.data as { error: string }).error); await check(); }} data-testid="profile-save">저장</button>
         </section>
       )}
+      <section className="rounded-xl bg-slate-900 p-3 space-y-1" data-testid="profile-evidence">
+        <h2 className="font-bold text-sm">내 플레이 성향 — 저장된 기록 기준</h2>
+        <div className="text-xs text-slate-400">핸드 {prof.hands.toLocaleString()}개 · 대회 전적 {prof.tourneyRecords}개 · 일시 {prof.dateRange}</div>
+        {prof.hands > 0 && <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">{prof.metrics.slice(0, 6).map((m) => <div key={m.key} className="bg-slate-800 rounded p-1.5"><div className="text-slate-400">{m.label}</div><div className="font-bold">{m.pct === null ? '–' : `${m.pct.toFixed(0)}%`} <span className="font-normal text-[10px] text-slate-500">n={m.den} · {m.confidence}</span></div></div>)}</div>}
+        <div className="text-[11px] text-slate-500" data-testid="profile-note">{prof.note}</div>
+      </section>
       <section className="rounded-xl bg-slate-900 p-3 space-y-2">
         <h2 className="font-bold text-sm">기존 기록 이관 / 백업</h2>
         {legacy ? <div className="text-xs space-y-1" data-testid="legacy-report"><div>{legacy.note}</div>{legacy.found && <div className="text-slate-300">복사된 항목: {Object.entries(legacy.copied).map(([k, v]) => `${k} ${v}`).join(' · ')}</div>}{legacy.legacyWalletBalance !== undefined && <div className="text-amber-200">옛 통장 잔액({legacy.legacyWalletBalance.toLocaleString()})은 검증되지 않은 값(legacy/unverified)이라 가져오지 않았습니다. 새 지갑은 서버 원장에서 시작합니다.</div>}</div> : <div className="text-xs text-slate-400">이관 기록이 없습니다.</div>}

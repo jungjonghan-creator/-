@@ -134,6 +134,8 @@ export const EVENT_TEMPLATES: EventDef[] = [
   E({ id: 'ecs-prague', seriesId: 'ecs', name: '프라하 시즌 피날레', venueId: 'prague', day: 295, kind: 'mtt', field: 600, buyIn: 3000, prestige: 4, reentry: { untilLevel: 8, max: 1 }, guarantee: 1500000, tags: ['메인'], note: '유럽 시즌 결산' }),
   E({ id: 'kcl-shoot', seriesId: 'kcl', name: '코리아 클럽 슛아웃', venueId: 'daegu', day: 175, kind: 'shootout', field: 108, buyIn: 300, tableSize: 6, prestige: 2, tags: ['슛아웃', '6맥스'], note: '6인 테이블 1명 진출' }),
   E({ id: 'kcl-sat', seriesId: 'kcl', name: '제주 그랜드슬램 새틀라이트', venueId: 'jeju', day: 180, kind: 'satellite', field: 90, buyIn: 300, satelliteFor: 'jeju-main', prestige: 1, speed: 'turbo', tags: ['새틀라이트'], note: '제주 메인 좌석' }),
+  E({ id: 'mega-5k', seriesId: 'apac', name: '아시아 모바일 메가 5K', venueId: 'manila', day: 20, kind: 'mtt', field: 5000, buyIn: 100, speed: 'turbo', stackBB: 60, reentry: { untilLevel: 6, max: 2 }, lateRegLevels: 6, paidPct: 0.12, prestige: 2, tags: ['메가필드', '터보', '재진입'], note: '5,000명 규모 모바일 메가 토너먼트' }),
+  E({ id: 'mega-10k', seriesId: 'vss', name: '월드 메가 10K 프리즈아웃', venueId: 'lasvegas', day: 280, kind: 'mtt', field: 10000, buyIn: 200, speed: 'turbo', stackBB: 75, paidPct: 0.12, prestige: 3, tags: ['메가필드', '프리즈아웃'], note: '10,000명 프리즈아웃 — 한 번 탈락하면 끝' }),
   E({ id: 'seoul-hu-hyper', seriesId: 'seoul', name: '서울 심야 헤즈업 하이퍼', venueId: 'seoul', day: 300, kind: 'hu', field: 32, buyIn: 300, tableSize: 2, speed: 'hyper', prestige: 1, tags: ['헤즈업', '하이퍼'], note: '32강' }),
 ];
 
