@@ -119,6 +119,8 @@ function distribute(seats: Seat[], board: Card[], btn: number, scores: (number |
   return { won, killers };
 }
 
+/** 실력 계수: 오픈 범위는 실력이 높을수록 넓어지고(포지션 활용), 콜 기준 강화는 완만하다 — 고수가 '너무 조이는 닛'이 되지 않도록 (scripts/worldBench.ts 3,000판 튜닝) */
+const T = { o0: 0.9, o1: 0.4, cs: 0.4 };
 export interface TableCtx { rng: RNG; bb: number; sb: number; ante: number; pressure: number }
 
 /** 한 테이블 한 핸드. 좌석 순서 = 배열 순서. 칩을 직접 변경하고 { busted } 를 반환 */
@@ -137,7 +139,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
   if (ante > 0) for (let i = 0; i < n; i++) { const a = Math.min(ante, seats[i].e.stack); seats[i].e.stack -= a; seats[i].contrib += a; if (seats[i].e.stack === 0) seats[i].allIn = true; }
   put(sbI, sb); put(bbI, bb);
   let cur = Math.max(seats[sbI].bet, seats[bbI].bet);
-  let raises = 0;
+  let raises = 0; let pfr = -1;
 
   // ───── 프리플랍 ─────
   const order: number[] = [];
@@ -160,8 +162,12 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
     const loose = 0.6 + (sk.risk / 100) * 0.9 + (sk.aggression / 100) * 0.1;
     const m = (s.e.stack + s.bet) / bb;
     const behind = n - 1 - order.indexOf(i);
-    const openT = (n === 2 ? 0.6 : OPEN_BY_BEHIND[Math.min(8, behind)]) * (1.1 - 0.2 * sk.preflop / 100);
-    const tight = 1 - ctx.pressure * 0.45 * (sk.icm / 100);
+    const openT = (n === 2 ? 0.6 : OPEN_BY_BEHIND[Math.min(8, behind)]) * (T.o0 + T.o1 * sk.preflop / 100);
+    // 버블/ICM 압박: 짧은 스택은 조이고, 칩 리더(+실력 높은 선수)는 오히려 넓혀 압박한다
+    let tot = 0, nal = 0; for (const x of seats) if (x.e.stack + x.bet > 0) { tot += x.e.stack + x.bet; nal++; }
+    const lead = (s.e.stack + s.bet) / Math.max(1, tot / Math.max(1, nal));
+    const icmSk = sk.icm / 100;
+    const tight = lead > 1.25 ? 1 + ctx.pressure * 0.5 * Math.max(0, icmSk - 0.45) * Math.min(1, lead - 1) : 1 - ctx.pressure * 0.45 * icmSk;
     let eff = 1; for (const x of seats) if (x !== s && !x.folded) eff = Math.max(eff, (x.e.stack + x.bet) / bb);
     eff = Math.min(m, eff);
     let act: 'fold' | 'call' | 'raise' | 'jam' = 'fold';
@@ -185,7 +191,7 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
       const sizeMul = open ? 2.2 + sk.aggression / 100 * 0.9 : 2.7 + sk.aggression / 100 * 0.6;
       const target = act === 'jam' ? s.e.stack + s.bet : Math.min(s.e.stack + s.bet, Math.round(cur * sizeMul));
       if (target <= cur) { put(i, needs); }
-      else { put(i, target - s.bet); cur = Math.max(cur, s.bet); raises++; pending = new Set(order.filter((j) => j !== i && !seats[j].folded && !seats[j].allIn)); }
+      else { put(i, target - s.bet); cur = Math.max(cur, s.bet); raises++; pfr = i; pending = new Set(order.filter((j) => j !== i && !seats[j].folded && !seats[j].allIn)); }
     }
   }
 
@@ -218,8 +224,13 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
           let leak = 0, cnt = 0; for (const j of ord) { if (j === i || seats[j].folded || seats[j].allIn) continue; leak += 0.5 - seats[j].e.sk.postflop / 100; cnt++; }
           const oppLeak = cnt ? clamp(leak / cnt, -0.3, 0.5) : 0;
           const ex = sk.exploit / 100;
-          const valueBet = str > 0.66 - pskill(sk, nAct) / 400 - sk.aggression / 400 - Math.max(0, oppLeak) * ex * 0.35;
-          const bluff = str < 0.3 && rng.next() < (sk.aggression / 100) * 0.28 * (0.6 + ex * 0.4) * (1 - oppLeak * 1.6 * ex);
+          const valueBet = str > 0.66 - pskill(sk, nAct) / 400 - sk.aggression / 400 - Math.max(0, oppLeak) * ex * 0.35 - (ord.filter((j) => !seats[j].folded && !seats[j].allIn).pop() === i ? 0.06 * Math.max(0, pskill(sk, nAct) - 55) / 45 : 0);
+          const psk = pskill(sk, nAct);
+          const skillEdge = Math.max(0, psk - 55) / 45; // 55 이상부터 쌓이는 고급 기술(주도권·포지션 활용)
+          const lastToAct = ord.filter((j) => !seats[j].folded && !seats[j].allIn).pop() === i;
+          const initiative = i === pfr && nAct <= 3;
+          const bluff = str < 0.3 && rng.next() < (sk.aggression / 100) * 0.28 * (0.6 + ex * 0.4) * (1 - oppLeak * 1.6 * ex)
+            + (initiative ? 0.3 * skillEdge * (1 - Math.max(0, oppLeak) * 1.2 * ex) : 0) + (lastToAct && nAct <= 2 ? 0.12 * skillEdge : 0);
           if (valueBet || bluff || (str > 0.45 && rng.next() < 0.25 + sk.aggression / 300)) {
             const frac = valueBet ? ((str > 0.85 ? 0.75 : 0.55) + sk.aggression / 400) * (1 + Math.max(0, oppLeak) * 1.3 * ex) : 0.5;
             const amt = Math.max(bb, Math.round(pot * frac));
@@ -236,7 +247,11 @@ export function playHand(table: E[], btn: number, ctx: TableCtx): { startStacks:
           const str = strengths.get(i)!; const sk = s.e.sk;
           const odds = need / (pot + need);
           const raiseIt = str > 0.88 && rng.next() < 0.18 + sk.aggression / 400 && s.e.stack > need * 2.5;
-          const callIt = str > odds + 0.12 + (pskill(sk, nAct) / 100 - 0.5) * 0.9 - (sk.risk / 100) * 0.1 + ctx.pressure * 0.12 * (sk.icm / 100);
+          // 핸드 리딩: 베터의 강도를 (실력에 비례하는 정확도로) 어림잡아 콜 기준을 조정한다
+          const acc = clamp(((sk.exploit + sk.adaptation) / 200 - 0.55) / 0.45);
+          const peek = aggressor >= 0 && aggressor !== i ? strengths.get(aggressor)! + noise(rng, (1 - acc) * 0.45) : 0.5;
+          const read = aggressor >= 0 && aggressor !== i ? acc * (peek - 0.55) * 0.55 : 0;
+          const callIt = str > odds + 0.12 + (pskill(sk, nAct) / 100 - 0.5) * T.cs - (sk.risk / 100) * 0.1 + ctx.pressure * 0.12 * (sk.icm / 100) + read;
           if (raiseIt) { const a = Math.min(need * 3, s.e.stack); s.e.stack -= a; s.contrib += a; s.bet += a; pot += a; if (s.e.stack === 0) s.allIn = true; /* 간이: 상대는 호출/폴드 단순 처리 */
             const raiseTo = s.bet;
             for (const j of ord) { if (j === i) continue; const t = seats[j]; if (t.folded || t.allIn) continue; const nd = Math.min(raiseTo - t.bet, t.e.stack); if (nd <= 0) continue; const ts = strengths.get(j)!; if (ts > nd / (pot + nd) + 0.25 || t.e.sk.risk > 70 && ts > 0.45) { t.e.stack -= nd; t.contrib += nd; t.bet += nd; pot += nd; if (t.e.stack === 0) t.allIn = true; } else t.folded = true; }

@@ -1,3 +1,4 @@
+import { pendingInvite } from '../net/invite';
 import { useState } from 'react';
 import { useAccount } from '../store/useAccount';
 
@@ -5,7 +6,8 @@ const NATIONS = ['대한민국', '일본', '대만', '중국', '미국', '캐나
 
 export function AuthScreen() {
   const { login, register, busy, error, useLocal, serverReachable } = useAccount();
-  const [tab, setTab] = useState<'login' | 'register'>('login');
+  const invited = pendingInvite();
+  const [tab, setTab] = useState<'login' | 'register'>(invited ? 'register' : 'login');
   const [u, setU] = useState(''); const [p, setP] = useState(''); const [p2, setP2] = useState('');
   const [name, setName] = useState(''); const [nat, setNat] = useState('대한민국'); const [pub, setPub] = useState(true);
   const mismatch = tab === 'register' && p2.length > 0 && p !== p2;
@@ -15,6 +17,7 @@ export function AuthScreen() {
         <h1 className="text-3xl font-extrabold">♠ POKER ARENA <span className="text-sky-400">5.0</span></h1>
         <p className="text-xs text-slate-400">WORLD POKER UNIVERSE 2035 · 가상 크레딧 전용 — 실제 돈·결제·환전·베팅 없음</p>
       </div>
+      {invited && <div className="rounded bg-emerald-900/60 border border-emerald-700 px-3 py-2 text-sm text-emerald-100" data-testid="auth-invite">친구 초대 링크로 오셨습니다. 가입(또는 로그인)하면 자동으로 같은 그룹에 들어가 서로의 랭킹이 보입니다.</div>}
       <div className="flex gap-2">
         <button className={`btn flex-1 ${tab === 'login' ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => setTab('login')} data-testid="auth-tab-login">로그인</button>
         <button className={`btn flex-1 ${tab === 'register' ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => setTab('register')} data-testid="auth-tab-register">가입</button>

@@ -1,3 +1,4 @@
+import { inviteUrl } from '../net/invite';
 import { useCallback, useEffect, useState } from 'react';
 import { useGame } from '../store/useGame';
 import { useAccount } from '../store/useAccount';
@@ -59,6 +60,7 @@ function Groups({ onPick, active }: { onPick: (id: string | null) => void; activ
     <div className="space-y-2" data-testid="groups">
       <div className="text-xs text-slate-400">친구·가족 그룹은 초대 코드로만 만들어집니다. 관계를 추정하거나 비공개 계정을 찾지 않으며, 실명은 표시되지 않습니다.</div>
       <div className="flex flex-wrap gap-2">{groups.map((g) => <button key={g.id} className={`btn !min-h-[34px] text-xs ${active === g.id ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => onPick(g.id)} data-testid={`group-${g.name}`}>{g.name} ({g.members.length}명){g.code ? ` · 코드 ${g.code}` : ''}</button>)}</div>
+      {groups.filter((g) => g.code).map((g) => <button key={`inv-${g.id}`} className="btn !min-h-[34px] text-xs bg-indigo-700 w-full" data-testid={`group-invite-${g.name}`} onClick={async () => { const url = inviteUrl(g.code!); try { if (navigator.share) await navigator.share({ title: 'POKER ARENA 친구 랭킹', text: `${g.name} 그룹에 초대합니다`, url }); else { await navigator.clipboard.writeText(url); setMsg(`초대 링크를 복사했습니다: ${url}`); } } catch { setMsg(`초대 링크: ${url}`); } }}>「{g.name}」 초대 링크 보내기 (카톡·문자)</button>)}
       <div className="flex gap-2"><input className="flex-1 rounded bg-slate-800 border border-slate-600 px-2 py-2 text-sm" placeholder="새 그룹 이름" value={name} onChange={(e) => setName(e.target.value)} data-testid="group-name" /><button className="btn !min-h-[38px] bg-emerald-700 text-sm" disabled={!name} onClick={async () => { const r = await api('POST', '/api/groups', { name }); setMsg(r.ok ? `만들었습니다. 초대 코드: ${(r.data as { code: string }).code}` : (r.data as { error: string }).error); setName(''); void load(); }} data-testid="group-create">만들기</button></div>
       <div className="flex gap-2"><input className="flex-1 rounded bg-slate-800 border border-slate-600 px-2 py-2 text-sm" placeholder="초대 코드 입력" value={code} onChange={(e) => setCode(e.target.value)} data-testid="group-code" /><button className="btn !min-h-[38px] bg-sky-700 text-sm" disabled={!code} onClick={async () => { const r = await api('POST', '/api/groups/join', { code }); setMsg(r.ok ? '참여했습니다' : (r.data as { error: string }).error); setCode(''); void load(); }} data-testid="group-join">참여</button></div>
       {msg && <div className="text-xs text-emerald-300" data-testid="group-msg">{msg}</div>}

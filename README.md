@@ -10,6 +10,8 @@ TypeScript(strict) · React 19 · Vite 8 · Tailwind · Zustand · IndexedDB · 
 npm install
 npm run build
 npm run serve            # http://localhost:8787  (API + 앱 + SQLite)
+npm run share            # 가족·친구와 바로: 서버 + 무료 터널(cloudflared) 주소 출력
+npm run deploy:cf        # Cloudflare 무료 배포 자동화 (먼저 npx wrangler login)
 ```
 같은 와이파이의 폰: `http://<PC의 IP>:8787` → 가입 → 「홈 화면에 추가」. 아이디+비밀번호만 있으면 가입됩니다.
 서버 없이 보려면 `npm run dev` (로컬 모드: 이 기기에서만, 랭킹은 이 기기 기록 + 공식 AI 스냅샷).

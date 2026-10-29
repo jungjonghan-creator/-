@@ -14,7 +14,12 @@
     "e2e": "playwright test",
     "serve": "tsx server/node.ts",
     "build:world": "tsx scripts/buildWorld.ts",
-    "bench:world": "tsx scripts/worldBench.ts"
+    "bench:world": "tsx scripts/worldBench.ts",
+    "start": "npm run build && npm run serve",
+    "share": "tsx scripts/share.ts",
+    "deploy:cf": "tsx scripts/deployCloudflare.ts",
+    "backtest:range": "tsx scripts/rangeBacktest.ts",
+    "rank:legends": "tsx scripts/legendRank.ts"
   },
   "dependencies": {
     "idb": "^8.0.4",

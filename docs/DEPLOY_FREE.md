@@ -2,7 +2,15 @@
 
 > **이 작업에서 실제 배포는 하지 않았다.** 계정 생성·로그인·D1 생성은 사용자 본인만 할 수 있다. 결제 수단 등록·유료 업그레이드는 하지 않는다.
 
-## 사용자가 할 일 (3단계)
+## 가장 빠른 길 (권장 순서)
+| 목표 | 명령 | 사용자가 해야 하는 것 | 주소 | 비고 |
+|---|---|---|---|---|
+| ① 오늘 바로 가족과 | `npm install` → `npm run share` | cloudflared 설치(무료·계정 불필요) | 실행마다 바뀌는 https 주소 | 이 PC가 켜져 있는 동안만 접속 |
+| ② 고정 주소·PC 꺼도 됨 | `npx wrangler login`(1회) → `npm run deploy:cf` | Cloudflare 무료 가입 + 로그인 허용 | `poker-arena.<계정>.workers.dev` | 가입/로그인 CPU 한도 위험 아래 참고 |
+| ③ 항상 켜진 PC·NAS | `npm run start` | 포트포워딩 또는 터널 | 직접 관리 | CPU 제한 없음 |
+**가족 합류:** 앱 → 랭킹 → 친구 → 그룹 만들기 → 「초대 링크 보내기」(카톡·문자). 링크를 연 사람은 가입 화면이 열리고, 가입/로그인하면 자동으로 같은 그룹에 들어간다. **기기 간 이어하기**는 같은 아이디로 로그인하면 된다(서버 저장).
+
+## 상세: 사용자가 할 일 (Cloudflare 3단계, `npm run deploy:cf` 가 2·3을 자동화)
 1. Cloudflare 무료 계정 생성 후 터미널에서 `npx wrangler login`
 2. `npx wrangler d1 create poker-arena` → 출력된 `database_id`를 `wrangler.toml`의 `REPLACE_WITH_D1_ID_AFTER_CREATE`에 붙여넣기
 3. `npm run build && npx wrangler deploy`  → 출력된 `https://poker-arena.<계정>.workers.dev` 를 가족에게 공유 (스키마는 첫 요청에 자동 생성)

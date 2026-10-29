@@ -194,3 +194,36 @@ test('모바일 360px: 로그인·메뉴·월드·랭킹·도감에 가로 스�
   }
   await ctx.close();
 });
+
+test('초대 링크: 링크로 들어와 가입하면 자동으로 그룹에 참여 (?join=코드)', async ({ browser }) => {
+  const A = await newUser(browser, 'host');
+  await A.page.getByTestId('nav-ranking').click();
+  await A.page.getByTestId('rank-tab-friends').click();
+  await A.page.getByTestId('group-name').fill('초대방');
+  await A.page.getByTestId('group-create').click();
+  await expect(A.page.getByTestId('group-invite-초대방')).toBeVisible();
+  const code = (await A.page.getByTestId('group-msg').innerText()).split('초대 코드:')[1].trim();
+  // 새 기기(새 컨텍스트)에서 링크를 연다
+  const ctx = await browser.newContext(); const page = await ctx.newPage();
+  await page.goto(`/?join=${code}`);
+  await expect(page.getByTestId('auth-invite')).toBeVisible();
+  expect(new URL(page.url()).search).toBe(''); // 주소에서 코드 제거
+  const username = `inv_${uid()}`;
+  await page.getByTestId('auth-user').fill(username);
+  await page.getByTestId('auth-pass').fill(PW);
+  await page.getByTestId('auth-pass2').fill(PW);
+  await page.getByTestId('auth-name').fill(username);
+  await page.getByTestId('auth-submit').click();
+  await expect(page.getByTestId('menu')).toBeVisible();
+  await expect(page.getByTestId('invite-banner')).toContainText('참여했습니다');
+  await page.getByTestId('nav-ranking').click(); await page.getByTestId('rank-tab-friends').click();
+  await expect(page.getByTestId('group-초대방')).toContainText('2명');
+  // 잘못된 코드는 조용히 실패하고 앱은 정상
+  const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage();
+  await p2.goto('/?join=ZZZZZZZZ');
+  const u2 = `bad_${uid()}`;
+  await p2.getByTestId('auth-user').fill(u2); await p2.getByTestId('auth-pass').fill(PW); await p2.getByTestId('auth-pass2').fill(PW); await p2.getByTestId('auth-name').fill(u2); await p2.getByTestId('auth-submit').click();
+  await expect(p2.getByTestId('menu')).toBeVisible();
+  await expect(p2.getByTestId('invite-banner')).toContainText('쓸 수 없습니다');
+  await A.ctx.close(); await ctx.close(); await ctx2.close();
+});

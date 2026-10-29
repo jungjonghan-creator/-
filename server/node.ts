@@ -6,6 +6,7 @@ import { handle } from './api';
 import { openNodeDb } from './nodeDb';
 
 const PORT = Number(process.env.PORT ?? 8787);
+const TRUST_PROXY = process.env.TRUST_PROXY === '1';
 const DIST = join(process.cwd(), 'dist');
 await mkdir('data', { recursive: true });
 const db = openNodeDb(process.env.DB_PATH ?? 'data/poker.sqlite');
@@ -13,7 +14,10 @@ const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js
 
 createServer(async (req, res) => {
   try {
-    const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
+    // 터널(cloudflared 등) 뒤에서는 TRUST_PROXY=1 로 공개 주소(프로토콜·호스트)를 따른다 → Origin 검사·Secure 쿠키가 올바르게 동작
+    const fwdHost = TRUST_PROXY ? (req.headers['x-forwarded-host'] as string | undefined) : undefined;
+    const fwdProto = TRUST_PROXY ? (req.headers['x-forwarded-proto'] as string | undefined)?.split(',')[0] : undefined;
+    const url = new URL(req.url ?? '/', `${fwdProto ?? 'http'}://${fwdHost ?? req.headers.host ?? 'localhost'}`);
     if (url.pathname.startsWith('/api/')) {
       const chunks: Buffer[] = []; for await (const c of req) chunks.push(c as Buffer);
       const body = chunks.length ? Buffer.concat(chunks) : undefined;
@@ -28,4 +32,4 @@ createServer(async (req, res) => {
     try { data = await readFile(file); } catch { file = join(DIST, 'index.html'); data = await readFile(file); }
     res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' }); res.end(data);
   } catch (e) { console.error(e); res.writeHead(500); res.end('server error'); }
-}).listen(PORT, () => console.log(`POKER ARENA 서버: http://localhost:${PORT}  (DB: ${process.env.DB_PATH ?? 'data/poker.sqlite'})`));
+}).listen(PORT, '0.0.0.0', () => console.log(`POKER ARENA 서버: http://localhost:${PORT}  (DB: ${process.env.DB_PATH ?? 'data/poker.sqlite'})`));

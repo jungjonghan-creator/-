@@ -34,7 +34,7 @@ export interface WorldSnapshot { version: 1; seed: number; roster: string[]; eve
 
 const TIER_IDX: Record<string, number> = { free: 0, micro: 1, low: 2, mid: 3, high: 4, super: 5, ultra: 6 };
 const AMATEUR_MEAN: Record<string, number> = { free: 38, micro: 42, low: 46, mid: 51, high: 57, super: 62, ultra: 66 };
-const LEGEND_AVAIL: Record<string, number> = { free: 0, micro: 0.02, low: 0.05, mid: 0.15, high: 0.45, super: 0.7, ultra: 0.85 };
+const LEGEND_AVAIL: Record<string, number> = { free: 0, micro: 0.05, low: 0.15, mid: 0.4, high: 0.7, super: 0.85, ultra: 0.95 }; // 실존 레전드는 투어를 도는 프로: 중·고액 이벤트에 자주 나온다
 const FUTURE_AVAIL: Record<string, number> = { free: 0.3, micro: 0.35, low: 0.45, mid: 0.5, high: 0.4, super: 0.25, ultra: 0.15 };
 const ROSTER_AVAIL: Record<string, number> = { free: 0.4, micro: 0.5, low: 0.5, mid: 0.4, high: 0.1, super: 0.02, ultra: 0 };
 
