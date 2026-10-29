@@ -1,4 +1,6 @@
 import { inferRange, OPEN_BASE } from '../ai/decide';
+import { buildRanges, evaluateDecision, DeepResult } from './deep';
+import type { OppModel } from '../ai/opponentModel';
 import { estimateEquity, holePct } from '../ai/equity';
 import { observe } from '../ai/observation';
 import { handKey } from '../ai/handKey';
@@ -41,6 +43,8 @@ export interface DecisionReview {
   facedFracOfPot: number | null; // 내가 직면한 벳의 팟 대비 크기
   stackBB: number;
   preflopRaisesFaced: number;
+  /** 심층 추론(베이지안 레인지 + 선택지별 EV) 결과. 프리플랍 첫 오픈은 범위표 평가라 없음 */
+  deep?: { options: { label: string; ev: number; se: number; foldProb?: number; chosen: boolean; best: boolean }[]; ranges: { name: string; line: string[]; top: string[]; share: number }[]; lossBB: number; lossSEBB: number; significant: boolean; model: string };
 }
 
 export interface HandReview {
@@ -54,9 +58,9 @@ export interface HandReview {
 }
 
 const gradeOf = (s: number): Grade => (s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 68 ? 'C' : s >= 52 ? 'D' : 'F');
-export const APPROX_NOTICE = '승률은 몬테카를로 추정(상대 레인지는 공개 행동으로부터의 휴리스틱 추론)이며 솔버 결과가 아닙니다. 점수는 근사 평가입니다.';
+export const APPROX_NOTICE = '승률·EV는 몬테카를로 추정입니다. 상대 레인지는 공개된 행동 순서(프리플랍~현재 스트리트, 베팅 크기 포함)에서 베이지안으로 추적한 것이며 솔버 결과가 아닙니다. 점수는 근사 평가입니다.';
 
-export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandReview {
+export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200, memory?: OppModel): HandReview {
   const heroSeat = rec.startStacks.find((s) => s.id === heroId)!.seat;
   const decisions: DecisionReview[] = [];
   const res = rec.result!;
@@ -72,11 +76,20 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
     const actedSeats = new Set(obs.history.filter((e) => e.street === 'preflop' && (e.type === 'call' || e.type === 'raise' || e.type === 'bet')).map((e) => e.seat));
     let opp = obs.players.filter((p) => !p.isHero && p.inHand && !p.folded);
     if (obs.street === 'preflop') { const f = opp.filter((p) => actedSeats.has(p.seat)); opp = f.length ? f : opp.filter((p) => p.position === 'BB' || p.position === 'BTN/SB').slice(0, 1); }
-    const ranges = opp.map((o) => inferRange(obs, o));
-    const equity = estimateEquity(obs.hole, obs.board, ranges, sims, rng);
-    const se = Math.sqrt(equity * (1 - equity) / sims);
-    const unc = obs.street === 'preflop' ? 0.06 : 0.05;
+    const raisesFaced0 = obs.history.filter((e) => e.street === 'preflop' && (e.type === 'raise' || e.type === 'bet')).length;
+    const unopened0 = obs.street === 'preflop' && raisesFaced0 === 0 && obs.position !== 'BB';
     const ev = after.events[after.events.length - 1];
+    let deep: DeepResult | null = null;
+    let equity: number; let se: number;
+    const ranges = unopened0 ? opp.map((o) => inferRange(obs, o)) : [];
+    if (unopened0) {
+      equity = estimateEquity(obs.hole, obs.board, ranges, sims, rng);
+      se = Math.sqrt(equity * (1 - equity) / sims);
+    } else {
+      deep = evaluateDecision(obs, { type: ev.type as 'fold' | 'check' | 'call' | 'bet' | 'raise', to: ev.toTotal }, rng, { memory, sims: Math.max(500, Math.round(sims * 1.2)), ranges: buildRanges(obs, memory, opp.map((o) => o.seat)) });
+      equity = deep.equity; se = deep.equitySE;
+    }
+    const unc = deep ? 0.035 : obs.street === 'preflop' ? 0.06 : 0.05;
     const type = ev.type;
     const toCall = l.callAmount;
     const pot = obs.pot;
@@ -93,7 +106,8 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
     notes.push(`핸드 ${obs.hole.map(cardToString).join(' ')} (${key}, 프리플랍 상위 ${(holePct(obs.hole[0], obs.hole[1]) * 100).toFixed(0)}%) · 포지션 ${obs.position}`);
     if (obs.board.length >= 3) notes.push(`보드 ${obs.board.map(cardToString).join(' ')} · 현재 메이드핸드: ${describe(evaluate([...obs.hole, ...obs.board]))}`);
     if (obs.street === 'preflop') notes.push('프리플랍 가정: 아직 행동하지 않은 플레이어는 폴드(이미 콜/레이즈한 상대와의 에퀴티)');
-    ranges.forEach((r, i) => notes.push(`상대 추정 레인지(${opp[i].name}): 프리플랍 상위 ${(r.pct * 100).toFixed(0)}%${r.boardTop < 1 ? ` · 현재 보드 강도 상위 ${(r.boardTop * 100).toFixed(0)}%` : ''} (휴리스틱 추론)`));
+    if (deep) deep.ranges.forEach((r) => notes.push(`상대 레인지(${r.name}): ${r.line.length ? r.line.join(' → ') : '행동 정보 없음'} ⇒ 유효 ${(r.share * 100).toFixed(0)}% 콤보 · 주요 ${r.top.slice(0, 5).join(' ')}`));
+    else ranges.forEach((r, i) => notes.push(`상대 추정 레인지(${opp[i].name}): 프리플랍 상위 ${(r.pct * 100).toFixed(0)}%${r.boardTop < 1 ? ` · 현재 보드 강도 상위 ${(r.boardTop * 100).toFixed(0)}%` : ''} (휴리스틱 추론)`));
     notes.push(`추정 승률 ${(equity * 100).toFixed(1)}% (±${(se * 200).toFixed(1)}%p 표본오차, 레인지 가정 불확실성 ±${(unc * 100).toFixed(0)}%p) vs ${opp.length}명`);
     if (need !== null) notes.push(`정확한 팟오즈: 콜 ${toCall.toLocaleString()} / 팟 ${(pot + toCall).toLocaleString()} → 필요 승률 ${(need * 100).toFixed(1)}%`);
 
@@ -116,33 +130,38 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
         if (late && handPct <= thr * 0.6) { score = 55; mistake = '너무 타이트한 폴드(추정)'; lesson = '이 포지션에서는 이 정도 핸드로 오픈해 블라인드를 노리는 것이 보통입니다.'; alternatives.push('레이즈(스틸)'); }
         else { score = 92; lesson = '범위 밖 핸드를 접은 올바른 폴드입니다.'; }
       }
-    } else if (need !== null && (type === 'fold' || type === 'call')) {
-      const evFold = 0;
-      const chosen = type === 'call' ? evCall! : evFold;
-      const best = Math.max(evCall!, evFold);
-      const loss = best - chosen;
-      const scale = pot + toCall;
-      score = Math.round(100 * (1 - Math.min(1, (loss / scale) * 3.5)));
-      if (Math.abs(equity - need) < margin) { borderline = true; score = Math.max(score, 78); notes.push('승률과 필요 승률이 오차 범위 안 — 경계선 판단(어느 쪽도 큰 실수 아님)'); }
-      else if (type === 'fold' && equity > need + margin) { mistake = '과폴드(추정)'; lesson = '팟오즈가 충분했습니다. 추정 승률이 필요 승률보다 높을 때는 콜을 고려하세요.'; }
-      else if (type === 'call' && equity < need - margin) { mistake = '과콜(추정)'; lesson = '팟오즈에 못 미치는 승률입니다. 이런 상황은 폴드가 기본입니다(드로우의 임플라이드 오즈 제외).'; }
-      else lesson = '팟오즈와 승률이 부합하는 판단입니다.';
-      alternatives.push(type === 'call' ? `폴드 (EV ≈ 0)` : `콜 (모델 EV ≈ ${evCall!.toFixed(0)} 칩)`);
-      notes.push(`모델 기반 EV: 콜 ≈ ${evCall!.toFixed(0)} 칩, 폴드 = 0 (승률 실현 100% 가정의 단순 모델)`);
+    } else if (deep && deep.chosen) {
+      const P = pot + toCall;
+      const bbv = rec.config.bb;
+      const best = deep.best; const ch = deep.chosen;
+      score = deep.loss <= 1e-9 ? 96 : Math.round(100 * (1 - Math.min(1, (deep.loss / Math.max(1, P)) * 3.5)));
+      const sizeOnly = best.to !== undefined && ch.to !== undefined;
+      if (!deep.significant && best.id !== ch.id) { borderline = true; score = Math.max(score, 80); notes.push(`최선 후보(${best.label})와의 EV 차이 ${deep.loss.toFixed(0)}칩(±${(2 * deep.lossSE).toFixed(0)})이 오차 범위 안 — 경계선 판단`); }
+      else if (best.id !== ch.id) {
+        if (type === 'fold') { mistake = '과폴드(추정)'; lesson = `폴드(EV 0)보다 ${best.label}의 추정 EV가 ${best.ev.toFixed(0)}칩 높습니다. 상대의 행동 라인에 비해 내 핸드가 충분히 강합니다.`; }
+        else if (type === 'call' && best.id === 'fold') { mistake = '과콜(추정)'; lesson = '상대의 라인(레인지)에 비해 승률이 모자라 콜의 추정 EV가 폴드보다 낮습니다. 드로우의 이후 스트리트 가치는 실현율 상수로만 반영됩니다.'; }
+        else if (type === 'call') { mistake = '수동적 플레이(추정)'; lesson = `콜보다 ${best.label}의 추정 EV가 높습니다. 상대가 접는 빈도나 밸류 가치가 큰 상황입니다.`; }
+        else if (type === 'check') { mistake = '기회 놓침(추정)'; lesson = `체크보다 ${best.label}의 추정 EV가 높습니다. 상대가 약한 라인을 보인 스팟입니다.`; }
+        else if (sizeOnly) { mistake = '베팅 사이즈 개선(추정)'; lesson = `방향은 맞지만 ${best.label}가 추정 EV가 더 높았습니다.`; score = Math.max(score, 66); }
+        else { mistake = '과한 공격(추정)'; lesson = `공격보다 ${best.label}의 추정 EV가 높습니다. 상대가 계속하는 레인지가 내 핸드보다 강한 편입니다.`; }
+      } else lesson = type === 'fold' ? '추정상 폴드가 최선인 올바른 판단입니다.' : type === 'call' ? '추정상 콜이 최선입니다.' : type === 'check' ? '추정상 체크가 최선입니다.' : '추정상 가장 EV가 높은 공격(방향·사이즈)입니다.';
+      if (type === 'bet' || type === 'raise') notes.push(`${l.isBet ? '벳' : '레이즈'} 크기: 팟의 ${(100 * ev.paid / Math.max(1, pot)).toFixed(0)}%${deep.chosen.foldProb !== undefined ? ` · 상대 전원 폴드 확률(모델) ${(100 * deep.chosen.foldProb).toFixed(0)}%` : ''}`);
+      [...deep.options].sort((x, y) => y.ev - x.ev).slice(0, 5).forEach((o) => notes.push(`EV ${o.ev >= 0 ? '+' : ''}${o.ev.toFixed(0)}칩 (±${(2 * o.se).toFixed(0)}) — ${o.label}${o.id === ch.id ? ' ← 내 선택' : o.id === best.id ? ' ← 최선' : ''}`));
+      if (best.id !== ch.id) alternatives.push(`${best.label} (추정 EV ${best.ev.toFixed(0)}칩 vs 내 선택 ${ch.ev.toFixed(0)}칩)`);
+      notes.push(deep.model);
+      void bbv;
     } else if (type === 'check') {
-      if (equity > 0.72 + unc && l.canRaise && obs.street !== 'river') { mistake = '밸류 기회 놓침(추정)'; score = 62; lesson = '강한 핸드로 체크했습니다. 상대가 이후 벳을 하도록 유도하는 의도가 아니라면 밸류 벳을 고려하세요.'; alternatives.push('팟 ½~¾ 밸류 벳'); }
-      else { score = 85; lesson = '무난한 체크입니다.'; }
-    } else if (type === 'bet' || type === 'raise') {
-      const sizeFrac = ev.paid / Math.max(1, pot);
-      if (equity >= 0.55) { score = 88; lesson = '밸류 벳/레이즈로 적절한 수준의 승률입니다.'; notes.push(`밸류 벳 (팟 대비 ${(sizeFrac * 100).toFixed(0)}%)`); }
-      else if (equity >= 0.3 && obs.street !== 'river') { score = 76; lesson = '세미블러프 영역입니다. 상대 폴드 확률에 따라 EV가 결정되며 폴드 확률은 추정 불가입니다.'; notes.push('세미블러프: 폴드 에퀴티 의존 — 점수는 중립 근사'); }
-      else { score = null; lesson = '블러프입니다. 성공 여부는 상대의 폴드 빈도에 달려 있어 정량 평가하지 않습니다.'; notes.push('순수 블러프: 평가 불가(폴드 확률 모델 없음)'); }
-      if (equity < 0.4 && sizeFrac > 1.1) { mistake = '과대 베팅(추정)'; score = score === null ? null : Math.min(score, 55); }
-      alternatives.push('체크 또는 더 작은 사이즈');
+      score = 85; lesson = '무난한 체크입니다.';
     }
-    if (type === 'raise' && equity < 0.5 && toCall > 0 && !mistake) alternatives.push(`콜 (모델 EV ≈ ${evCall!.toFixed(0)} 칩)`);
-    const evLossBB = need !== null && (type === 'fold' || type === 'call') && !borderline && mistake
-      ? Math.max(0, (Math.max(evCall!, 0) - (type === 'call' ? evCall! : 0))) / rec.config.bb : 0;
+    if (!deep && type === 'raise' && equity < 0.5 && toCall > 0 && !mistake) alternatives.push(`콜 (모델 EV ≈ ${evCall!.toFixed(0)} 칩)`);
+    const evLossBB = deep ? (deep.significant && mistake ? deep.loss / rec.config.bb : 0)
+      : need !== null && (type === 'fold' || type === 'call') && !borderline && mistake
+        ? Math.max(0, (Math.max(evCall!, 0) - (type === 'call' ? evCall! : 0))) / rec.config.bb : 0;
+    const deepOut: DecisionReview['deep'] = deep ? {
+      options: deep.options.map((o) => ({ label: o.label, ev: o.ev, se: o.se, foldProb: o.foldProb, chosen: o.id === deep!.chosen?.id, best: o.id === deep!.best.id })),
+      ranges: deep.ranges.map((r) => ({ name: r.name, line: r.line, top: r.top, share: r.share })),
+      lossBB: deep.loss / rec.config.bb, lossSEBB: deep.lossSE / rec.config.bb, significant: deep.significant, model: deep.model,
+    } : undefined;
     decisions.push({
       position: obs.position, actionType: type as DecisionReview['actionType'], handKey: key, opponents: opp.length, evLossBB,
       facingBet: toCall > 0, betFracOfPot: type === 'bet' || type === 'raise' ? ev.paid / Math.max(1, pot) : null,
@@ -150,7 +169,7 @@ export function reviewHand(rec: HandRecord, heroId = 'hero', sims = 1200): HandR
       preflopRaisesFaced: raisesFaced,
       actionIndex: idx, street: obs.street, actionLabel: label, pot, toCall, equity, equitySE: se, rangeUncertainty: unc,
       potOddsNeed: need, evCall, score, grade: score === null ? null : gradeOf(score), mistake, notes, alternatives,
-      lesson: lesson || '평가 정보가 부족합니다.', borderline,
+      lesson: lesson || '평가 정보가 부족합니다.', borderline, deep: deepOut,
     });
   });
 
