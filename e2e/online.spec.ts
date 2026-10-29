@@ -31,11 +31,12 @@ async function newUser(browser: Browser, name: string): Promise<{ ctx: BrowserCo
 }
 const act = async (page: Page, id: string) => { const b = page.getByTestId(id); if ((await b.isVisible()) && (await b.isEnabled())) { await b.click(); return true; } return false; };
 /** 폴드/체크만 하며 정산 패널이 보일 때까지 진행 */
-async function foldUntilSettled(page: Page, limit = 1500) {
+async function foldUntilSettled(page: Page, limit = 1500, shove = true) {
   for (let i = 0; i < limit; i++) {
     if (await page.getByTestId('settle-done').isVisible()) return;
     if (await page.getByTestId('settle-error').isVisible()) throw new Error('정산 오류 표시');
     if (await page.getByTestId('btn-decline').isVisible()) { await page.getByTestId('btn-decline').click(); continue; }
+    if (shove && (await act(page, 'btn-allin'))) { const ok = page.getByTestId('allin-ok'); await ok.waitFor({ timeout: 5000 }); await ok.click(); continue; }
     if (await act(page, 'btn-fold')) continue;
     if (await act(page, 'btn-check')) continue;
     const nxt = page.getByTestId('btn-next');
