@@ -29,7 +29,10 @@ const build = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: WIN 
 if (build.status !== 0) process.exit(4);
 const dep = spawnSync('npx', ['--yes', 'wrangler@4', 'deploy'], { encoding: 'utf8', shell: WIN });
 process.stdout.write(dep.stdout ?? ''); process.stderr.write(dep.stderr ?? '');
-if (dep.status !== 0) process.exit(5);
+if (dep.status !== 0) {
+  if (/workers\.dev subdomain/i.test((dep.stdout ?? '') + (dep.stderr ?? ''))) console.error('\n[안내] 처음 한 번만 workers.dev 주소 이름을 정해야 합니다. 위 dash.cloudflare.com/.../workers/onboarding 링크를 브라우저로 열어 이름(영문 소문자·숫자·-)을 정하고 저장한 뒤, 이 배포를 다시 실행하세요.');
+  process.exit(5);
+}
 const url = /https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev/i.exec((dep.stdout ?? '') + (dep.stderr ?? ''))?.[0];
 if (url) {
   // 스모크 테스트(계정을 만들지 않는다): 서버와 D1 연결 확인
