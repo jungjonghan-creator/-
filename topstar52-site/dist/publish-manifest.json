@@ -1,0 +1,311 @@
+{
+ "origin": "https://topstar52.co.kr",
+ "builtAt": "2026-11-10T07:41:19.041Z",
+ "mode": "production",
+ "static": [
+  {
+   "path": "/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/services/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/benefits/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/dongnae/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/hakjang/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/dusil/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/bugok/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/deokcheon/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/yeonsan-togok/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/jwadong/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/banyeo/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/centum/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/motgol/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/stores/gyobang/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/guide/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/guide/progressive/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/guide/questions/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/brand/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/franchise/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/franchise/requirements/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/franchise/stories/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/franchise/insights/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/franchise/contact/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/company/",
+   "lastmod": "2026-11-10"
+  },
+  {
+   "path": "/privacy/",
+   "lastmod": "2026-11-10"
+  }
+ ],
+ "articles": [
+  {
+   "slug": "first-progressive",
+   "path": "/guide/articles/first-progressive/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "다초점 안경, 처음 맞출 때 확인할 5가지",
+   "audience": "손님",
+   "description": "처음 다초점을 알아볼 때는 렌즈 이름보다 내 생활을 먼저 정리하는 것이 좋습니다. 오래 보는 것, 보는 거리, 쓰던 안경, 물어볼 것, 실제로 쓸 사람의 의견 다섯 가지를 확인해 보세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "past-discomfort",
+   "path": "/guide/articles/past-discomfort/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "예전 다초점 안경이 불편했다면 확인할 것",
+   "audience": "손님",
+   "description": "한 번 불편했던 경험이 있으면 다시 맞추기가 망설여집니다. 어떤 장면에서 불편했는지, 언제부터였는지, 생활이 바뀌었는지를 정리하면 다음 상담에서 같은 고민을 줄일 수 있습니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "parents-glasses",
+   "path": "/guide/articles/parents-glasses/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "부모님 안경을 알아보기 전 여쭤볼 질문 6가지",
+   "audience": "손님",
+   "description": "부모님 안경을 대신 알아볼 때는 가게보다 부모님의 하루를 먼저 아는 것이 순서입니다. 미리 여쭤보면 좋은 질문 6가지를 정리했습니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "why-glasses-prices-differ",
+   "path": "/guide/articles/why-glasses-prices-differ/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "안경값은 왜 매장마다 다를까요?",
+   "audience": "손님",
+   "description": "안경값은 안경테와 렌즈의 구성, 선택한 기능 등에 따라 달라질 수 있습니다. 가격만 비교하지 말고 무엇이 포함됐는지 함께 확인하는 것이 좋습니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "chain-optician-consultation",
+   "path": "/guide/articles/chain-optician-consultation/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "체인 안경원은 대충 볼까요? 상담 순서를 공개합니다",
+   "audience": "손님",
+   "description": "체인이라는 이유만으로 상담이 꼼꼼하거나 소홀하다고 판단할 수는 없습니다. 상담에서 무엇을 확인하고 어떻게 설명하는지를 살펴보세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "worry-about-expensive-lenses",
+   "path": "/guide/articles/worry-about-expensive-lenses/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "비싼 렌즈를 권할까 봐 걱정되신다면",
+   "audience": "손님",
+   "description": "안경을 고를 때 가장 먼저 정할 것은 가격이 아니라 사용 목적입니다. 제품을 권하는 이유와 다른 선택지가 있는지 물어보세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "after-purchase-discomfort",
+   "path": "/guide/articles/after-purchase-discomfort/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "맞춘 뒤 불편하면 어떻게 하나요?",
+   "audience": "손님",
+   "description": "새 안경을 받은 뒤 불편함을 느끼면 어떤 상황에서 불편한지 기록해 두세요. 매장에 문의하기 전에 구매 당시 안내받은 관리 범위도 확인하는 것이 좋습니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "bring-old",
+   "path": "/guide/articles/bring-old/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "쓰던 안경을 가져오면 좋은 이유",
+   "audience": "손님",
+   "description": "쓰던 안경은 이전에 무엇을 사용했는지 설명하는 자료가 됩니다. 불편했던 점과 좋았던 점을 함께 이야기하면 새 안경을 알아볼 때 도움이 됩니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "frame",
+   "path": "/guide/articles/frame/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "안경테, 디자인보다 먼저 볼 것",
+   "audience": "손님",
+   "description": "안경테는 모양뿐 아니라 실제로 썼을 때의 느낌도 중요합니다. 얼굴에 어떻게 놓이는지 확인하고 고르는 것이 좋습니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "contacts-and-sunglasses",
+   "path": "/guide/articles/contacts-and-sunglasses/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "콘택트렌즈·선글라스도 같이 볼 수 있나요?",
+   "audience": "손님",
+   "description": "으뜸스타안경은 안경과 함께 콘택트렌즈·선글라스도 안내합니다. 다만 실제 취급 상품과 재고는 지점별로 확인해야 합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "kakao-first-question",
+   "path": "/guide/articles/kakao-first-question/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "카톡으로 먼저 물어봐도 될까요?",
+   "audience": "손님",
+   "description": "안경원에 가기 전에 궁금한 점을 카카오톡으로 물어볼 수 있습니다. 방문할 지점의 연락 경로와 네이버 예약 가능 여부를 먼저 확인하세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "before-switching",
+   "path": "/franchise/insights/before-switching/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "안경원 체인을 바꾸기 전 확인할 7가지",
+   "audience": "원장님",
+   "description": "간판을 바꾸는 결정은 매장의 몇 년을 좌우합니다. 비용, 계약, 상권, 운영 지원, 지역 마케팅, 성과 자료, 기존 매장 전환까지 일곱 가지를 순서대로 확인해 보세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "visits-no-calls",
+   "path": "/franchise/insights/visits-no-calls/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "보는 사람은 있는데 연락이 적은 이유",
+   "audience": "원장님",
+   "description": "플레이스를 보고 간 사람이 많아도 전화와 예약이 적다면, 문제는 노출이 아니라 매장 정보를 본 뒤의 망설임일 수 있습니다. 유입과 연락을 나눠 읽는 방법을 정리했습니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "fixed-royalty-scope",
+   "path": "/franchise/insights/fixed-royalty-scope/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "로열티 월 30만 원 정액, 무엇이 들어 있나",
+   "audience": "원장님",
+   "description": "으뜸스타안경의 로열티는 월 30만 원 정액이며 부가세는 별도입니다. 이 금액에 포함되는 구체적인 지원 업무는 계약 문서로 확인해야 합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "no-allocation-policy",
+   "path": "/franchise/insights/no-allocation-policy/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "본사가 물량을 배정하지 않는 이유",
+   "audience": "원장님",
+   "description": "으뜸스타안경 본사는 지점에 상품 물량을 배정하지 않습니다. 다만 상품 거래와 운영 의무의 세부 내용은 계약서에서 확인해야 합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "keep-regular-customers",
+   "path": "/franchise/insights/keep-regular-customers/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "간판을 바꾸면 단골이 떠날까요?",
+   "audience": "원장님",
+   "description": "상호를 바꾼다고 기존 손님이 반드시 떠나는 것은 아닙니다. 다만 같은 원장인지, 기존 안경에 대한 문의는 어디로 해야 하는지 분명히 알려야 합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "first-three-months-support",
+   "path": "/franchise/insights/first-three-months-support/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "가맹 첫 3개월 마케팅 지원, 계약 전 확인할 것",
+   "audience": "원장님",
+   "description": "으뜸스타안경은 신규 가맹점에 마케팅을 3개월 동안 무료로 지원합니다. 어떤 매체와 작업이 포함되는지는 계약 전 서면으로 확인하세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "branch-marketing-evidence",
+   "path": "/franchise/insights/branch-marketing-evidence/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "숫자로 보는 지점 마케팅 (일부 지점 실제 기록)",
+   "audience": "원장님",
+   "description": "으뜸스타안경은 일부 지점의 매출과 마케팅 기록을 공개하고 있습니다. 지점 수와 기간, 비교 기준이 서로 다르므로 각각 구분해서 읽어야 합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "territory-500m",
+   "path": "/franchise/insights/territory-500m/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "영업 지역 500m, 옆 가게와 겹치지 않나요?",
+   "audience": "원장님",
+   "description": "으뜸스타안경은 점포를 기준으로 직선거리 500m의 영업 지역 조건을 안내합니다. 실제 계약에서 어떤 점포를 기준으로 어떻게 적용되는지 확인해야 합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "ai-search-local-optician",
+   "path": "/franchise/insights/ai-search-local-optician/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "AI 검색 시대, 동네 안경원이 할 일",
+   "audience": "원장님",
+   "description": "AI 검색에서 지역 안경원이 정확하게 소개되려면 이름과 위치, 서비스 정보가 서로 맞아야 합니다. 홈페이지뿐 아니라 네이버·구글 등 외부 업체 정보도 함께 관리하는 것이 중요합니다.",
+   "source": "site.json"
+  },
+  {
+   "slug": "documents-before-signing",
+   "path": "/franchise/insights/documents-before-signing/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "계약 전에 꼭 받아야 할 서류",
+   "audience": "원장님",
+   "description": "가맹 계약을 결정하기 전에는 정보공개서와 계약서를 충분히 살펴야 합니다. 인근 가맹점 현황과 비용, 영업 지역, 지원 범위도 서면으로 확인하세요.",
+   "source": "site.json"
+  },
+  {
+   "slug": "founder-direct-consultation",
+   "path": "/franchise/insights/founder-direct-consultation/",
+   "publishAt": "2026-11-06T07:00:00+09:00",
+   "title": "가맹 상담을 대표가 직접 하는 이유",
+   "audience": "원장님",
+   "description": "으뜸스타안경은 가맹 문의를 대표 염대홍에게 직접 할 수 있도록 연락처를 공개하고 있습니다. 대표 상담에서는 공개된 조건과 실제 매장 전환에 관한 궁금증을 확인하세요.",
+   "source": "site.json"
+  }
+ ]
+}

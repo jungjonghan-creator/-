@@ -1,0 +1,12 @@
+{
+  "name": "topstar52-site",
+  "private": true,
+  "description": "으뜸스타안경 공식 홈페이지 (topstar52.co.kr) — 정적 빌드 + 평일 07:00 예약 공개",
+  "scripts": {
+    "week": "node scripts/check.mjs && node scripts/build.mjs --production --validate --week",
+    "check": "node scripts/check.mjs",
+    "preview": "node scripts/build.mjs --validate",
+    "test-post": "node scripts/test-post.mjs",
+    "test-post:remove": "node scripts/test-post.mjs --remove"
+  }
+}
